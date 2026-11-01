@@ -10,7 +10,7 @@ Usage:
     python scripts/check_names.py [PATH ...]
 
 Without arguments, the script checks `README.md`, `mkdocs.yml`, `docs` and
-`includes`. It exits with status 1 if it finds a wrong spelling.
+`includes`. It exits with status 1 if it finds a wrong spelling or a path does not exist.
 """
 
 from __future__ import annotations
@@ -26,19 +26,23 @@ SUFFIXES = {".md", ".yml", ".yaml"}
 IGNORED = re.compile(
     r"""
       ```.*?```                      # fenced code blocks
+    | ~~~.*?~~~                      # fenced code blocks (tildes)
     | `[^`\n]*`                      # inline code
     | https?://[^\s<>"')\]]+         # URLs
     | \]\([^)\n]*\)                  # link targets
     | \]\[[^\]\n]*\]                 # reference link labels
-    | ^\s*\[[^\]\n]+\]:.*$           # reference definitions
+    | ^[ \t]*\[[^\]\n]+\]:[^\n]*$   # reference definitions
     | \b(?:href|src|icon|image)=?\s*["':][^"'\n]*   # attributes and keys
     """,
     re.VERBOSE | re.DOTALL | re.MULTILINE,
 )
 
-# A name is a word that is not part of an identifier, path or domain
+# A name is a word that is not part of an identifier, path or domain. A name
+# may be wrapped over two lines
+SEP = r"(?:[ \t-]|\n[ \t>]*)*"
 NAME = re.compile(
-    r"(?<![\w./@-])elixir(?:[ \t-]*(?:on)?[ \t-]*cloud|[ \t]+europe)?(?![\w./@-])",
+    rf"(?<![\w./@-])elixir(?:{SEP}(?:on)?{SEP}cloud|(?:[ \t]|\n[ \t>]*)+europe)?"
+    r"(?![\w./@-])",
     re.IGNORECASE,
 )
 
@@ -70,10 +74,11 @@ def check_file(path: Path) -> list[str]:
     prose = IGNORED.sub(blank, text)
     problems = []
     for match in NAME.finditer(prose):
-        if match.group(0) in CORRECT:
+        name = re.sub(r"\s+", " ", match.group(0))
+        if name in CORRECT:
             continue
         line = prose.count("\n", 0, match.start()) + 1
-        problems.append(f"{path}:{line}: '{match.group(0)}' is not a valid name")
+        problems.append(f"{path}:{line}: '{name}' is not a valid name")
     return problems
 
 
@@ -93,6 +98,9 @@ def main(args: list[str]) -> int:
             files += sorted(p for p in path.rglob("*") if p.suffix in SUFFIXES)
         elif path.is_file():
             files.append(path)
+        else:
+            print(f"{arg}: no such file or directory")
+            return 1
     problems = [p for file in files for p in check_file(file)]
     for problem in problems:
         print(problem)

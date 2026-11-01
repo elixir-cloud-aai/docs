@@ -63,7 +63,7 @@ docker-compose down
 ## Onboarding your compute center
 
 Follow the instructions below to onboard your compute node with the [ELIXIR
-Cloud][elixir-cloud]. Afterwards, your compute cluster will be accessible
+On-Cloud][elixir-cloud]. Afterwards, your compute cluster will be accessible
 through the [GA4GH][ga4gh] Task Execution Service ([TES][ga4gh-tes]) API and,
 optionally, available in the ELIXIR On-Cloud compute network.
 
