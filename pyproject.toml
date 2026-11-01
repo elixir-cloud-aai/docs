@@ -3,14 +3,14 @@ requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "elixir-cloud-aai-github-io"
+name = "docs"
 version = "0.1.0"
 description = "Documentation of the ELIXIR On-Cloud federated deployment"
 authors = [
     {name = "ELIXIR On-Cloud", email = "cloud-service@elixir-europe.org"},
 ]
 readme = "README.md"
-license = "Apache-2.0"
+license = "CC0-1.0"
 license-files = ["LICENSE"]
 requires-python = ">=3.11"
 
@@ -22,10 +22,20 @@ requires-python = ">=3.11"
 docs = [
     "mkdocs>=1.6.1,<2",
     "mkdocs-material>=9.7.7,<10",
-    "mkdocs-redirects>=1.2.3,<2",
     "pymdown-extensions>=12.3,<13",
+]
+
+# Tests of `scripts/check_names.py`
+tests = [
+    "pytest>=8,<10",
+    "pytest-cov>=6,<8",
 ]
 
 # The repository holds the documentation only, no Python package
 [tool.setuptools]
 packages = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["scripts"]
+addopts = "--cov=check_names --cov-branch --cov-report=term-missing --cov-fail-under=100"
