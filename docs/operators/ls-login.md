@@ -1,29 +1,57 @@
-# Using LS-Login in JupyterHub
+# LS Login
 
-* For deploying JupyterHub in de.NBI Cloud using Kubernetes see this [tutorial](https://cloud.denbi.de/wiki/Tutorials/JupyterHub/).
-* JupyterHub can be configured to use Life Science Login. Therefore, you need to have a service registered at LS-Login ([HowTo](https://docs.google.com/document/d/17pNXM_psYOP5rWF302ObAJACsfYnEWhjvxAHzcjvfIE/edit?tab=t.0#heading=h.suudoy1bqtvm)).
-* In the SPREG tool ([link](https://services.aai.lifescience-ri.eu/spreg)) you have to register the Redirect URIs accordingly to your domain at the SAML/OIDC setting page (`https://{yourdomain}/hub/oauth_callback` - be aware to change `{yourdomain}` accordingly). LS-LOGIN does exact matching of the URL, so adding `/hub/oauth_callback` is required and the domain alone is not sufficient.
-* In the SAML/OIDC setting page, you will also find values for Client ID and Client Secret
-* To use LS-Login in Jupyterhub, you have to modify the config.yaml file (see also [here](https://z2jh.jupyter.org/en/stable/administrator/authentication.html)):
+[LS Login](https://lifescience-ri.eu/ls-login/) (Life Science Login) is the
+identity provider of the ELIXIR On-Cloud: the [Cloud Registry](cloud-registry.md) trusts it only. This
+page shows how to connect three services to LS Login: JupyterHub, HedgeDoc
+and MinIO.
+
+For the registration of a service, and for everything else about LS Login,
+see the [LS Login docs](https://lifescience-ri.eu/registering-integrating-and-managing-your-service/).
+
+## Register your service
+
+Do this once for each service:
+
+1. Register the service in LS Login (see the [LS Login
+   docs](https://lifescience-ri.eu/registering-integrating-and-managing-your-service/)).
+2. Open the [SPREG tool](https://services.aai.lifescience-ri.eu/spreg).
+3. On the SAML/OIDC page, add the redirect URI of your service (see the
+   sections below). LS Login compares the URI exactly: the host name alone
+   is not enough.
+4. On the same page, copy the client ID and the client secret.
+5. Keep the client secret in a secret store, never in a repository.
+
+Use one LS Login client for each service.
+
+## JupyterHub
+
+To deploy JupyterHub in the de.NBI Cloud, see this
+[tutorial](https://cloud.denbi.de/wiki/Tutorials/JupyterHub/).
+
+1. Register the redirect URI `https://{yourdomain}/hub/oauth_callback`.
+   Replace `{yourdomain}` with your host name.
+2. Add this to the `config.yaml` of the Helm chart (see the [Zero to
+   JupyterHub docs](https://z2jh.jupyter.org/en/stable/administrator/authentication.html)):
 
 ```yaml
 hub:
   config:
     Authenticator:
-      allow_all: true
+      allowed_users: # Only these LS Login users can log in
+        - USER
       admin_users:
-        - ADMIN # here you can specify an user as admin
+        - ADMIN # A user name that is an admin
     GenericOAuthenticator:
-      client_id: # add client id from SPREG
-      client_secret: # add client secret from SPREG
-      login_service : LS LOGIN
-      oauth_callback_url: https://{yourdomain}/hub/oauth_callback # change to you domain accordingly
+      client_id: # The client ID from SPREG
+      client_secret: # The client secret from SPREG
+      login_service: LS LOGIN
+      oauth_callback_url: https://{yourdomain}/hub/oauth_callback
       authorize_url: https://login.aai.lifescience-ri.eu/oidc/authorize
       token_url: https://login.aai.lifescience-ri.eu/oidc/token
       userdata_url: https://login.aai.lifescience-ri.eu/oidc/userinfo
-      username_claim: preferred_username # used in newer versions
-      username_key: preferred_username # this variable is deprecated in newer versions
-      scope: 
+      username_claim: preferred_username # Newer versions
+      username_key: preferred_username # Deprecated in newer versions
+      scope:
         - openid
         - email
         - profile
@@ -33,13 +61,19 @@ cull:
   enabled: false
 ```
 
-# Add LS_Login to Hedgedoc
+`allow_all: true` would let every LS Login user in. Keep the list of allowed
+users instead. Do not put the client secret into a values file that you
+commit: pass it at deploy time, for example from a secret store.
 
-Before configuring Hedgedoc, you need to register your service with LS-Login. Follow the registration process at https://lifescience-ri.eu/ls-login/documentation/how-to-integrate/registration.html
+## HedgeDoc
 
-Hedgedoc is configured using environment variables. This guide assumes that a Hedgedoc is already deployed, in our case we used this [chart](https://github.com/CSCfi/helm-charts/tree/main/charts/hedgedoc).
+HedgeDoc reads its settings from environment variables. These steps assume
+that HedgeDoc is deployed already, for example with this [Helm
+chart](https://github.com/CSCfi/helm-charts/tree/main/charts/hedgedoc).
 
-Once Hedgedoc is deployed, in order to add LS-AAI login one just needs to add these variables:
+1. Register the redirect URI of your HedgeDoc in SPREG (see the [HedgeDoc
+   docs](https://docs.hedgedoc.org/configuration/#oauth2-login)).
+2. Add these environment variables to the deployment:
 
 ```yaml
 - name: CMD_OAUTH2_USER_PROFILE_URL
@@ -64,25 +98,31 @@ Once Hedgedoc is deployed, in order to add LS-AAI login one just needs to add th
   value: openid email profile
 ```
 
-The documentation from Hedgedoc about this is available [here](https://docs.hedgedoc.org/configuration/#oauth2-login).
+## MinIO
 
-# Using LS-Login in MinIO
-
-LS-Login can be activated in MinIO either by using the MinIO console using the OIDC configuration or by setting environment variables ([MinIO OIDC Documentation](https://min.io/docs/minio/linux/operations/external-iam/configure-openid-external-identity-management.html)).
+You can turn on LS Login in the MinIO console (OIDC settings) or with
+environment variables (see the [MinIO
+docs](https://min.io/docs/minio/linux/operations/external-iam/configure-openid-external-identity-management.html)):
 
 ```sh
 export MINIO_IDENTITY_OPENID_CONFIG_URL="https://login.aai.lifescience-ri.eu/oidc/.well-known/openid-configuration"
-export MINIO_IDENTITY_OPENID_CLIENT_ID="<ID of the LS-Login service>"
-export MINIO_IDENTITY_OPENID_CLIENT_SECRET="<Secret of the LS-Login service>"
-export MINIO_IDENTITY_OPENID_DISPLAY_NAME="<A human readable label for the login button (e.g. `LS-Login`)>"
-export MINIO_IDENTITY_OPENID_SCOPES="<Scopes that will be requested from LS-Login (e.g. `openid,email,profile`)>"
-export MINIO_IDENTITY_OPENID_ROLE_POLICY="<Name of a policy in MinIO that will be used to manage access of LS-Login users (e.g. `readonly`).>"
-export MINIO_IDENTITY_OPENID_CLAIM_USERINFO="<Allow MinIO to request the userinfo endpoint for additional information (`on`).>"
+export MINIO_IDENTITY_OPENID_CLIENT_ID="<ID of the LS Login service>"
+export MINIO_IDENTITY_OPENID_CLIENT_SECRET="<Secret of the LS Login service>"
+export MINIO_IDENTITY_OPENID_DISPLAY_NAME="<Label of the login button, e.g., LS Login>"
+export MINIO_IDENTITY_OPENID_SCOPES="<Scopes to request, e.g., openid,email,profile>"
+export MINIO_IDENTITY_OPENID_ROLE_POLICY="<Policy for LS Login users, e.g., readonly>"
+export MINIO_IDENTITY_OPENID_CLAIM_USERINFO="on"
 ```
 
-MinIO supports two different mechanisms for authorization of users with OIDC ([MinIO OIDC authorization](https://min.io/docs/minio/linux/administration/identity-access-management/oidc-access-management.html#minio-external-identity-management-openid)). It is recommended to use the RolePolicy flow. Here, all LS-Login users in MinIO will be assigned to one or more policies. These policies can control access to specific buckets by group membership; e.g. require that users belong to a specific LS-AAI group (see [policy based access control](https://min.io/docs/minio/linux/administration/identity-access-management/policy-based-access-control.html#tag-based-policy-conditions)).
+MinIO has two ways to authorize users with OIDC (see the [MinIO
+docs](https://min.io/docs/minio/linux/administration/identity-access-management/oidc-access-management.html#minio-external-identity-management-openid)).
+Use the RolePolicy flow: MinIO assigns each LS Login user to one or more
+policies. A policy can limit access to a bucket, for example to the members
+of an LS Login group (see [policy-based access
+control](https://min.io/docs/minio/linux/administration/identity-access-management/policy-based-access-control.html#tag-based-policy-conditions)).
 
-In the example below, access to a bucket (`sensitive/`) is restricted to a list of users which are identified by their `preferred_username` claims. 
+This policy gives the listed users, identified by their `preferred_username`
+claim, read access to the bucket `sensitive`:
 
 ```json
 {

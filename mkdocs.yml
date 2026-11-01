@@ -92,6 +92,7 @@ nav:
     - "Cloud Registry": "operators/cloud-registry.md"
     - "LS Login": "operators/ls-login.md"
     - Services:
+      - "operators/services/index.md"
       - "CWL-WES": "operators/services/cwlwes.md"
       - "DRS-Filer": "operators/services/drsfiler.md"
       - "Funnel": "operators/services/funnel.md"
