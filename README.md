@@ -1,6 +1,8 @@
-# Documentation Hub
+# ELIXIR On-Cloud docs
 
-Documentation for the ELIXIR-on-Cloud project.
+Documentation of the ELIXIR On-Cloud federated deployment, built with MkDocs Material and currently published at
+https://elixir-cloud-aai.github.io/ (it moves to Read the Docs, see
+[#61](https://github.com/elixir-cloud-aai/elixir-cloud-aai.github.io/issues/61)).
 
 ## Development
 

@@ -11,8 +11,8 @@ Welcome to the Documentation Hub for [ELIXIR-on-Cloud][elixir-on-cloud], a
 [Driver Project][ga4gh-dps] of the [GA4GH][ga4gh].
 
 <div>
-    <a href="https://elixir-cloud.dcc.sib.swiss/">
-        <img src="images/logo.256px.png" alt="ELIXIR-on-Cloud logo" width="60"/>
+    <a href="https://elixir-on.cloud/">
+        <img src="images/logo_elixir_on_cloud.png" alt="ELIXIR On-Cloud logo" width="215"/>
     </a>
     <a href="https://elixir-europe.org/">
         <img src="images/logo.elixir.svg" alt="ELIXIR logo" width="81"/>

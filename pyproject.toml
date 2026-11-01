@@ -1,18 +1,30 @@
-[tool.poetry]
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
 name = "elixir-cloud-aai-github-io"
 version = "0.1.0"
-description = "Documentation Hub for ELIXIR Cloud AAI"
-authors = ["ELIXIR Cloud AAI <cloud-service@elixir-europe.org>"]
-license = "Apache-2.0"
+description = "Documentation of the ELIXIR On-Cloud federated deployment"
+authors = [
+    {name = "ELIXIR On-Cloud", email = "cloud-service@elixir-europe.org"},
+]
 readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
 
-[tool.poetry.dependencies]
-python = "^3.11"
-mkdocs-i18n = "^0.4.6"
-mkdocs-material = "^9.5.28"
-pillow = "^10.4.0"
-cairosvg = "^2.7.1"
+[project.optional-dependencies]
+# Documentation (`mkdocs.yml`), built by Read the Docs (`.readthedocs.yaml`)
+# and in CI. The packages that add warnings, which fail the strict build,
+# are listed too, to bound their major versions (new warnings of minor
+# releases still fail it)
+docs = [
+    "mkdocs>=1.6.1,<2",
+    "mkdocs-material>=9.7.7,<10",
+    "pymdown-extensions>=12.3,<13",
+]
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+# The repository holds the documentation only, no Python package
+[tool.setuptools]
+packages = []
