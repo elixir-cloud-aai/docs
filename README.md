@@ -47,7 +47,7 @@ The content is licensed under [Creative Commons Zero, version 1.0][license]
 (CC0).
 
 [badge-build-status]: <https://github.com/elixir-cloud-aai/docs/actions/workflows/ci.yml/badge.svg?branch=main>
-[badge-docs]: <https://img.shields.io/website?url=https%3A%2F%2Fdocs.elixir-on.cloud%2F&label=docs>
+[badge-docs]: <https://img.shields.io/readthedocs/elixir-on-cloud-docs>
 [badge-license]: <https://img.shields.io/badge/license-CC0%201.0-blue.svg>
 [badge-url-build-status]: <https://github.com/elixir-cloud-aai/docs/actions/workflows/ci.yml?query=branch%3Amain>
 [badge-url-docs]: <https://docs.elixir-on.cloud/>
