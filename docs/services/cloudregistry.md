@@ -653,8 +653,10 @@ cluster allows:
             location /admin/ { return 404; }
     ```
 
-Check it from outside the cluster (see [Checks](#checks-after-installing)):
-`/admin/` must not reach the app.
+The first way is the stricter one: an allow list of the API's base path,
+while the second blocks only `/admin/`. Check it from outside the cluster
+(see [Checks](#checks-after-installing)): `/admin/` must not reach the
+app.
 
 If the API moves to another host name, change `hostName` and the API URL in
 the front end's deployment together, keeping the base path
@@ -1170,6 +1172,12 @@ never in a file in a repository. A lifecycle rule of the bucket that
 deletes objects after 14 days can replace the `rclone delete`, so that the
 job needs no right to delete. Pin both images (e.g., by digest).
 
+The chart's MongoDB is a single server without an oplog, so a dump is not a
+point-in-time copy: writes during the dump (a few seconds for this small
+database) may be in some collections and not in others. The app corrects
+its service counters on startup after a restore; for exact point-in-time
+copies, use volume snapshots.
+
 ```yaml title="backup-cloud-registry.yaml"
 apiVersion: batch/v1
 kind: CronJob
@@ -1313,12 +1321,16 @@ it):
 
 ```bash
 kubectl scale deploy/cloud-registry --replicas=0 -n <namespace>
+# Starts the app again only if the restore succeeded
 kubectl exec -i deploy/cloud-registry-mongodb -n <namespace> -- sh -c 'mongorestore \
   -u "$MONGO_INITDB_ROOT_USERNAME" -p "$MONGO_INITDB_ROOT_PASSWORD" \
   --authenticationDatabase admin --gzip --archive --drop' \
-  < cloud-registry-<timestamp>.archive.gz
-kubectl scale deploy/cloud-registry --replicas=1 -n <namespace>
+  < cloud-registry-<timestamp>.archive.gz \
+  && kubectl scale deploy/cloud-registry --replicas=1 -n <namespace>
 ```
+
+If the restore fails, keep the app stopped, and restore again (`--drop`
+replaces the collections that the archive holds).
 
 ## Upgrades
 
