@@ -20,12 +20,11 @@
 [elixir-on-cloud]: <https://elixir-cloud.dcc.sib.swiss/>
 [elixir-on-cloud-contributors]: <https://elixir-cloud.dcc.sib.swiss/contributors>
 [elixir-on-cloud-github]: <https://github.com/elixir-cloud-aai/>
-[elixir-on-cloud-slack]: <https://join.slack.com/t/elixir-cloud/shared_invite/zt-1uvebyx1e-NcC0Hof2guT9df~haBdQaw>
+[elixir-on-cloud-slack]: <https://join.slack.com/t/elixir-cloud/shared_invite/zt-4f6zdhi84-X4YBkJHxhYmVIHJkRfY2JQ>
 [elixir-on-cloud-slack-channel-oss]: <https://elixir-cloud.slack.com/archives/CSJ97K04E> 
-[elixir-on-cloud-forum]: <https://github.com/elixir-cloud-aai/elixir-cloud-aai/discussions>
+[elixir-on-cloud-forum]: <https://github.com/orgs/elixir-cloud-aai/discussions>
 [elixir-on-cloud-issues]: https://github.com/orgs/elixir-cloud-aai/projects
 [elixir-on-cloud-news]: <https://elixir-cloud.dcc.sib.swiss/news>
-[elixir-on-cloud-twitter]: <https://twitter.com/ELIXIRcloud_aai>
 [elixir-on-cloud-email]: <mailto:cloud-service@elixir-europe.org>
 [elixir-cloud-demo-cwl]: <https://github.com/elixir-cloud-aai/elixir-cloud-demos/tree/main/demos/2023-ecp-f2f>
 [elixir-cloud-demo-smk]: <https://github.com/elixir-cloud-aai/demo-tes-hybrid-cloud>

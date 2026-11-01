@@ -36,7 +36,8 @@ extra:
       make our documentation better.
     title: Cookie consent
   social:
-    - icon: custom/elixir-on-cloud
+    # Rendered as an image by `overrides/partials/social.html`
+    - image: images/logo_elixir_on_cloud_mark_night.svg
       link: https://elixir-on.cloud/
       name: ELIXIR On-Cloud website
     - icon: custom/elixir
@@ -48,14 +49,11 @@ extra:
     - icon: custom/github
       link: https://github.com/elixir-cloud-aai
       name: ELIXIR On-Cloud GitHub organization
-    - icon: custom/twitter
-      link: https://twitter.com/ELIXIRcloud_aai
-      name: ELIXIR On-Cloud Twitter profile
     - icon: custom/slack
-      link: https://join.slack.com/t/elixir-cloud/shared_invite/enQtNzA3NTQ5Mzg2NjQ3LTZjZGI1OGQ5ZTRiOTRkY2ExMGUxNmQyODAxMDdjM2EyZDQ1YWM0ZGFjOTJhNzg5NjE0YmJiZTZhZDVhOWE4MWM
+      link: https://join.slack.com/t/elixir-cloud/shared_invite/zt-4f6zdhi84-X4YBkJHxhYmVIHJkRfY2JQ
       name: ELIXIR On-Cloud Slack board
     - icon: custom/forum
-      link: https://github.com/elixir-cloud-aai/elixir-cloud-aai/discussions
+      link: https://github.com/orgs/elixir-cloud-aai/discussions
       name: ELIXIR On-Cloud Q&A forum
     - icon: custom/email
       link: mailto:cloud-service@elixir-europe.org
@@ -125,6 +123,8 @@ nav:
       - "License": "about/license.md"
       - "Code of Conduct": "about/code-of-conduct.md"
       - "Release Notes": "about/release-notes.md"
+extra_css:
+  - stylesheets/extra.css
 plugins:
   - search
 repo_name: elixir-cloud-aai/elixir-cloud-aai.github.io
@@ -137,6 +137,12 @@ site_description: >-
 site_url: !ENV [READTHEDOCS_CANONICAL_URL, "https://elixir-cloud-aai.github.io/"]
 theme:
   custom_dir: overrides
+  # The favicon follows the colour scheme of the browser (see the file). The
+  # header and the footer are dark in both schemes of the site, hence the white
+  # (night) version of the mark in both; the page body uses day and night
+  # versions of the lockup (`docs/stylesheets/extra.css`)
+  favicon: images/favicon.svg
+  logo: images/logo_elixir_on_cloud_mark_night.svg
   features:
     - announce.dismiss
     - content.code.copy
