@@ -1,30 +1,112 @@
 # User Stories
 
-With the ELIXIR On-Cloud activities, we support the development of cloud services to provide access to data and compute for researchers. Thereby we have various user stories in mind, which are listed below to guide researchers as well as service/data provider.
+These stories show how users and providers work with services and data in
+ELIXIR On-Cloud. Use them to plan an integration. The stories about access
+to services use [LS Login](https://www.lifescience-ri.eu/life-science-login/),
+the identity provider of the deployment.
 
 ## Access to services
 
-**As a researcher, I can access a cloud service, which provides access to research data, so that I can perform data analysis on the research data.** LS Login allows researchers to authenticate using their home institute credentials. Service providers must register the service with LS Login and, if necessary, authorize researchers or groups of researchers to use the service. Technically, the user navigates through the service's GUI to a login page. The service redirects the user to the LS Login page, where the user logs in with the personal credentials of their respective identity provider. LS Login checks whether the user has access rights to the service through group memberships or specific user roles/affiliations. If successful, the user gets redirected back to the service and the service receives the user information from LS Login.
+### Researcher: Access a service
 
-**As a service provider, I can register my service, so that external researchers can authenticate and access the service and work with research data.** For using LS Login, a service provider needs to register their service as a Relying Party (RP) at LS Login. There are instructions on how to connect a service available ([How to connect a service to the LifeScience AAI](https://docs.google.com/document/d/17pNXM_psYOP5rWF302ObAJACsfYnEWhjvxAHzcjvfIE/edit?tab=t.0#heading=h.suudoy1bqtvm)). Once registered, service providers need to configure their service for using LS Login as a feature for authentication. See the following tutorials for configuring specific service:
-* [Using LS-Login in JupyterHub](https://elixir-hedgedoc.rahtiapp.fi/2O8p9sIhTVmvbd3YEUYrdg?both)
-* [Using LS-Login in Hedgedoc](https://elixir-hedgedoc.rahtiapp.fi/2O8p9sIhTVmvbd3YEUYrdg?both)
+*As a researcher, I can access a cloud service that gives access to research
+data, so that I can analyse the data.*
 
-**As a service provider, I define the modalities for access to my service, so that access to my service is controlled to a set of specific users.** These modalities can include membership to a user group or a specific user role/affiliation. LS-AAI manages all user group assignments and access modalities for services based on group memberships. There is tutorial provided by LS-Login for [managing access to the relying parties](https://docs.google.com/document/d/1L9paVp6hAc2iJ_LRD866LPTfBFTo_AVfFxrvtbfQyJU/edit?tab=t.0#heading=h.yh1d0bs79mo2)). In short:
-* In [SPREG](https://services.aai.lifescience-ri.eu/spreg) the service provider needs to activate "Restrict access to the service based on membership in groups"
-* User of the service need to be member of the group. See [Instructions for group managers](https://docs.google.com/document/d/1-qHT4N_iRrMLZmdIYpU9dXqactg61yFKAT0VFFLoK8c/edit?tab=t.0#heading=h.jpxy5yiesyoq).
-* A group can be assigned to a service (facility) in [Perun](https://perun.aai.lifescience-ri.eu/facilities).
+1. The user opens the service and goes to its login page.
+2. The service redirects the user to LS Login.
+3. The user logs in at their own identity provider, for example their
+   institute.
+4. LS Login checks whether the user may access the service, through group
+   memberships or roles.
+5. If so, LS Login redirects the user back to the service and sends the
+   service the user's information.
 
-**As a service provider, I can withdraw access rights, so that users won't be able to access the service anymore.** Access to the service can be restricted again via the respective group memberships. See [Instructions for group managers](https://docs.google.com/document/d/1-qHT4N_iRrMLZmdIYpU9dXqactg61yFKAT0VFFLoK8c/edit?tab=t.0#heading=h.jpxy5yiesyoq).
+### Service provider: Register a service
+
+*As a service provider, I can register my service, so that external
+researchers can log in and use it.*
+
+1. Register the service at LS Login as a relying party (RP). See the [LS Login
+   guide](https://www.lifescience-ri.eu/registering-integrating-and-managing-your-service/)
+   and the [registration tool (SPREG)](https://services.aai.lifescience-ri.eu/spreg).
+2. Configure the service to use LS Login. For examples with JupyterHub and
+   HedgeDoc, see [Using LS Login](../operators/ls-login.md).
+
+### Service provider: Control access
+
+*As a service provider, I can define who may use my service, so that only
+specific users have access.*
+
+LS Login manages groups and decides access from group memberships. See the
+[guide for managing access to a service](https://docs.google.com/document/d/1L9paVp6hAc2iJ_LRD866LPTfBFTo_AVfFxrvtbfQyJU/edit).
+In short:
+
+1. In SPREG, turn on "Restrict access to the service based on membership in
+   groups".
+2. Assign a group to your service as a facility in
+   [Perun](https://perun.aai.lifescience-ri.eu/facilities).
+3. Add users to the group. See the [instructions for group
+   managers](https://docs.google.com/document/d/1-qHT4N_iRrMLZmdIYpU9dXqactg61yFKAT0VFFLoK8c/edit).
+
+### Service provider: Withdraw access
+
+*As a service provider, I can withdraw access, so that a user can no longer
+use the service.*
+
+Remove the user from the group. See the [instructions for group
+managers](https://docs.google.com/document/d/1-qHT4N_iRrMLZmdIYpU9dXqactg61yFKAT0VFFLoK8c/edit).
 
 ## Access to data
 
-**As a researcher, I can identify a relevant sensitive data set, so that I can consider it for analysis in my own research.** A prerequisite for the reuse of data is usually that the data fulfils the FAIR (Findable, Accessible, Interoperable, Reusable) criteria, including the findability of the data in metadatabases. Best practices and guidelines on FAIR criteria and data management are available in the [ELIXIR RDMkit](https://rdmkit.elixir-europe.org/).
+### Researcher: Find a data set
 
-**As a researcher, I can request access to a sensitive data set, so that I can integrate it into my own research activities.** The researcher creates a data access request for a specific data set via an access management system. An example of an access management system is [REMS](https://github.com/CSCfi/rems) from CSC Finland. 
+*As a researcher, I can find a relevant sensitive data set, so that I can
+consider it for my research.*
 
-**As a data controller, I can give a researcher access to a specific dataset, so that the researcher can work with the data in accordance with my data usage policies.** The data controllers are responsible for providing access to sensitive data. Regarding sensitive human data, patients have usually specified the purposes for which personal data may be accessed and the controllers must check whether these purposes are fulfilled in the event of a request. For this purpose, GA4GH defines the [Data Use Ontology](https://www.ga4gh.org/product/data-use-ontology-duo/) to standardize both consents and requests. Approved access requests can be stored uniformly via the [GA4GH Passport](https://www.ga4gh.org/product/ga4gh-passports/) specification. Life Science Login acts as a passport broker and can provide user authorizations for the cloud services ([GA4GH passport support in LifeScience AAI](https://docs.google.com/document/d/1QpMgSeDdtPJWujdR9Z93WsTC5I9vyvd4bHjpWcGVnz0/edit?tab=t.0#heading=h.vdrx3flw0u2j)).
+Data can be reused if it is findable, accessible, interoperable and reusable
+(FAIR) and described in a searchable catalogue. The [ELIXIR
+RDMkit](https://rdmkit.elixir-europe.org/) has best practices for FAIR data
+and data management.
+
+### Researcher: Request access
+
+*As a researcher, I can request access to a sensitive data set, so that I can
+use it in my research.*
+
+The researcher files a data access request for the data set in an access
+management system, for example [REMS](https://github.com/CSCfi/rems).
+
+### Data controller: Grant access
+
+*As a data controller, I can give a researcher access to a data set, so that
+the researcher can work with the data under my usage policies.*
+
+The data controller decides on each request. For human data, the data
+subjects usually limit the purposes of use, and the controller checks that a
+request fits them. GA4GH helps with two standards:
+
+- The [Data Use Ontology
+  (DUO)](https://www.ga4gh.org/product/data-use-ontology-duo/) describes
+  consents and requests in a standard way.
+- [GA4GH Passports](https://www.ga4gh.org/product/passports/) store approved
+  access requests in a standard way. LS Login can act as a passport broker,
+  and can give the services the authorisations of a user. See [GA4GH Passport
+  support in the Life Science
+  AAI](https://docs.google.com/document/d/1QpMgSeDdtPJWujdR9Z93WsTC5I9vyvd4bHjpWcGVnz0/edit).
 
 ## Analysis
 
-**As a researcher, I can run a specific data analysis workflow on an external dataset in the cloud, so that I can integrate the results into my research activities.** The GA4GH standardizes the execution of workflows and workflow tasks in the cloud via the specification of the [Workflow Execution Service (WES)](https://www.ga4gh.org/product/workflow-execution-service-wes/) and the [Task Execution Service (TES)](https://www.ga4gh.org/product/task-execution-service-tes/) respectively. The ELIXIR On-Cloud project supports the execution of workflows and tasks by developing tools and providing guidance for researchers ([user guide](../researchers/index.md)). A user can trigger the execution of a workflow via a WES implementation. Once the workflow has been successfully completed, the resulting data can be used by the researcher for further activities.
+### Researcher: Run a workflow on an external data set
+
+*As a researcher, I can run a workflow on an external data set in the cloud,
+so that I can use the results in my research.*
+
+GA4GH standardises the execution of workflows and their tasks with the
+[Workflow Execution Service
+(WES)](https://www.ga4gh.org/product/workflow-execution-service-wes/) and
+the [Task Execution Service
+(TES)](https://www.ga4gh.org/product/task-execution-service-tes/). The user
+sends a workflow to a WES service. When the run is complete, the user can use
+the results. For the services of the deployment, see [Using the
+APIs](apis.md). For a walk-through, see
+[Researchers](../researchers/index.md).

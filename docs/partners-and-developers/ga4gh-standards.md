@@ -1,148 +1,51 @@
-# GA4GH Cloud Workstream
+# GA4GH Standards
 
-The GA4GH (Global Alliance for Genomics and Health) cloud [APIs][ga4gh-cloud]
-are a set of standard APIs that provide a common interface for accessing
-genomic data and tools across different cloud providers. These APIs are
-essential for enabling genomic data sharing and collaboration, and they have
-been adopted by major cloud providers such as Google Cloud Platform, Microsoft
-Azure, and Amazon Web Services. In this documentation, we'll cover four main
-GA4GH APIs that you'll be using: the Workflow Execution Service
-([WES][ga4gh-wes]), the Task Execution Service ([TES][ga4gh-tes]), the Data
-Repository Service ([DRS][ga4gh-drs]), and the Tool Registry Service
-([TRS][ga4gh-trs]). The WES API allows you to define and execute workflows,
-while the TES API allows you to execute individual tasks within those
-workflows. The DRS API provides a way to access and download genomic data, and
-the TRS API enables the discovery of genomic analysis tools.
+ELIXIR On-Cloud is a [Driver Project][ga4gh-dps] of the [GA4GH][ga4gh]. Its
+services implement the APIs of the [GA4GH Cloud Workstream][ga4gh-cloud-ws].
+This page lists them, the versions that the stack implements and the workflow
+engines that can use them. The specifications define what each API does: read
+them, not this page, for the details.
 
-Whether you are a bioinformatician or a data scientist, this site will
-provide you with all the information you need to start using ELIXIR's GA4GH
-cloud services ecosystem and harness the power of cloud computing for your
-genomic data analysis needs. Let's get started!
+## APIs and versions
 
-## Task Execution Service (TES)
+| API | Current version | In the stack | Docs |
+| --- | --- | --- | --- |
+| [TES][ga4gh-tes], for tasks | [1.1](https://ga4gh.github.io/task-execution-schemas/) | proTES (1.0), [TESK][tesk] and [Funnel][funnel] | [proTES](https://protes.readthedocs.io/en/latest/), [TESK](https://tesk.readthedocs.io/en/latest/) |
+| [WES][ga4gh-wes], for workflows | [1.1.0](https://ga4gh.github.io/workflow-execution-service-schemas/) | [proWES](https://github.com/elixir-cloud-aai/proWES) (1.0.1), [CWL-WES](https://github.com/elixir-cloud-aai/cwl-WES) (1.0.0) | see the READMEs |
+| [DRS][ga4gh-drs], for data | [1.5.0](https://ga4gh.github.io/data-repository-service-schemas/) | [DRS-Filer](https://github.com/elixir-cloud-aai/drs-filer) (1.1.0) | see the README |
+| [TRS][ga4gh-trs], for tools and workflows | [2.0.1](https://ga4gh.github.io/tool-registry-service-schemas/) | [TRS-Filer](https://github.com/elixir-cloud-aai/trs-filer) (2.0.1) | [TRS-Filer](https://trs-filer.readthedocs.io/en/latest/) |
+| [Service Registry][ga4gh-service-registry], for finding services | [1.0.0](https://github.com/ga4gh-discovery/ga4gh-service-registry) | [Cloud Registry](https://github.com/elixir-cloud-aai/cloud-registry) (1.0.0) | [Cloud Registry](https://cloud-registry.readthedocs.io/en/latest/) |
 
-The GA4GH [TES][ga4gh-tes] specification is a standard interface that enables
-interoperability between workflow management systems and execution engines. The
-TES specification provides a uniform way to submit and monitor tasks to any
-execution engine that implements the specification, allowing users to easily
-switch between workflow management systems or execution engines without
-rewriting their workflows. Typical use cases are
+The versions in brackets are the versions of the specification that each
+product implements, as of November 2026. Check the product's docs for the
+current state. Some products deviate from the specification in details: the
+docs of the product list the deviations (for example, see the [Cloud Registry
+API](https://cloud-registry.readthedocs.io/en/latest/api/#deviations-from-the-ga4gh-specification)).
 
-- Scenario 1: A researcher wants to run a workflow locally. The workflow
-  contains some resource-intensive steps, such as requirements for GPUs or many
-  cores. Using TES as a backend, the researcher can execute the workflow
-  locally and also send the resource-intensive tasks to cloud servers for
-  execution.
-- Scenario 2: A researcher wants to run a workflow that involves processing
-  data that is stored in cloud locations. Using TES would allow individual
-  tasks to be sent to the compute locations associated with each storage
-  location. This may be relevant if the data provider does not allow files to
-  be downloaded to a central location or if it is not technically feasible.
+!!! note "Do your clients support a newer version?"
+    Several products implement an older version than the current one. Send
+    requests that the version in the table accepts, and read the service
+    info of a service (`GET /service-info`) to see what it reports.
 
-The TES specification defines a HTTP API for submitting and monitoring tasks
-that includes endpoints for creating, querying, updating, and canceling tasks.
-Tasks are defined as JSON objects that include input and output files, a
-command to execute, and any environment variables or resources required by the
-task. The TES specification also includes mechanisms for handling task
-dependencies and retrying failed tasks. Popular TES implementations are
-[Funnel][funnel] and [TESK][tesk].
+## Run workflows through TES
 
-Several popular workflow management systems, including [cwl-tes][cwl-tes],
-[Snakemake][snakemake] and [Nextflow][nextflow], have implemented the TES
-specification, allowing users to easily run their workflows on any execution
-engine that supports TES.
+Workflow engines can send their tasks to a TES service instead of running
+them on the local machine. This helps if a workflow has steps that need a
+GPU or many cores, or if the data must stay at the site where it is stored.
 
-### Snakemake
+1. Choose a TES service: see [Using the APIs](apis.md).
+2. Get an access token: see [Using the APIs](apis.md#2-get-an-access-token).
+3. Configure your workflow engine to use the TES service and the token.
 
-Snakemake supports TES v1.0 since version 5.28.0, as described in the
-[Snakemake documentation][snakemake-docs]. Snakemake executes individual tasks
-as separate workflows that execute only one or a few rules. When using TES, it
-is recommended to use additional remote storage to store input and output
-files. By default, Snakemake TES tasks are executed using the official
-Snakemake container image in the same version as the original Snakemake call.
-To use specific tools, conda environments should be appended to the rules. A
-demo workflow is available
-[here][elixir-cloud-demo-smk].
+The engines below support TES. Each one's docs describe the configuration.
 
-### CWL-tes
+- **Snakemake** uses the [TES executor
+  plugin](https://github.com/snakemake/snakemake-executor-plugin-tes). A
+  [demo workflow][elixir-cloud-demo-smk] is available.
+- **Nextflow** uses the [`nf-ga4gh`
+  plugin](https://github.com/nextflow-io/nf-ga4gh). Set `plugins { id
+  'nf-ga4gh' }` and `process.executor = 'tes'` in `nextflow.config`.
+- **cwl-tes** runs CWL workflows with a TES backend: see [cwl-tes][cwl-tes].
+  A [demo workflow][elixir-cloud-demo-cwl] is available.
 
-A demo workflow is available [here][elixir-cloud-demo-cwl].
-
-### Nextflow
-
-You can find an article about NextFlow with GA4GH TES [here](https://techcommunity.microsoft.com/blog/healthcareandlifesciencesblog/introducing-nextflow-with-ga4gh-tes-a-new-era-of-scalable-data-processing-on-azu/4253160)
-
-To use TES in your Nextflow config, use the plugin `nf-ga4gh`:
-
-```
-plugins {
-  id 'nf-ga4gh'
-}
-```
-
-## Workflow Execution Service (WES)
-
-The GA4GH [WES][ga4gh-wes] is a standard specification protocol for executing
-and monitoring bioinformatics workflows. It allows researchers to easily
-execute and manage complex analysis pipelines across multiple computing
-platforms and institutions. The WES specification provides a unified API for
-describing workflow inputs and outputs, monitoring job status and progress, and
-managing data transfers. With this specification, users can build scalable,
-reproducible, and interoperable genomics workflows, enabling collaboration
-across institutions and improving data sharing. Two use cases for the GA4GH WES
-specification are:
-
-- Scenario 1: A researcher wants to analyze a large dataset of genomic data
-  using a specific analysis pipeline. With the WES specification, the
-  researcher can easily define the inputs and parameters for the pipeline,
-  select a computing platform that meets their requirements, and submit the job
-  for execution. They can then monitor the progress of the job and receive
-  notifications when the job is complete. This allows the researcher to focus
-  on analyzing the results rather than managing the underlying infrastructure.
-
-- Scenario 2: A clinical laboratory needs to process patient samples for
-  genetic testing. The laboratory can use the WES specification to define the
-  analysis pipeline and integrate it with its LIMS. This allows the laboratory
-  to automate the processing of samples, reducing errors and turnaround time.
-
-## Data Repository Service (DRS)
-
-The GA4GH [DRS][ga4gh-drs] API provides a standard set of data retrieval methods
-to access genomic and related health data across different repositories.
-It allows researchers to simplify and standardize data retrieval in cloud-based
-environments. Some key features like Standardized data access that offers a consistent
-API for retrieving datasets. Cloud-agnostic means that it works across different
-cloud infrastructures. Two use cases for the GA4GH DRS:
-
-- Scenario 1: A researcher wants to run an analysis pipeline on a dataset without
-  worrying about where the data physically resides. The researcher uses a DRS ID
-  to request the dataset. DRS resolves the ID to the actual storage location and
-  provides signed URLs or access tokens and the pipeline retrieves the data
-  seamlessly, regardless of the underlying cloud or storage system.
-
-- Scenario 2: A pharmaceutical company is collaborating with hospitals to analyze
-  patient genomic data. Due to privacy regulations, raw data cannot be moved outside
-  the hospital’s secure environment. The hospital can expose their datasets via DRS
-  endpointsand the pharmaceutical company's workflow engine queries DRS to get metadata.
-  Finally, the analysis is performed without violating data residency rules.
-
-## Tool Registry Service (TRS)
-
-The GA4GH [TRS][ga4gh-trs] API provides a standard mechanism to list, search and
-register tools and workflows across different platforms and cloud environments.
-It supports workflows written in CWL, WDL, Nextflow, Galaxy, Snakemake.
-Here are examples of two use cases:
-
-- Scenario 1: A bioinformatics researcher develops a workflow for variant calling
-  using WDL and Docker containers. They want to share it with collaborators who use
-  different platform. TRS can help, the researcher registers the workflow in a 
-  TRS-compliant registry like Dockstore. The collaborators can discover the workflow
-  via TRS API and run it on their platform.
-  TRS will ensure that metadata, versioning, and container are standardized and
-  accessible
-
-- Scenario 2: A hospital’s genomics lab uses an automated pipeline to analyze patient
-  exome data for rare disease diagnosis. The pipeline queries a TRS registry to find
-  the latest version of tools (like VEP or GATK), retrieves the workflow descriptor
-  and container images. Finally, the pipeline executes the tools in a secure,
-  compliant environment.
+For the researcher's view, see [Researchers](../researchers/index.md).
