@@ -37,7 +37,8 @@ To deploy JupyterHub in the de.NBI Cloud, see this
 hub:
   config:
     Authenticator:
-      allow_all: true
+      allowed_users: # Only these LS Login users can log in
+        - USER
       admin_users:
         - ADMIN # A user name that is an admin
     GenericOAuthenticator:
@@ -59,6 +60,10 @@ hub:
 cull:
   enabled: false
 ```
+
+`allow_all: true` would let every LS Login user in. Keep the list of allowed
+users instead. Do not put the client secret into a values file that you
+commit: pass it at deploy time, for example from a secret store.
 
 ## HedgeDoc
 

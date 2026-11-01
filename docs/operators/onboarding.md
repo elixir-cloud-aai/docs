@@ -7,7 +7,7 @@ Registry][elixir-cloud-registry].
 
 You need:
 
-- a Kubernetes cluster, or an HPC or HTC cluster (Slurm or OpenPBS)
+- a Kubernetes cluster, or an HPC or HTC cluster with Slurm
 - an LS Login account (see [LS Login](ls-login.md))
 - an HTTPS host name for your TES service
 
@@ -52,7 +52,9 @@ Other S3 and FTP servers may work, but nobody has tested them.
 ### vsftpd (FTP)
 
 1. Deploy [vsftpd][vsftpd], for example with [this guide][vsftpd-deploy].
-2. Turn on secure FTP: set `ssl_enable=YES`.
+2. Require secure FTP: set `ssl_enable=YES`, `force_local_logins_ssl=YES`
+   and `force_local_data_ssl=YES`. Clients must then connect with FTP over
+   TLS (FTPS).
 3. Create one account for the federation. Write to
    [cloud-service@elixir-europe.org][elixir-on-cloud-email] for the user name
    and password to use.

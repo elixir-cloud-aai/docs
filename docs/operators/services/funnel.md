@@ -16,11 +16,9 @@ deploy it, register it in the [Cloud Registry][elixir-cloud-registry] (see
 
 ## Notes for the deployment
 
-- The ELIXIR On-Cloud has tested Funnel with Slurm.
+- The ELIXIR On-Cloud documents Funnel with Slurm only. For other
+  backends, see the Funnel docs.
 - Place the `funnel` binary on a server that has access to Slurm.
 - Put the config file on the same server. [This file][funnel-config-slurm]
   is a starting point.
 - If everything works, Funnel listens on port `8080`.
-
-!!! warning "Under construction"
-    The notes for OpenPBS are missing.
