@@ -457,7 +457,7 @@ curl http://localhost:8000/v1/tasks/<task-id>
 
 ## Additional Resources
 
-- [Funnel Documentation](https://ohsu-comp-bio.github.io/funnel/)
+- [Funnel Documentation](https://github.com/calypr/funnel)
 - [proTES Documentation](https://github.com/elixir-cloud-aai/proTES)
 - [Crypt4GH Specification](https://crypt4gh.readthedocs.io/)
 - [GA4GH TES API](https://github.com/ga4gh/task-execution-schemas)
