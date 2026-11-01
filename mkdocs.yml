@@ -86,7 +86,7 @@ markdown_extensions:
       permalink: true
 nav:
   - Home: "index.md"
-  - Node operators:
+  - Node Operators:
     - "operators/index.md"
     - "Onboarding": "operators/onboarding.md"
     - "Cloud Registry": "operators/cloud-registry.md"
@@ -95,15 +95,16 @@ nav:
       - "CWL-WES": "operators/services/cwlwes.md"
       - "DRS-Filer": "operators/services/drsfiler.md"
       - "Funnel": "operators/services/funnel.md"
+      - "Poiesis": "operators/services/poiesis.md"
       - "proTES": "operators/services/protes.md"
       - "proWES": "operators/services/prowes.md"
       - "TESK": "operators/services/tesk.md"
       - "TRS-Filer": "operators/services/trsfiler.md"
-  - Partners and developers:
+  - Partners and Developers:
     - "partners-and-developers/index.md"
-    - "GA4GH standards": "partners-and-developers/ga4gh-standards.md"
-    - "Sensitive data": "partners-and-developers/sensitive-data.md"
-    - "User stories": "partners-and-developers/user-stories.md"
+    - "GA4GH Standards": "partners-and-developers/ga4gh-standards.md"
+    - "Sensitive Data": "partners-and-developers/sensitive-data.md"
+    - "User Stories": "partners-and-developers/user-stories.md"
   - Researchers:
     - "researchers/index.md"
     - "SPE with WESkit": "researchers/spe-with-weskit.md"

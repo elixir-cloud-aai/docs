@@ -24,14 +24,14 @@ Welcome to the documentation of [ELIXIR On-Cloud][elixir-on-cloud], a
 
 Choose the section that fits you:
 
-=== ":material-database: Node operators"
+=== ":material-database: Node Operators"
 
     You run services at an ELIXIR Node or want to join the federation.
 
     [:octicons-arrow-right-24: Start
     here](operators/index.md){ .md-button }
 
-=== ":material-puzzle: Partners and developers"
+=== ":material-puzzle: Partners and Developers"
 
     You want to integrate the deployment or its components with your own
     solutions.

@@ -1,4 +1,4 @@
-# Partners and developers: start here
+# Partners and Developers: start here
 
 This section is for people who want to integrate the ELIXIR On-Cloud
 deployment or its components with their own solutions.
@@ -13,9 +13,6 @@ deployment or its components with their own solutions.
   secure environments.
 - [User stories](user-stories.md): common journeys for access to services
   and data and for running analyses.
-- [Poiesis](https://github.com/JaeAeich/poiesis): a TES implementation for
-  Kubernetes, next to [TESK](../operators/services/tesk.md) and
-  [Funnel](../operators/services/funnel.md).
 - The services of the deployment, registered in the [Cloud
   Registry][elixir-cloud-registry].
 - How to contribute: see [Contributing](https://github.com/elixir-cloud-aai/.github/blob/main/CONTRIBUTING.md).
