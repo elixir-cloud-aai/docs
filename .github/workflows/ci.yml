@@ -8,8 +8,10 @@ name: CI
 on:
   push:
     branches: [main]
+  # `edited` reruns the title check when the title changes
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened, edited]
 
 permissions:
   contents: read
