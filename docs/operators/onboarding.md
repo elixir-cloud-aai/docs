@@ -1,6 +1,6 @@
 # Administrator guide
 
-Welcome to the systems administrator guide to the [ELIXIR Cloud][elixir-cloud].
+Welcome to the systems administrator guide to the [ELIXIR On-Cloud][elixir-cloud].
 Whether you would like to onboard your data or compute center, set up your own
 [GA4GH][ga4gh]-based cloud or simply play around with our compute and storage
 solutions, this is the right place to get you off the ground.
@@ -65,18 +65,18 @@ docker-compose down
 Follow the instructions below to onboard your compute node with the [ELIXIR
 Cloud][elixir-cloud]. Afterwards, your compute cluster will be accessible
 through the [GA4GH][ga4gh] Task Execution Service ([TES][ga4gh-tes]) API and,
-optionally, available in the ELIXIR Cloud compute network.
+optionally, available in the ELIXIR On-Cloud compute network.
 
 ### Deploying compute
 
 Depending on whether you have a Native Cloud cluster or an HPC/HTC, you will
-need to follow the instructions for deploying [TESK](tesk.md) or [Funnel](funnel.md)
+need to follow the instructions for deploying [TESK](services/tesk.md) or [Funnel](services/funnel.md)
 respectively.
 
 ### Deploying storage
 
 Follow the instructions to connect your TES endpoint to one or more
-ELIXIR Cloud cloud storage solutions. The currently supported solutions are:
+ELIXIR On-Cloud storage solutions. The currently supported solutions are:
 
 - [MinIO][minio] (Amazon S3)
 - [vsftpd][vsftpd] (FTP)
@@ -100,13 +100,13 @@ There are a lot of guides available online to deploy [`vsftpd`][vsftpd], for
 example [this one][vsftpd-deploy]. There are only two considerations:
 
 1. It is required to activate secure FTP support with `ssl_enable=YES`.
-2. For onboarding with the ELIXIR Cloud, currently the server should have one
+2. For onboarding with the ELIXIR On-Cloud, currently the server should have one
    account with a specific username and password created. Please [contact
     us][elixir-on-cloud-email] for details.
 
 ### Registering your TES service
 
-Register your TES endpoint in the [ELIXIR Cloud
+Register your TES endpoint in the [Cloud
 Registry][elixir-cloud-registry]: log in with LS Login and register the
 service; you become its owner and can update it later. Please also let us
 know about your new TES endpoint by [email][elixir-on-cloud-email].

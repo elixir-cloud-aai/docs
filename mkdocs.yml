@@ -3,8 +3,6 @@ copyright: >
   <a href="#__consent">Change cookie settings</a>
 edit_uri: edit/main/docs/
 
-# A template for pull requests, linked from the guidelines, not in the navigation
-not_in_nav: contribute/PULL_REQUEST_TEMPLATE.md
 extra:
   analytics:
     feedback:
@@ -88,45 +86,65 @@ markdown_extensions:
       permalink: true
 nav:
   - Home: "index.md"
-  - General:
-    - "general/index.md"
-    - "GA4GH Cloud Workstream": "general/ga4gh_cloud.md"
-    - "Sensitive Data": "general/sensitive_data.md"
-    - "User stories": "general/user_stories.md"
-  - Sandbox:
-    - "sandbox/index.md"
-  - Services:
-    - "services/index.md"
-    - "Cloud-Registry": "services/cloudregistry.md"
-    - "CWL-WES": "services/cwlwes.md"
-    - "DRS-Filer": "services/drsfiler.md"
-    - "Funnel": "services/funnel.md"
-    - "LS Login": "services/services_to_ls_aai.md"
-    - "proWES": "services/prowes.md"
-    - "proTES": "services/protes.md"
-    - "TESK" : "services/tesk.md"
-    - "TRS-Filer": "services/trsfiler.md"
-  - Tutorials:
-    - "tutorials/index.md"
-    - "SPE based on WES": "tutorials/sensitive_data_analysis.md"
-    - "Crypt4GH with proTES": "tutorials/crypt4gh_to_protes.md"
-  - Contribute:
-    - "contribute/index.md"
-    - "Workflow": "contribute/workflow.md"
-    - "General guidelines": "contribute/general-guidelines.md"
-    - "Managing projects": "contribute/managing-projects.md"
-    - Language-specific guidelines:
-      - "contribute/language-specific/index.md"
-      - "Python": "contribute/language-specific/python.md"
-  - About:
-      - "Contact": "about/contact.md"
-      - "License": "about/license.md"
-      - "Code of Conduct": "about/code-of-conduct.md"
-      - "Release Notes": "about/release-notes.md"
+  - Node operators:
+    - "operators/index.md"
+    - "Onboarding": "operators/onboarding.md"
+    - "Cloud Registry": "operators/cloud-registry.md"
+    - "LS Login": "operators/ls-login.md"
+    - Services:
+      - "CWL-WES": "operators/services/cwlwes.md"
+      - "DRS-Filer": "operators/services/drsfiler.md"
+      - "Funnel": "operators/services/funnel.md"
+      - "proTES": "operators/services/protes.md"
+      - "proWES": "operators/services/prowes.md"
+      - "TESK": "operators/services/tesk.md"
+      - "TRS-Filer": "operators/services/trsfiler.md"
+  - Partners and developers:
+    - "partners-and-developers/index.md"
+    - "GA4GH standards": "partners-and-developers/ga4gh-standards.md"
+    - "Sensitive data": "partners-and-developers/sensitive-data.md"
+    - "User stories": "partners-and-developers/user-stories.md"
+  - Researchers:
+    - "researchers/index.md"
+    - "SPE with WESkit": "researchers/spe-with-weskit.md"
+    - "Crypt4GH with proTES": "researchers/crypt4gh-with-protes.md"
+  - About and contributing: "about.md"
 extra_css:
   - stylesheets/extra.css
 plugins:
   - search
+  # Old URLs of moved pages, from the structure before the audience sections
+  - redirects:
+      redirect_maps:
+        general/index.md: partners-and-developers/index.md
+        general/ga4gh_cloud.md: partners-and-developers/ga4gh-standards.md
+        general/sensitive_data.md: partners-and-developers/sensitive-data.md
+        general/user_stories.md: partners-and-developers/user-stories.md
+        sandbox/index.md: researchers/index.md
+        services/index.md: operators/onboarding.md
+        services/cloudregistry.md: operators/cloud-registry.md
+        services/services_to_ls_aai.md: operators/ls-login.md
+        tutorials/index.md: researchers/index.md
+        tutorials/sensitive_data_analysis.md: researchers/spe-with-weskit.md
+        tutorials/crypt4gh_to_protes.md: researchers/crypt4gh-with-protes.md
+        services/cwlwes.md: operators/services/cwlwes.md
+        services/drsfiler.md: operators/services/drsfiler.md
+        services/funnel.md: operators/services/funnel.md
+        services/prowes.md: operators/services/prowes.md
+        services/protes.md: operators/services/protes.md
+        services/tesk.md: operators/services/tesk.md
+        services/trsfiler.md: operators/services/trsfiler.md
+        contribute/index.md: about.md
+        contribute/workflow.md: about.md
+        contribute/general-guidelines.md: about.md
+        contribute/managing-projects.md: about.md
+        contribute/PULL_REQUEST_TEMPLATE.md: about.md
+        contribute/language-specific/index.md: about.md
+        contribute/language-specific/python.md: about.md
+        about/contact.md: about.md
+        about/license.md: about.md
+        about/code-of-conduct.md: about.md
+        about/release-notes.md: about.md
 repo_name: elixir-cloud-aai/elixir-cloud-aai.github.io
 repo_url: https://github.com/elixir-cloud-aai/elixir-cloud-aai.github.io
 site_name: ELIXIR On-Cloud docs

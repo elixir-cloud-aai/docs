@@ -59,6 +59,9 @@ jobs:
           cache-dependency-path: pyproject.toml
       - name: Install dependencies
         run: pip install -e ".[docs]"
+      # Wrong spellings of "ELIXIR On-Cloud", "ELIXIR" and "ELIXIR Europe"
+      - name: Check names
+        run: python scripts/check_names.py
       # Fails on warnings, e.g., of broken links, anchors and references
       - name: Build documentation
         run: mkdocs build --strict
