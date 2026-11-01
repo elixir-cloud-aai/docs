@@ -108,7 +108,7 @@ nav:
     - "researchers/index.md"
     - "SPE with WESkit": "researchers/spe-with-weskit.md"
     - "Crypt4GH with proTES": "researchers/crypt4gh-with-protes.md"
-  - About and contributing: "about.md"
+  - About: "about.md"
 extra_css:
   - stylesheets/extra.css
 plugins:
