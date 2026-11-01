@@ -18,7 +18,7 @@ deployment or its components with their own solutions.
   [Funnel](../operators/services/funnel.md).
 - The services of the deployment, registered in the [Cloud
   Registry][elixir-cloud-registry].
-- How to contribute: see [About and contributing](../about.md).
+- How to contribute: see [Contributing](https://github.com/elixir-cloud-aai/.github/blob/main/CONTRIBUTING.md).
 
 !!! warning "Under construction"
     A guide on integrating with the deployment's APIs and packages is missing
