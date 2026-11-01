@@ -10,8 +10,8 @@
   align-items: center;
   display: flex;
   flex-wrap: wrap;
-  gap: 1.5rem;
-  justify-content: space-between;
+  gap: 2.5rem;
+  justify-content: flex-start;
 }
 
 .hub-banner a {
