@@ -7,7 +7,7 @@ hide:
 
 # Welcome
 
-Welcome to the Documentation Hub for [ELIXIR-on-Cloud][elixir-on-cloud], a
+Welcome to the documentation of [ELIXIR On-Cloud][elixir-on-cloud], a
 [Driver Project][ga4gh-dps] of the [GA4GH][ga4gh].
 
 <div class="hub-banner">
@@ -20,32 +20,31 @@ Welcome to the Documentation Hub for [ELIXIR-on-Cloud][elixir-on-cloud], a
     </a>
 </div>
 
-Whether you are a (potential) user, developer, systems administrator or
-contributor, this is your one-stop shop for documentation around the
-ELIXIR-on-Cloud federated analytics platform and bespoke ELIXIR-on-Cloud
-solutions for your cloud needs.
+--8<-- "includes/scope.md"
 
+Choose the section that fits you:
 
-=== ":fontawesome-solid-user: Users"
+=== ":material-database: Node operators"
 
-    Conveniently run your genomics workflows and compute-intensive tasks in the
-    cloud  
+    You run services at an ELIXIR Node or want to join the federation.
 
-    [:octicons-arrow-right-24: Get
-    started](sandbox/index.md){ .md-button }
+    [:octicons-arrow-right-24: Start
+    here](operators/index.md){ .md-button }
 
-=== ":material-database: Administrators"
+=== ":material-puzzle: Partners and developers"
 
-    Make your data or compute cluster available to users inside or outside of
-    your organization and outscale peak performance needs to the cloud
-      
-    [:octicons-arrow-right-24: Get
-    started](services/index.md){ .md-button }
+    You want to integrate the deployment or its components with your own
+    solutions.
 
-=== ":material-hand-heart: Contributors"
+    [:octicons-arrow-right-24: Start
+    here](partners-and-developers/index.md){ .md-button }
 
-    Contribute to the development of GA4GH-powered federated analytics
-    infrastructure
-      
-    [:octicons-arrow-right-24: Get
-    started](contribute/index.md){ .md-button }
+=== ":fontawesome-solid-user: Researchers"
+
+    You want to try the federated analytics blueprint.
+
+    [:octicons-arrow-right-24: Start
+    here](researchers/index.md){ .md-button }
+
+Questions, contributing, funding, license and contact: see [About and
+contributing](about.md).

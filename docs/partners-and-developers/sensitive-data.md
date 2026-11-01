@@ -3,7 +3,7 @@
 Processing sensitive human data is fundamental to biomedical research, enabling breakthroughs in disease understanding, biomarker discovery, and treatment development.
 Rapid and secure access to such data accelerates research but also introduces significant responsibilities for data protection and privacy.
 Cloud-based services are increasingly used in biomedical research to connect researchers, data, and tools throughout the data lifecycle.
-This page summarizes scenarios and requirements for handling sensitive data within the ELIXIR-on-Cloud framework.
+This page summarizes scenarios and requirements for handling sensitive data within the ELIXIR On-Cloud framework.
 
 ## Legal Frameworks
 

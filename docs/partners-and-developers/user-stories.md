@@ -1,6 +1,6 @@
 # User Stories
 
-With the elixir cloud activities, we support the development of cloud services to provide access to data and compute for researchers. Thereby we have various user stories in mind, which are listed below to guide researchers as well as service/data provider.
+With the ELIXIR On-Cloud activities, we support the development of cloud services to provide access to data and compute for researchers. Thereby we have various user stories in mind, which are listed below to guide researchers as well as service/data provider.
 
 ## Access to services
 
@@ -27,4 +27,4 @@ With the elixir cloud activities, we support the development of cloud services t
 
 ## Analysis
 
-**As a researcher, I can run a specific data analysis workflow on an external dataset in the cloud, so that I can integrate the results into my research activities.** The GA4GH standardizes the execution of workflows and workflow tasks in the cloud via the specification of the [Workflow Execution Service (WES)](https://www.ga4gh.org/product/workflow-execution-service-wes/) and the [Task Execution Service (TES)](https://www.ga4gh.org/product/task-execution-service-tes/) respectively. The ELIXIR-on-cloud project supports the execution of workflows and tasks by developing tools and providing guidance for researchers ([user guide](../sandbox/index.md)). A user can trigger the execution of a workflow via a WES implementation. Once the workflow has been successfully completed, the resulting data can be used by the researcher for further activities.
+**As a researcher, I can run a specific data analysis workflow on an external dataset in the cloud, so that I can integrate the results into my research activities.** The GA4GH standardizes the execution of workflows and workflow tasks in the cloud via the specification of the [Workflow Execution Service (WES)](https://www.ga4gh.org/product/workflow-execution-service-wes/) and the [Task Execution Service (TES)](https://www.ga4gh.org/product/task-execution-service-tes/) respectively. The ELIXIR On-Cloud project supports the execution of workflows and tasks by developing tools and providing guidance for researchers ([user guide](../researchers/index.md)). A user can trigger the execution of a workflow via a WES implementation. Once the workflow has been successfully completed, the resulting data can be used by the researcher for further activities.

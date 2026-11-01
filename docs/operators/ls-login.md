@@ -59,7 +59,7 @@ Once Hedgedoc is deployed, in order to add LS-AAI login one just needs to add th
 - name: CMD_OAUTH2_CLIENT_SECRET
   value: _REPLACE BY CLIENT SECRET_
 - name: CMD_OAUTH2_PROVIDERNAME
-  value: ELIXIR-on-Cloud
+  value: ELIXIR On-Cloud
 - name: CMD_OAUTH2_SCOPE
   value: openid email profile
 ```

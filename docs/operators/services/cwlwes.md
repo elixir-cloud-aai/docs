@@ -5,7 +5,7 @@ Health][ga4gh] (GA4GH) [Workflow Execution Service][ga4gh-wes] (WES)
 API specification for the execution of workflows written in the [Common
 Workflow Language](https://www.commonwl.org/) (CWL).
 
-cwl-WES is a core service of the [ELIXIR-on-Cloud project][elixir-on-cloud-github].
+cwl-WES is a core service of the [ELIXIR On-Cloud project][elixir-on-cloud-github].
 
 ## Description
 
@@ -25,10 +25,10 @@ JSON Web Token-based access tokens, such as those issued by
 MongoDB database.
 
 Note that development is currently in beta stage.
-Further test deployments can be found at the [ELIXIR-on-Cloud's resource
+Further test deployments can be found at the [ELIXIR On-Cloud's resource
 listings](https://github.com/elixir-cloud-aai/elixir-cloud-aai/blob/dev/resources/resources.md).
 
-cwl-WES is developed and maintained by the [ELIXIR-on-Cloud
+cwl-WES is developed and maintained by the [ELIXIR On-Cloud
 project][elixir-cloud], a multinational effort aimed at establishing and
 implementing [FAIR][fair] research in the Life Sciences.
 
