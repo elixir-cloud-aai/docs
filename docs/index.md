@@ -12,11 +12,11 @@ Welcome to the Documentation Hub for [ELIXIR-on-Cloud][elixir-on-cloud], a
 
 <div class="hub-banner">
     <a href="https://elixir-on.cloud/">
-        <img class="only-light" src="images/logo_elixir_on_cloud_lockup.png" alt="ELIXIR On-Cloud logo" width="400"/>
-        <img class="only-dark" src="images/logo_elixir_on_cloud_lockup_night.png" alt="ELIXIR On-Cloud logo" width="400"/>
+        <img class="only-light" src="images/logo_elixir_on_cloud_lockup.png" alt="ELIXIR On-Cloud logo" width="340"/>
+        <img class="only-dark" src="images/logo_elixir_on_cloud_lockup_night.png" alt="ELIXIR On-Cloud logo" width="340"/>
     </a>
     <a href="https://ga4gh.org/">
-        <img src="images/ga4gh_padding.svg" alt="GA4GH logo" width="240"/>
+        <img src="images/ga4gh.svg" alt="GA4GH logo" width="330"/>
     </a>
 </div>
 
