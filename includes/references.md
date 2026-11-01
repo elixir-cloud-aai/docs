@@ -16,8 +16,8 @@
 [docker-compose]: <https://docs.docker.com/compose/>
 [docker-engine]: <https://docs.docker.com/engine/>
 [elixir]: <https://elixir-europe.org/>
-[elixir-cloud]: <https://elixir-cloud.dcc.sib.swiss/>
-[elixir-on-cloud]: <https://elixir-cloud.dcc.sib.swiss/>
+[elixir-cloud]: <https://elixir-on.cloud/>
+[elixir-on-cloud]: <https://elixir-on.cloud/>
 [elixir-on-cloud-contributors]: <https://elixir-cloud.dcc.sib.swiss/contributors>
 [elixir-on-cloud-github]: <https://github.com/elixir-cloud-aai/>
 [elixir-on-cloud-slack]: <https://join.slack.com/t/elixir-cloud/shared_invite/zt-4f6zdhi84-X4YBkJHxhYmVIHJkRfY2JQ>
@@ -32,7 +32,7 @@
 [elixir-cloud-services]: <https://github.com/elixir-cloud-aai/elixir-cloud-aai/blob/dev/resources/resources.md>
 [eur-lex-ehds]: <https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=OJ:L_202500327>
 [fair]: <https://www.go-fair.org/fair-principles/>
-[funnel]: <https://ohsu-comp-bio.github.io/funnel/>
+[funnel]: <https://github.com/calypr/funnel>
 [funnel-config-slurm]: <https://raw.githubusercontent.com/lvarin/test-funnel-slurm/main/funnel_config.yml>
 [funnel-config-slurm-service]: <https://raw.githubusercontent.com/ohsu-comp-bio/funnel/52ef90fb76e620226f2af1bca5d14d35e1c4ad4a/deployments/systemd/funnel-server.service>
 [ga4gh]: <https://ga4gh.org/>
@@ -82,7 +82,7 @@
 [gsoc-timeline]: <https://developers.google.com/open-source/gsoc/timeline>
 [helm]: <https://helm.sh/>
 [helm-install]: <https://helm.sh/docs/intro/install/>
-[issue-tracker-example]: <https://github.com/elixir-cloud-aai/elixir-cloud-aai.github.io/issues>
+[issue-tracker-example]: <https://github.com/elixir-cloud-aai/docs/issues>
 [jsdoc]: <https://jsdoc.app/index.html>
 [k8s]: <https://kubernetes.io/>
 [k8s-jobs]: <https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion>

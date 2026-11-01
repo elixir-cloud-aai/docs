@@ -117,46 +117,13 @@ extra_css:
   - stylesheets/extra.css
 plugins:
   - search
-  # Old URLs of moved pages, from the structure before the audience sections
-  - redirects:
-      redirect_maps:
-        general/index.md: partners-and-developers/index.md
-        general/ga4gh_cloud.md: partners-and-developers/ga4gh-standards.md
-        general/sensitive_data.md: partners-and-developers/sensitive-data.md
-        general/user_stories.md: partners-and-developers/user-stories.md
-        sandbox/index.md: researchers/index.md
-        services/index.md: operators/onboarding.md
-        services/cloudregistry.md: operators/cloud-registry.md
-        services/services_to_ls_aai.md: operators/ls-login.md
-        tutorials/index.md: researchers/index.md
-        tutorials/sensitive_data_analysis.md: researchers/spe-with-weskit.md
-        tutorials/crypt4gh_to_protes.md: researchers/crypt4gh-with-protes.md
-        services/cwlwes.md: operators/services/cwlwes.md
-        services/drsfiler.md: operators/services/drsfiler.md
-        services/funnel.md: operators/services/funnel.md
-        services/prowes.md: operators/services/prowes.md
-        services/protes.md: operators/services/protes.md
-        services/tesk.md: operators/services/tesk.md
-        services/trsfiler.md: operators/services/trsfiler.md
-        contribute/index.md: about.md
-        contribute/workflow.md: about.md
-        contribute/general-guidelines.md: about.md
-        contribute/managing-projects.md: about.md
-        contribute/PULL_REQUEST_TEMPLATE.md: about.md
-        contribute/language-specific/index.md: about.md
-        contribute/language-specific/python.md: about.md
-        about/contact.md: about.md
-        about/license.md: about.md
-        about/code-of-conduct.md: about.md
-        about/release-notes.md: about.md
-repo_name: elixir-cloud-aai/elixir-cloud-aai.github.io
-repo_url: https://github.com/elixir-cloud-aai/elixir-cloud-aai.github.io
+repo_name: elixir-cloud-aai/docs
+repo_url: https://github.com/elixir-cloud-aai/docs
 site_name: ELIXIR On-Cloud docs
 site_description: >-
   Documentation of the ELIXIR On-Cloud federated deployment
-# Read the Docs serves each version under its own path (e.g., `/en/latest/`);
-# until the switch to docs.elixir-on.cloud, GitHub Pages serves the site
-site_url: !ENV [READTHEDOCS_CANONICAL_URL, "https://elixir-cloud-aai.github.io/"]
+# Read the Docs sets `READTHEDOCS_CANONICAL_URL` (the site's own URL)
+site_url: !ENV [READTHEDOCS_CANONICAL_URL, "https://docs.elixir-on.cloud/"]
 theme:
   custom_dir: overrides
   # The favicon follows the colour scheme of the browser (see the file). The

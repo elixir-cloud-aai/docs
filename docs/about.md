@@ -22,4 +22,4 @@ do not drift apart.
 
 The content on this documentation hub is licensed under [Creative Commons
 Zero, version
-1.0](https://github.com/elixir-cloud-aai/elixir-cloud-aai.github.io/blob/main/LICENSE).
+1.0](https://github.com/elixir-cloud-aai/docs/blob/main/LICENSE).
