@@ -1,4 +1,4 @@
-# Node operators: start here
+# Node Operators: start here
 
 This section is for admins of ELIXIR Nodes who run services at their Node or
 want to join the ELIXIR On-Cloud federation.
