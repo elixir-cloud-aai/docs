@@ -842,7 +842,11 @@ the registry sets `opt_in_roles: []`.
 - **Until the UI has releases:** build from a commit of `ai-post-deploy`
   that you record (e.g., in the infrastructure repository, next to the
   Deployment), as in [Building the image](#building-the-image), so that
-  you can build the same image again and know what runs.
+  you can build the same image again and know what runs. A tag in your
+  own registry can be overwritten by anyone with write access to it, so
+  record the digest of the pushed image as well, and deploy that
+  (`<registry>/cloud-registry-ui@sha256:<digest>`, from the push output
+  or `docker buildx imagetools inspect`).
 - **Once the UI has releases:** deploy the signed release image of the
   version that goes with the registry
   (`elixircloud/cloud-registry-ui:<version>`), pinned by its digest
@@ -1011,8 +1015,9 @@ spec:
         runAsGroup: 1000
       containers:
       - name: cloud-registry-ui
-        # The recorded build (see "UI version"); for releases, pin the digest
-        image: <registry>/cloud-registry-ui:<commit>
+        # Always pin the digest (see "UI version"): the recorded build until
+        # the UI has releases, the signed release image afterwards
+        image: <registry>/cloud-registry-ui@sha256:<digest>
         ports:
         - name: http
           containerPort: 3000
@@ -1229,7 +1234,7 @@ spec:
                 drop: [ALL]
             volumeMounts:
             - {name: backup, mountPath: /backup}
-            - {name: tmp, mountPath: /tmp}
+            - {name: dump-tmp, mountPath: /tmp}
           containers:
           - name: upload
             image: docker.io/rclone/rclone:<version>
@@ -1251,10 +1256,13 @@ spec:
                 drop: [ALL]
             volumeMounts:
             - {name: backup, mountPath: /backup}
-            - {name: tmp, mountPath: /tmp}
+            - {name: upload-tmp, mountPath: /tmp}
           volumes:
           - {name: backup, emptyDir: {}}
-          - {name: tmp, emptyDir: {}}
+          # Separate scratch volumes: the uploader must not see the dump
+          # container's password file
+          - {name: dump-tmp, emptyDir: {}}
+          - {name: upload-tmp, emptyDir: {}}
 ---
 # MongoDB's NetworkPolicy lets only the app's pods connect: allow the job
 apiVersion: networking.k8s.io/v1
