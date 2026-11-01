@@ -25,6 +25,15 @@ deployment:
     then update the version in the links and commands of this page (the
     chart URL and the links to the documentation).
 
+!!! warning "Settings marked *from 1.0.0rc1*"
+    A few recommended settings (the limit of [services per
+    user](#services-per-user) and the [invitations](#invitations)) exist
+    only from Cloud Registry 1.0.0rc1, which is not released yet. Leave
+    them out of the values file for 0.6.0: it checks `config.custom`
+    strictly and refuses to start with keys that it doesn't know (the chart
+    renders them without complaint, so the new pods crash on startup). Add
+    them in the upgrade to 1.0.0rc1.
+
 For anything this page doesn't answer, write to
 [cloud-service@elixir-europe.org][elixir-on-cloud-email].
 
@@ -183,12 +192,13 @@ deployment:
    drop it (see [From 0.4.0][cr-upgrading-0.4.0-to-0.5.0]).
 3. Tell the operators of clients that the registry sets the timestamps of
    services now (see [Timestamps][cr-timestamps]).
-4. Set up rate limits at the ingress, if there are none yet (see [Service
-   types](#service-types)).
+4. Set up rate limits at the ingress, if there are none yet (see [Rate
+   limits](#rate-limits)).
 5. Upgrade with the chart of v0.5.0 (see [Upgrades](#upgrades), with
    `v0.5.0` and `0.5.0` in the chart URL; leave out
    `config.security.access_control.opt_in_roles`, which 0.5.0 doesn't
-   know), then restart the app once, so that it stores the types of the
+   know, and the settings marked *from 1.0.0rc1*), then
+   restart the app once, so that it stores the types of the
    services that pods of 0.4.0 registered during the rollout (the app also
    creates its new indexes and marks pending services on startup; nothing
    to do for them):
@@ -201,20 +211,48 @@ deployment:
 6. Then upgrade to 0.6.0 as in [Upgrading from
    0.5.0](#upgrading-from-050), which also covers the front end.
 
-Switch the service types to the mode `moderated` (see [Service
-types](#service-types)) only after the restart, in a later upgrade.
+The mode `controlled` of the values file below (see [Service
+types](#service-types)) exists from 0.5.0, so it can stay in the upgrade to
+0.5.0. Only the mode `moderated` must wait until after the restart, as
+pods of 0.4.0 store no types.
 
 ## Version
 
-Install the chart attached to the release, by its versioned URL, and set
+Install the chart attached to the release (downloaded by its versioned URL
+and verified, see below), and set
 neither `cloudRegistry.tag` nor a tag in `cloudRegistry.image`: the chart
 then deploys the image of its release (see [Image][cr-image] and
 [Installation][cr-installation]). Don't deploy the moving image tags `latest`
 or `dev`, nor the chart from the repository's `deployment` folder (which
 deploys `dev`): a restart of a pod could then start another version than the
-one the config was written for. Optionally, [verify the image and the
-chart][cr-verifying] before installing. The development docs explain this
-for all deployments now (see [Image][cr-latest-image]).
+one the config was written for. The development docs explain this for all
+deployments now (see [Image][cr-latest-image]).
+
+### Verifying the chart and the image
+
+**Verify the signatures of the chart and the image before every install and
+upgrade**, and install the chart file that you verified (see [Verifying
+images and charts][cr-verifying]). The registry holds the URLs to which
+clients send their users' access tokens, so a tampered chart or image would
+expose them; the checks prove that both were built by the release workflow
+of the Cloud Registry repository for the release tag. With the [GitHub
+CLI][gh-cli] (or the `cosign` commands of the linked section), for 0.6.0:
+
+```bash
+gh release download v0.6.0 --repo elixir-cloud-aai/cloud-registry \
+  --pattern 'cloud-registry-0.6.0.tgz*'
+gh attestation verify cloud-registry-0.6.0.tgz \
+  --repo elixir-cloud-aai/cloud-registry \
+  --signer-workflow elixir-cloud-aai/cloud-registry/.github/workflows/release.yml \
+  --source-ref refs/tags/v0.6.0
+gh attestation verify oci://docker.io/elixircloud/cloud-registry:0.6.0 \
+  --repo elixir-cloud-aai/cloud-registry \
+  --signer-workflow elixir-cloud-aai/cloud-registry/.github/workflows/release.yml \
+  --source-ref refs/tags/v0.6.0
+```
+
+Don't install if a check fails. `--source-ref` checks that the workflow ran
+for the release tag, not for another branch.
 
 ### MongoDB and the nodes' kernels
 
@@ -242,7 +280,7 @@ and claims are listed in its [discovery document][ls-login-discovery].
 | Setting | Value | Why |
 |---|---|---|
 | `config.security.auth.issuers` | `["https://login.aai.lifescience-ri.eu/oidc/"]` | the `iss` claim of LS Login tokens (with the trailing slash) |
-| `config.security.auth.audience` | the client IDs of the front ends (see [Audience](#audience)) | LS Login sets `aud` to the client that the user logged in with |
+| `config.security.auth.audience` | the client IDs of all front ends, one client each (see [Audience](#audience)) | LS Login sets `aud` to the client that the user logged in with |
 | `config.security.auth.userinfo_claims` | `["eduperson_entitlement", "name"]` | LS Login releases groups and names via its user info endpoint, not in access tokens |
 | `config.security.access_control.claim_groups` | `eduperson_entitlement` | the claim with the user's group memberships |
 | `config.security.access_control.group_mapping` | the admin group mapped to `admin` (see [Admins](#admins)) | required: the app refuses to start without admins |
@@ -270,6 +308,22 @@ any other front end (e.g., a preview deployment) or client for scripts that
 should be able to register services. Without the front end's client ID,
 logging in works, but every create, update and delete fails with
 `401 Unauthorized`.
+
+**Register one LS Login client per front end**: the registry UI, Krini and
+the dashboard each have their own client, and each client ID is listed in
+the audience. Each front end then has its own client secret and redirect
+URIs: a leaked secret or a retired front end affects only its own client,
+which can be replaced or removed without touching the others.
+
+```yaml title="values-prod.yaml"
+config:
+  security:
+    auth:
+      audience:
+        - "<client ID of the registry UI>"
+        - "<client ID of Krini>"
+        - "<client ID of the dashboard>"
+```
 
 Client IDs are not listed here. To obtain them:
 
@@ -315,7 +369,7 @@ Admins act as admins only in **admin mode**: in requests with the header
 `X-Request-Roles: admin`; their other requests have the rights of other
 users (see [Admin mode][cr-admin-mode]). In the front end, admins switch
 between "User mode" and "Admin mode" in the top bar, and start in user
-mode (see [Registry][cr-ui-registry-settings] in the UI's README). Scripts
+mode (see [Admin mode][cr-ui-admin-mode] in the UI's documentation). Scripts
 send the header with each request that needs admin rights.
 
 The deployment keeps the opt-in of the base config
@@ -336,12 +390,39 @@ config:
 
 ### Service environments
 
-The deployment keeps the default environments (`prod`, `test`, `dev` and
-`staging`, as suggested by the GA4GH specification): registrations with
-other values are rejected (see [Service
-environments][cr-service-environments]). If the values file changes them,
-set the same values in the front end's settings (see
-[Settings](#settings)).
+**Allow the environments `prod` and `test` only**, rather than the four
+defaults (`prod`, `test`, `dev` and `staging`, as suggested by the GA4GH
+specification): the TES network has production and test nodes only, and
+two unambiguous choices keep the filters by environment useful.
+Registrations with other values are rejected with `400 Bad Request` (see
+[Service environments][cr-service-environments]):
+
+```yaml title="values-prod.yaml"
+config:
+  custom:
+    endpoints:
+      services:
+        environments: [prod, test]
+```
+
+Set the same values in the front end's settings
+(`NEXT_PUBLIC_SERVICE_ENVIRONMENTS=prod,test`, see [Settings](#settings)).
+The front end's form for new services still offers the four defaults (a
+[known limitation][cr-ui-known-limitations]); the registry rejects `dev` and
+`staging` there. Before setting this on a running deployment, check the
+environments of the stored services, as in [Upgrading from
+0.4.0](#upgrading-from-040): services with other values are still served,
+but can only be updated with `prod` or `test`, and the app warns of them on
+startup.
+
+### Service URL schemes
+
+**Keep the default: service URLs must be `https` URLs**
+(`config.custom.endpoints.services.url_schemes`, default `[https]`; see
+[Service URL schemes][cr-service-url-schemes]). Clients send access tokens
+to the registered URLs, which must not travel unencrypted. The values file
+sets nothing for it, and neither do the front end's settings (its default
+for `NEXT_PUBLIC_SERVICE_URL_SCHEMES` is `https`).
 
 ### Service types
 
@@ -349,30 +430,64 @@ Service types are stored, and `config.custom.access_control.service_types`
 sets who may add them (see [Service types][cr-service-types-config]):
 `open` (the default, any logged-in user), `controlled` (admins only) or
 `moderated` (any logged-in user, but types of users other than admins, and
-the services that have them, are pending until an admin approves them). The
-values file below keeps the default; to moderate new types, set:
+the services that have them, are pending until an admin approves them).
+
+**Set the mode `controlled`.** The registry is primarily for the services of
+the ECP TES network and the central services, not for arbitrary services, so
+admins curate the list of types; open it up (`moderated`) only once enough
+people bring good reasons for other types:
 
 ```yaml title="values-prod.yaml"
 config:
   custom:
     access_control:
-      service_types: moderated
+      service_types: controlled
 ```
 
-Admins approve pending types and services in the front end. Without the
-admin group (see [Admins](#admins)), nobody could approve them.
+Other users can then register services only with registered types:
+registering a service with another type fails with `400 Bad Request`, and
+`POST /ga4gh/registry/v1/services/types` with `403 Forbidden`. Admins add
+types in admin mode, in the front end ("Service Types", "Add service type")
+or with that request. Add the types of the TES network and the central
+services before announcing the registry; the types of services that are
+already registered are registered too.
 
-Users other than admins may add at most 10 types that no service has
-(`config.custom.access_control.max_unused_service_types`, default `10`;
-`null` for no limit, `0` to let only admins add types other than those of
-services; see [Service types][cr-service-types-config]). Further types are
-rejected with `409 Conflict`; admins remove unwanted types that no service
-has (`DELETE /ga4gh/registry/v1/services/types`). The limit is per user, and anyone
-can create an LS Login account, so also limit the request rate at the
-ingress, at least for `POST /ga4gh/registry/v1/services/types` and
-`POST /ga4gh/registry/v1/services` (see
-[Rate limits][cr-rate-limits]; the controller must see the clients'
-addresses, not those of a proxy in front of the cluster).
+**Leave `config.custom.access_control.max_unused_service_types` at its
+default** (`10`): it limits how many types that no service has users other
+than admins may add, and with `controlled`, they can't add any (see
+[Service types][cr-service-types-config]). Admins remove unwanted types
+that no service has (`DELETE /ga4gh/registry/v1/services/types`).
+
+### Services per user
+
+*From 1.0.0rc1.* **Let users other than admins register at most 20
+services each** (`config.custom.access_control.max_services_per_user`,
+default `50`; see [Services per user][cr-latest-services-per-user]).
+The limit bounds what a single account can fill the registry with; the rate
+limits (see [Rate limits](#rate-limits)) slow down accounts created at
+will.
+Further registrations fail with `409 Conflict`; services that admins
+register in admin mode count for nobody.
+
+```yaml title="values-prod.yaml"
+config:
+  custom:
+    access_control:
+      # From 1.0.0rc1 only: 0.6.0 refuses to start with this key
+      max_services_per_user: 20
+```
+
+It is a config value, changed with a `helm upgrade` at any time. Lowering
+it never removes services: users above the limit keep theirs, and can only
+register more once they are below it.
+
+### Invitations
+
+*From 1.0.0rc1.* Owners can invite users to their services by link (see
+[Invitations][cr-latest-invitations]). **Keep the defaults**
+(`config.custom.access_control.invitations`: invitations are valid for
+7 days, `expiry_days`, and a service may have 20 that haven't expired,
+`max_per_service`): the values file sets nothing for them.
 
 ### Values file
 
@@ -382,7 +497,11 @@ up in a ConfigMap; the MongoDB credentials are referenced by the name of a
 Secret. The service info keeps the identifier
 `ELIXIR_CLOUD_SERVICE_REGISTRY_1`, so that clients still recognize the
 registry, and sets all fields that describe the deployment (see [Service
-info][cr-service-info]).
+info][cr-service-info]). It collects the recommended settings of the
+sections above and below, for 0.6.0; the settings from 1.0.0rc1 are
+commented out. The ingress controller's settings (rate limits, blocking
+`/admin/`) depend on the controller and come on top (see [Exposing the
+API](#exposing-the-api) and [Rate limits](#rate-limits)).
 
 ```yaml title="values-prod.yaml"
 # Public host name of the API (not of the front end)
@@ -398,20 +517,48 @@ cloudRegistry:
       # true to serve HTTPS with a certificate from cert-manager, false if
       # TLS is terminated in front of the cluster
       enabled: true
+  # Only the ingress controller may connect (see "Network policies")
+  networkPolicy:
+    enabled: true
+    ingressFrom:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: <namespace of the ingress controller>
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: <name label of its pods>
+  # No `gunicorn`: the defaults (1 worker, 4 threads) fit (see "Replicas")
 
 config:
   security:
     auth:
       issuers: ["https://login.aai.lifescience-ri.eu/oidc/"]
-      # REQUIRED: replace with the LS Login client IDs of the front end(s)
-      # (the chart accepts any non-empty value; see "Audience")
-      audience: ["<client ID of the front end>"]
+      # REQUIRED: replace with the LS Login client IDs of the front ends,
+      # one client per front end (the chart accepts any non-empty value;
+      # see "Audience")
+      audience:
+        - "<client ID of the registry UI>"
+        - "<client ID of Krini>"
+        - "<client ID of the dashboard>"
       userinfo_claims: ["eduperson_entitlement", "name"]
     access_control:
       claim_groups: eduperson_entitlement
       group_mapping:
         # Quoted, as it contains `#`
         "urn:geant:lifescience-ri.eu:group:elixir:ECP_CLN:ADMIN#aai.lifescience-ri.eu": admin
+  custom:
+    endpoints:
+      services:
+        # See "Service environments"; `url_schemes` keeps its default,
+        # `[https]` (see "Service URL schemes")
+        environments: [prod, test]
+    access_control:
+      # Only admins add service types (see "Service types");
+      # `max_unused_service_types` keeps its default
+      service_types: controlled
+      # From 1.0.0rc1 only (see "Services per user"); 0.6.0 refuses to
+      # start with it. `invitations` keeps its defaults (see "Invitations")
+      # max_services_per_user: 20
   service_info:
     service:
       id: ELIXIR_CLOUD_SERVICE_REGISTRY_1
@@ -433,26 +580,153 @@ mongodb:
 
 The chart routes all paths of `hostName` to the app, including FOCA's
 permissions API for admins in admin mode (`/admin/access-control/`; see
-[Ingress][cr-ingress] and [TLS][cr-tls]). If `elixir-on.cloud` serves other
-apps too, or to keep the permissions API off the internet, disable the
-chart's Ingress and Route (`cloudRegistry.ingress.enabled: false`,
-`cloudRegistry.route.enabled: false`) and route only `/ga4gh/registry/v1/`
-to the app's Service (port `http`) with an Ingress or HTTPRoute of your own,
-or block `/admin/` at the proxy in front of the cluster.
+[Ingress][cr-ingress] and [TLS][cr-tls]). **Block `/admin/`, so that only
+`/ga4gh/registry/v1/` is reachable from outside.** Admins of this deployment
+come from the LS Login group (see [Admins](#admins)), not from the
+permissions API, and the front end needs nothing under `/admin/`, so
+blocking it only removes attack surface.
+
+Either way below works with the values file above; pick the one that the
+cluster allows:
+
+- **Without the chart's Ingress (any ingress controller):** disable the
+  chart's Ingress and Route, and route only `/ga4gh/registry/v1/` to the
+  app's Service (`cloud-registry`, port `http`) with an Ingress (or
+  HTTPRoute) of your own. This is also the way to go if `elixir-on.cloud`
+  serves other apps too:
+
+    ```yaml title="values-prod.yaml"
+    cloudRegistry:
+      ingress:
+        enabled: false
+      route:
+        enabled: false
+    ```
+
+    ```yaml title="ingress-cloud-registry.yaml"
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: cloud-registry-api
+      namespace: <namespace>
+      annotations:
+        # As `cloudRegistry.ingress.https` would set them; leave them and
+        # `tls` out if TLS is terminated in front of the cluster
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+        kubernetes.io/tls-acme: "true"
+        # The controller's settings, e.g., the rate limits (see "Rate limits")
+    spec:
+      ingressClassName: <Ingress class>
+      rules:
+      - host: elixir-on.cloud
+        http:
+          paths:
+          - path: /ga4gh/registry/v1/
+            pathType: Prefix
+            backend:
+              service:
+                name: cloud-registry
+                port:
+                  name: http
+      tls:
+      - hosts: [elixir-on.cloud]
+        secretName: cloud-registry-api-tls
+    ```
+
+    Apply it with `kubectl apply -f ingress-cloud-registry.yaml` and keep it
+    in the infrastructure repository next to the values file.
+
+- **With the chart's Ingress:** block `/admin/` at the proxy in front of the
+  cluster, or in the ingress controller. *Example for ingress-nginx*, which
+  needs snippet annotations to be allowed by the controller
+  (`allow-snippet-annotations: "true"` and, from controller 1.12,
+  `annotations-risk-level: Critical` in its ConfigMap; many clusters refuse
+  them, as they let anyone who may create Ingresses change the controller's
+  configuration):
+
+    ```yaml title="values-prod.yaml"
+    cloudRegistry:
+      ingress:
+        annotations:
+          # Applies to the whole host, also to other apps on it
+          nginx.ingress.kubernetes.io/server-snippet: |
+            location /admin/ { return 404; }
+    ```
+
+Check it from outside the cluster (see [Checks](#checks-after-installing)):
+`/admin/` must not reach the app.
 
 If the API moves to another host name, change `hostName` and the API URL in
 the front end's deployment together, keeping the base path
 `/ga4gh/registry/v1`.
 
+### Rate limits
+
+**Limit the request rate per client IP address at the ingress: write
+requests (`POST`, `PUT`, `DELETE`) to 10 per minute with a small burst, all
+requests to 300 per minute.** The registry limits how many service types
+and (from 1.0.0rc1) services each account adds, but not how often anyone
+writes, and anyone can create LS Login accounts (see [Rate
+limits][cr-rate-limits]). Registering a few services takes far fewer
+writes; 300 requests per minute leave room for the front end, which sends
+several reads per page. The controller must see the clients' addresses, not
+those of a proxy in front of the cluster (e.g., with `use-forwarded-headers`
+or the PROXY protocol); otherwise, all requests count for the proxy.
+
+*Example for ingress-nginx.* The annotations limit all requests;
+annotations can't tell methods apart, so the limit of writes needs a
+`limit_req` zone keyed by the client address for writes only, in the
+controller's ConfigMap (set by the cluster's admins), and a snippet
+annotation that applies it (snippets must be allowed, see [Exposing the
+API](#exposing-the-api)):
+
+```yaml title="ConfigMap of ingress-nginx (data)"
+http-snippet: |
+  map $request_method $cloud_registry_writer {
+    default "";
+    POST $binary_remote_addr;
+    PUT $binary_remote_addr;
+    DELETE $binary_remote_addr;
+  }
+  limit_req_zone $cloud_registry_writer zone=cloud_registry_writes:10m rate=10r/m;
+# Optional: answer excess requests with `429 Too Many Requests` (default: 503)
+limit-req-status-code: "429"
+```
+
+```yaml title="values-prod.yaml"
+cloudRegistry:
+  ingress:
+    annotations:
+      # All requests: 300 per minute and client IP address, with a burst of
+      # as many (the default multiplier, 5, would allow 1500 at once)
+      nginx.ingress.kubernetes.io/limit-rpm: "300"
+      nginx.ingress.kubernetes.io/limit-burst-multiplier: "1"
+      # Writes: 10 per minute, a burst of 5 (requests with an empty key,
+      # i.e., reads, aren't counted in this zone)
+      nginx.ingress.kubernetes.io/configuration-snippet: |
+        limit_req zone=cloud_registry_writes burst=5 nodelay;
+```
+
+Without the chart's Ingress, set the same annotations on your own Ingress
+(`metadata.annotations` of `ingress-cloud-registry.yaml` in [Exposing the
+API](#exposing-the-api)). With other controllers, use their own means, e.g.,
+Traefik's `rateLimit` middleware on routes that match the methods, or the
+rate limit policies of a Gateway implementation (see [Rate
+limits][cr-rate-limits]).
+
 ### Network policies
 
 MongoDB's NetworkPolicy is enabled by default: only the app's pods of the
-release may connect. The app's NetworkPolicy
-(`cloudRegistry.networkPolicy.enabled`) is optional: when enabling it, list
-the pods of the cluster's ingress controller (or Gateway proxies) in
-`cloudRegistry.networkPolicy.ingressFrom`, or the API becomes unreachable.
-The front end needs no entry, as browsers call the API through the ingress.
-Find the controller's namespace and pod labels with:
+release may connect. **Enable the app's NetworkPolicy too**
+(`cloudRegistry.networkPolicy.enabled: true`, as in the values file), with
+the cluster's ingress controller as the only peer
+(`cloudRegistry.networkPolicy.ingressFrom`): the API is meant to be reached
+through the ingress only, where TLS, the rate limits and the blocking of
+`/admin/` apply, so other pods in the cluster shouldn't bypass them. Without
+the controller in `ingressFrom`, the API becomes unreachable; rendering
+fails if the policy is enabled without peers. The front end needs no entry,
+as browsers call the API through the ingress. Find the controller's
+namespace and pod labels with:
 
 ```bash
 kubectl get ingressclass
@@ -478,6 +752,22 @@ See [Network policies][cr-network-policies] and FOCA's [NetworkPolicy
 peers][foca-networkpolicy-peers] for the peers of common ingress
 controllers and Gateways. The policies only take effect if the cluster's
 network plugin enforces them.
+
+### Replicas
+
+**Run 2 replicas of the app, with the default Gunicorn settings** (1 worker
+with 4 threads, `cloudRegistry.gunicorn`; see [Server][cr-server]): with
+two pods, node drains, crashes and rolling upgrades cause no downtime of the
+API, and the load is tiny, so more workers or threads aren't needed.
+MongoDB stays a single pod, so a drain of its node still interrupts the API
+briefly.
+
+!!! warning "The chart can't set the number of replicas yet"
+    The chart of 0.6.0 (and of 1.0.0rc1) always deploys 1 replica of the
+    app: it has no values key for it. Until it has one, the deployment runs
+    1 replica. Don't work around this by scaling the Deployment by hand
+    (`kubectl scale`): Helm manages it, and a later upgrade or rollback can
+    set it back without notice.
 
 ## Installation
 
@@ -506,19 +796,23 @@ network plugin enforces them.
     kubectl describe secret cloud-registry-mongodb-credentials -n <namespace>
     ```
 
-3. Install the chart of the release, and wait for the app:
+3. Download and verify the chart and the image (see [Verifying the chart
+   and the image](#verifying-the-chart-and-the-image)), then install the
+   verified chart file, and wait for the app:
 
     ```bash
-    helm install cloud-registry \
-      https://github.com/elixir-cloud-aai/cloud-registry/releases/download/v0.6.0/cloud-registry-0.6.0.tgz \
+    helm install cloud-registry ./cloud-registry-0.6.0.tgz \
       -n <namespace> -f values-prod.yaml
     kubectl rollout status deploy/cloud-registry -n <namespace>
     ```
 
     Rendering fails if the issuer, the audience or the admin group is
-    missing.
+    missing. Without the chart's Ingress, apply your own (see [Exposing the
+    API](#exposing-the-api)).
 
-4. Deploy the front end (see [Front end](#front-end)).
+4. Set up the backups, and test a restore once (see [Backups](#backups)).
+
+5. Deploy the front end (see [Front end](#front-end)).
 
 ### Front end
 
@@ -539,13 +833,27 @@ branch][cr-ui-ai-post-deploy], which goes with Cloud Registry 0.6.0 (its
 admin mode switch needs 0.6.0; see [Admin mode](#admin-mode)). Deploy the
 registry first, then the front end. The branch `ai`, which went with 0.5.0,
 has no switch: with it, admins can act as admins in the front end only if
-the registry sets `opt_in_roles: []`. Note the commit you build from, so
-that you can build the same image again.
+the registry sets `opt_in_roles: []`.
+
+**Deploy a fixed, traceable image:**
+
+- **Until the UI has releases:** build from a commit of `ai-post-deploy`
+  that you record (e.g., in the infrastructure repository, next to the
+  Deployment), as in [Building the image](#building-the-image), so that
+  you can build the same image again and know what runs.
+- **Once the UI has releases:** deploy the signed release image of the
+  version that goes with the registry
+  (`elixircloud/cloud-registry-ui:<version>`), pinned by its digest
+  (`elixircloud/cloud-registry-ui:<version>@sha256:<digest>`), after
+  verifying its signature (see [Verifying images][cr-ui-verifying-images]).
+  A tag can be moved; the digest can't, so pods restarted later run the
+  verified image.
 
 #### Registering the front end with LS Login
 
 Register the front end with [LS Login][ls-login] as a service (an OpenID
-Connect client):
+Connect client) of its own, not shared with Krini or the dashboard (one
+client per front end, see [Audience](#audience)):
 
 - **Flow:** authorization code, with a client secret and PKCE (`S256`,
   which LS Login supports); the front end also sends a nonce and checks the
@@ -601,8 +909,9 @@ this deployment:
 | `NEXT_PUBLIC_CLOUD_REGISTRY_URL` (required) | `https://elixir-on.cloud/ga4gh/registry/v1` |
 | `LOGIN_PROVIDERS` (required) | a JSON list with LS Login, including the client ID and secret (see below) |
 | `LOGIN_REDIRECT_URI` (required) | `https://registry.elixir-on.cloud/auth/api/callback` |
+| `NEXT_PUBLIC_SERVICE_ENVIRONMENTS` | `prod,test`, as the registry (see [Service environments](#service-environments)) |
 
-The [LS Login example][cr-ui-login] in the UI's README shows the format of
+The [LS Login example][cr-ui-login] in the UI's documentation shows the format of
 `LOGIN_PROVIDERS`, with the scopes above; keep its `scopes`, or the
 registry doesn't recognize admins:
 
@@ -619,7 +928,7 @@ them with `docker run --env-file`, from a file outside any repository
 (`NAME=value` per line, values not quoted).
 
 The defaults of the other settings `NEXT_PUBLIC_*` match the registry's
-defaults (e.g., the environments `prod`, `test`, `dev` and `staging`); if
+defaults (e.g., the URL scheme `https`, which this deployment keeps); if
 the values file changes the allowed environments or URL schemes, set them
 too (see [Registry][cr-ui-registry-settings]). The branding settings are
 optional, and their defaults are the ELIXIR On-Cloud logos and the title
@@ -648,13 +957,88 @@ any headers by default, so there is nothing to configure for it.
   seconds) only applies to Docker; Kubernetes ignores it. Give the
   Deployment HTTP probes on `/` and port 3000 instead (the start page
   answers with a redirect; probes count `2xx` and `3xx` as success).
-- **Security context:** the app runs as the unprivileged user `bun` and
-  writes only to `/app/.next/cache`; with a read-only root file system,
-  mount an `emptyDir` there.
+- **Hardening:** run the container with a read-only root file system, as a
+  non-root user, and without any capabilities, with an `emptyDir` on
+  `/app/.next/cache`. The app runs as the unprivileged user `bun` and
+  writes only to that folder, so it needs nothing more, and a compromised
+  app can neither change its own code nor gain privileges. The image names
+  its user (`bun`) rather than giving its ID, so set the ID (`1000`) too:
+  otherwise, the kubelet can't check `runAsNonRoot` and refuses to start
+  the container.
+- **Replicas:** run 2 replicas, for the same reasons as the registry's (see
+  [Replicas](#replicas)). The front end keeps the login state and the
+  session in the browser's cookies (the login's state, PKCE verifier and
+  nonce while logging in, then the tokens), not in the server, so any pod
+  can serve any request, and no sticky sessions are needed.
 - **Security headers:** the app sets its own Content Security Policy, with a
   nonce per request. Don't let the ingress or a proxy add a second one:
   browsers enforce both, and one without the nonce blocks the app's
   scripts (see [Registry][cr-ui-registry-settings]).
+
+For example (with the settings of [Settings](#settings) in the Secret
+`cloud-registry-ui-login` and the ConfigMap `cloud-registry-ui-settings`):
+
+```yaml title="deployment-cloud-registry-ui.yaml"
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloud-registry-ui
+  namespace: <namespace>
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cloud-registry-ui
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cloud-registry-ui
+    spec:
+      automountServiceAccountToken: false
+      # Spread the pods over nodes, so that a node drain keeps one running
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: cloud-registry-ui
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+      containers:
+      - name: cloud-registry-ui
+        # The recorded build (see "UI version"); for releases, pin the digest
+        image: <registry>/cloud-registry-ui:<commit>
+        ports:
+        - name: http
+          containerPort: 3000
+        envFrom:
+        - configMapRef:
+            name: cloud-registry-ui-settings
+        - secretRef:
+            name: cloud-registry-ui-login
+        securityContext:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: [ALL]
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http
+        volumeMounts:
+        - name: next-cache
+          mountPath: /app/.next/cache
+      volumes:
+      - name: next-cache
+        emptyDir: {}
+```
 
 Users stay logged in as long as their LS Login access token is valid, at
 most 12 hours; the front end doesn't refresh tokens. Logins that were
@@ -667,10 +1051,15 @@ below, which include logging in as an admin.
 
 ## Checks after installing
 
-1. The service info shows version `0.6.0` and the deployment's fields:
+1. The service info shows version `0.6.0` and the deployment's fields. Its
+   registration rules show the recommended settings: the environments
+   `["prod", "test"]`, the URL schemes `["https"]` and the service types
+   `controlled` (from 1.0.0rc1 also `"max_services_per_user": 20`):
 
     ```bash
     curl -fsS https://elixir-on.cloud/ga4gh/registry/v1/service-info
+    curl -fsS https://elixir-on.cloud/ga4gh/registry/v1/service-info \
+      | jq .registration_rules
     ```
 
 2. Reads are public; writes without a token are rejected with `401`:
@@ -716,15 +1105,233 @@ below, which include logging in as an admin.
 
 6. Register a test service in the front end, then delete it.
 
+7. From outside the cluster, `/admin/` doesn't reach the app (`403` or
+   `404` from the proxy or the controller, not the app's `401`; see
+   [Exposing the API](#exposing-the-api)):
+
+    ```bash
+    curl -s -o /dev/null -w '%{http_code}\n' \
+      https://elixir-on.cloud/admin/access-control/
+    ```
+
+8. The rate limit of writes applies: of 20 quick `POST` requests without a
+   token, the first ones get `401` from the app, the rest `429` (or `503`)
+   from the ingress. This blocks writes from your address for a minute:
+
+    ```bash
+    for i in $(seq 20); do
+      curl -s -o /dev/null -w '%{http_code} ' -X POST \
+        https://elixir-on.cloud/ga4gh/registry/v1/services
+    done; echo
+    ```
+
+9. The app's NetworkPolicy exists, and a pod in the release's namespace
+   (not the ingress controller) can't connect to the app (the request
+   times out, if the network plugin enforces NetworkPolicies):
+
+    ```bash
+    kubectl get networkpolicy -n <namespace>
+    kubectl run np-check --rm -it --restart=Never -n <namespace> \
+      --image=curlimages/curl -- curl -sS -m 5 http://cloud-registry/ga4gh/registry/v1/service-info
+    ```
+
+## Backups
+
+The registry's data (services, their owners and roles, verifications) lives
+only in MongoDB's volume, the claim `cloud-registry-mongodb` (see
+[Persistence][cr-persistence]). **Back it up daily, to storage that doesn't
+fail with the cluster, and test a restore once**:
+
+- **If the storage provider offers volume snapshots, use them** for the
+  claim: they need no extra job and no credentials. Schedule them with the
+  provider's or the cluster's tools (e.g., a snapshot schedule of the
+  storage, or Velero), and check that the snapshots are kept outside the
+  cluster's own disks. Whether a snapshot class exists:
+
+    ```bash
+    kubectl get volumesnapshotclass
+    ```
+
+- **Otherwise, dump the database daily with `mongodump` to storage outside
+  the cluster, and keep the dumps for 14 days**, e.g., with a CronJob (see
+  below).
+
+### Dumps with a CronJob
+
+*Example*, for an S3-compatible bucket outside the cluster: `mongodump`
+writes a compressed archive of the database `serviceStore` as the app user,
+then [rclone][rclone] copies it to the bucket and deletes dumps older than 14
+days. The bucket's credentials go in a Secret of their own
+(`cloud-registry-backup-storage`, with the variables
+`RCLONE_CONFIG_OFFSITE_TYPE=s3`, `RCLONE_CONFIG_OFFSITE_PROVIDER`,
+`RCLONE_CONFIG_OFFSITE_ENDPOINT`, `RCLONE_CONFIG_OFFSITE_ACCESS_KEY_ID` and
+`RCLONE_CONFIG_OFFSITE_SECRET_ACCESS_KEY`), created like the MongoDB Secret,
+never in a file in a repository. A lifecycle rule of the bucket that
+deletes objects after 14 days can replace the `rclone delete`, so that the
+job needs no right to delete. Pin both images (e.g., by digest).
+
+```yaml title="backup-cloud-registry.yaml"
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cloud-registry-backup
+  namespace: <namespace>
+spec:
+  schedule: "30 2 * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: cloud-registry-backup
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999
+            runAsGroup: 999
+          initContainers:
+          - name: dump
+            image: docker.io/library/mongo:7.0
+            env:
+            - name: MONGO_USER
+              valueFrom:
+                secretKeyRef: {name: cloud-registry-mongodb-credentials, key: username}
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: cloud-registry-mongodb-credentials, key: password}
+            command: [sh, -c]
+            # The password goes into a config file, not into the arguments
+            args:
+            - |
+              set -e
+              printf 'password: "%s"\n' "$MONGO_PASSWORD" > /tmp/mongodump.yaml
+              mongodump --config /tmp/mongodump.yaml \
+                --host cloud-registry-mongodb --port 27017 \
+                --username "$MONGO_USER" --authenticationDatabase serviceStore \
+                --db serviceStore --gzip \
+                --archive="/backup/cloud-registry-$(date -u +%Y%m%dT%H%M%SZ).archive.gz"
+            securityContext:
+              readOnlyRootFilesystem: true
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop: [ALL]
+            volumeMounts:
+            - {name: backup, mountPath: /backup}
+            - {name: tmp, mountPath: /tmp}
+          containers:
+          - name: upload
+            image: docker.io/rclone/rclone:<version>
+            envFrom:
+            - secretRef:
+                name: cloud-registry-backup-storage
+            env:
+            - {name: HOME, value: /tmp}
+            command: [sh, -c]
+            args:
+            - |
+              set -e
+              rclone copy /backup offsite:<bucket>/cloud-registry/
+              rclone delete --min-age 14d offsite:<bucket>/cloud-registry/
+            securityContext:
+              readOnlyRootFilesystem: true
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop: [ALL]
+            volumeMounts:
+            - {name: backup, mountPath: /backup}
+            - {name: tmp, mountPath: /tmp}
+          volumes:
+          - {name: backup, emptyDir: {}}
+          - {name: tmp, emptyDir: {}}
+---
+# MongoDB's NetworkPolicy lets only the app's pods connect: allow the job
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cloud-registry-mongodb-backup
+  namespace: <namespace>
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: cloud-registry
+      app.kubernetes.io/instance: cloud-registry
+      app.kubernetes.io/component: mongodb
+  policyTypes: [Ingress]
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: cloud-registry-backup
+    ports:
+    - {port: 27017, protocol: TCP}
+```
+
+Run it once by hand after applying it, and check that the dump arrives in
+the bucket:
+
+```bash
+kubectl apply -f backup-cloud-registry.yaml
+kubectl create job --from=cronjob/cloud-registry-backup backup-test -n <namespace>
+kubectl logs job/backup-test -n <namespace> --all-containers
+```
+
+### Testing a restore
+
+A backup that was never restored may not work. **Restore one once**, away
+from the production database, and compare it with the live registry; the
+numbers differ only by the services registered since, and by pending
+services, which the public list leaves out:
+
+- **A dump**, e.g., with Docker on a workstation, from a dump downloaded
+  from the bucket:
+
+    ```bash
+    docker run -d --name cr-restore-test docker.io/library/mongo:7.0
+    docker exec -i cr-restore-test mongorestore --gzip --archive \
+      < cloud-registry-<timestamp>.archive.gz
+    docker exec cr-restore-test mongosh --quiet \
+      --eval 'db.getSiblingDB("serviceStore").services.countDocuments()'
+    curl -fsS https://elixir-on.cloud/ga4gh/registry/v1/services | jq length
+    docker rm -f cr-restore-test
+    ```
+
+- **A snapshot:** create a claim from it (`dataSource` of kind
+  `VolumeSnapshot`, in the same namespace), start a test pod with
+  `docker.io/library/mongo:7.0` on that claim (mounted at `/data/db`, as
+  user 999), and count the services in it with `mongosh` as above, with the
+  root user's credentials from the Secret (the snapshot holds the users of
+  the production database). Delete the pod and the claim afterwards.
+
+For a real restore, stop the app, restore the dump into the release's
+MongoDB as the root user, replacing the collections (`--drop`), and start
+the app again (or, for a snapshot, replace the claim with one created from
+it):
+
+```bash
+kubectl scale deploy/cloud-registry --replicas=0 -n <namespace>
+kubectl exec -i deploy/cloud-registry-mongodb -n <namespace> -- sh -c 'mongorestore \
+  -u "$MONGO_INITDB_ROOT_USERNAME" -p "$MONGO_INITDB_ROOT_PASSWORD" \
+  --authenticationDatabase admin --gzip --archive --drop' \
+  < cloud-registry-<timestamp>.archive.gz
+kubectl scale deploy/cloud-registry --replicas=1 -n <namespace>
+```
+
 ## Upgrades
 
 Read the release notes and upgrade steps of the new release, change the
-values file if needed, and upgrade with the chart of that release (see
-[Upgrades][cr-upgrades]):
+values file if needed (e.g., add the settings marked *from 1.0.0rc1* when
+upgrading to it), check that the last backup is
+recent (see [Backups](#backups)), download and verify the chart and the image
+of that release (see [Verifying the chart and the
+image](#verifying-the-chart-and-the-image), with the new version), and
+upgrade with the verified chart file (see [Upgrades][cr-upgrades]):
 
 ```bash
-helm upgrade cloud-registry \
-  https://github.com/elixir-cloud-aai/cloud-registry/releases/download/vX.Y.Z/cloud-registry-X.Y.Z.tgz \
+helm upgrade cloud-registry ./cloud-registry-X.Y.Z.tgz \
   -n <namespace> -f values-prod.yaml
 ```
 
@@ -752,13 +1359,14 @@ policy is `Retain`.
 [cr-ui-repo]: <https://github.com/elixir-cloud-aai/cloud-registry-ui>
 [cr-ui-ai-post-deploy]: <https://github.com/elixir-cloud-aai/cloud-registry-ui/tree/ai-post-deploy>
 [cr-ui-readme]: <https://github.com/elixir-cloud-aai/cloud-registry-ui/blob/ai-post-deploy/README.md>
-[cr-ui-docker]: <https://github.com/elixir-cloud-aai/cloud-registry-ui/blob/ai-post-deploy/README.md#docker>
-[cr-ui-configurations]: <https://github.com/elixir-cloud-aai/cloud-registry-ui/blob/ai-post-deploy/README.md#configurations>
-[cr-ui-registry-settings]: <https://github.com/elixir-cloud-aai/cloud-registry-ui/blob/ai-post-deploy/README.md#registry>
-[cr-ui-branding]: <https://github.com/elixir-cloud-aai/cloud-registry-ui/blob/ai-post-deploy/README.md#branding>
-[cr-ui-login]: <https://github.com/elixir-cloud-aai/cloud-registry-ui/blob/ai-post-deploy/README.md#login>
-[cr-ui-sessions]: <https://github.com/elixir-cloud-aai/cloud-registry-ui/blob/ai-post-deploy/README.md#sessions-and-logout>
-[cr-ui-copy-token]: <https://github.com/elixir-cloud-aai/cloud-registry-ui/blob/ai-post-deploy/README.md#copying-the-access-token>
+[cr-ui-docker]: <https://cloud-registry-ui.readthedocs.io/en/latest/operator-guide/deployment/#docker>
+[cr-ui-configurations]: <https://cloud-registry-ui.readthedocs.io/en/latest/operator-guide/configuration/>
+[cr-ui-registry-settings]: <https://cloud-registry-ui.readthedocs.io/en/latest/operator-guide/configuration/#registry>
+[cr-ui-admin-mode]: <https://cloud-registry-ui.readthedocs.io/en/latest/operator-guide/admins/#admin-mode>
+[cr-ui-branding]: <https://cloud-registry-ui.readthedocs.io/en/latest/operator-guide/branding/>
+[cr-ui-login]: <https://cloud-registry-ui.readthedocs.io/en/latest/operator-guide/login/>
+[cr-ui-sessions]: <https://cloud-registry-ui.readthedocs.io/en/latest/operator-guide/login/#sessions-and-logout>
+[cr-ui-copy-token]: <https://cloud-registry-ui.readthedocs.io/en/latest/operator-guide/login/#copying-the-access-token>
 [cr-deployment-readme]: <https://github.com/elixir-cloud-aai/cloud-registry/blob/v0.6.0/deployment/README.md>
 [cr-deployment]: <https://cloud-registry.readthedocs.io/en/v0.6.0/deployment/>
 [cr-image]: <https://cloud-registry.readthedocs.io/en/v0.6.0/deployment/#image>
@@ -798,3 +1406,11 @@ policy is `Retain`.
 [ls-login]: <https://www.lifescience-ri.eu/life-science-login/>
 [ls-login-discovery]: <https://login.aai.lifescience-ri.eu/oidc/.well-known/openid-configuration>
 [mongodb-server-121912]: <https://jira.mongodb.org/browse/SERVER-121912>
+[cr-server]: <https://cloud-registry.readthedocs.io/en/v0.6.0/deployment/#server>
+[cr-service-url-schemes]: <https://cloud-registry.readthedocs.io/en/v0.6.0/configuration/#service-url-schemes>
+[cr-latest-services-per-user]: <https://cloud-registry.readthedocs.io/en/latest/configuration/#services-per-user>
+[cr-latest-invitations]: <https://cloud-registry.readthedocs.io/en/latest/access-control/#invitations>
+[cr-ui-known-limitations]: <https://cloud-registry-ui.readthedocs.io/en/latest/user-guide/registering/#known-limitations>
+[cr-ui-verifying-images]: <https://cloud-registry-ui.readthedocs.io/en/latest/operator-guide/deployment/#verifying-images>
+[gh-cli]: <https://cli.github.com/>
+[rclone]: <https://rclone.org/>
