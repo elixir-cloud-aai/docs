@@ -17,5 +17,6 @@ do not drift apart.
 - [Security policy](https://github.com/elixir-cloud-aai/.github/blob/main/SECURITY.md)
 - [License](https://github.com/elixir-cloud-aai/.github/blob/main/LICENSE)
 - [Discussions][elixir-on-cloud-forum]: questions and ideas
+- [Website](https://elixir-on.cloud/): the nodes, funders and news
 - [ELIXIR Compute Platform](https://elixir-europe.org/platforms/compute):
   the ELIXIR platform behind the project
