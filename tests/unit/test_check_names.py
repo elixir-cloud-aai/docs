@@ -91,6 +91,17 @@ def test_main_ok(
     assert capsys.readouterr().out == ""
 
 
+def test_main_scans_directories(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Finds wrong spellings in files of nested directories."""
+    nested = tmp_path / "a" / "b"
+    nested.mkdir(parents=True)
+    path = write(nested, "Elixir\n")
+    assert check_names.main([str(tmp_path)]) == 1
+    assert f"{path}:1: 'Elixir' is not a valid name" in capsys.readouterr().out
+
+
 def test_main_reports_problems(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -119,6 +130,8 @@ def test_main_defaults(
     (tmp_path / "docs").mkdir()
     (tmp_path / "includes").mkdir()
     assert check_names.main([]) == 0
+    write(tmp_path / "docs", "Elixir\n")
+    assert check_names.main([]) == 1
 
 
 def test_script_entry_point(
