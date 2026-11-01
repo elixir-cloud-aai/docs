@@ -16,10 +16,14 @@ data, so that I can analyse the data.*
 2. The service redirects the user to LS Login.
 3. The user logs in at their own identity provider, for example their
    institute.
-4. LS Login checks whether the user may access the service, through group
-   memberships or roles.
-5. If so, LS Login redirects the user back to the service and sends the
-   service the user's information.
+4. If the service restricts access by group, LS Login checks the group
+   memberships of the user.
+5. If the user may access the service, LS Login redirects the user back and
+   sends the service the user's information.
+
+LS Login identifies the user and can restrict who reaches the service. The
+service itself decides what a user may do, with the roles and groups that it
+receives.
 
 ### Service provider: Register a service
 
@@ -55,6 +59,10 @@ use the service.*
 
 Remove the user from the group. See the [instructions for group
 managers](https://docs.google.com/document/d/1-qHT4N_iRrMLZmdIYpU9dXqactg61yFKAT0VFFLoK8c/edit).
+
+Removing a user does not end the tokens and sessions that already exist. The
+user keeps access until the token or the session of the service expires, or
+until the service ends it. Check how long these last for your service.
 
 ## Access to data
 

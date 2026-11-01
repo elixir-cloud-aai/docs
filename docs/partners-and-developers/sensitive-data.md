@@ -42,9 +42,12 @@ Three terms describe places where sensitive data can be processed safely:
 SPEs and TREs are very similar. The term SPE comes from the EHDS. The term
 TRE originates in the UK.
 
-All three isolate their content from the platform they run on, protect the
-data against compromise, check who may run code and access data, and let
-researchers analyse data and work together without moving the data out.
+All three aim to isolate their content from the platform they run on, to
+protect the data against compromise, to check who may run code and access
+data, and to let researchers analyse data and work together without moving
+the data out. How well they do this depends on how an environment is built
+and run. Before you rely on one, check its isolation and its controls for
+data leaving the environment.
 
 ## Four ways to reach data
 
@@ -65,8 +68,8 @@ the researcher's own environment?
   nodes that hold the data they need.
 - **Cloud platform:** the data is on one platform. Authorised users log in
   and analyse it in an SPE, with workflows or interactive tools.
-- **Federated processing:** the data stays on separate nodes and cannot
-  leave. The analysis runs through APIs in an SPE and often combines results
+- **Federated processing:** the data stays on separate nodes, and its
+  transfer is restricted (the nodes must enforce this). The analysis runs through APIs in an SPE and often combines results
   from several sources. Federated learning is a special case: a model is
   trained in several rounds with different datasets.
 

@@ -10,7 +10,7 @@ them, not this page, for the details.
 
 | API | Current version | In the stack | Docs |
 | --- | --- | --- | --- |
-| [TES][ga4gh-tes], for tasks | [1.1](https://ga4gh.github.io/task-execution-schemas/) | proTES (1.0), [TESK][tesk] and [Funnel][funnel] | [proTES](https://protes.readthedocs.io/en/latest/), [TESK](https://tesk.readthedocs.io/en/latest/) |
+| [TES][ga4gh-tes], for tasks | [1.1.0](https://ga4gh.github.io/task-execution-schemas/) | proTES (1.0), [TESK][tesk] and [Funnel][funnel] (versions not checked) | [proTES](https://protes.readthedocs.io/en/latest/), [TESK](https://tesk.readthedocs.io/en/latest/) |
 | [WES][ga4gh-wes], for workflows | [1.1.0](https://ga4gh.github.io/workflow-execution-service-schemas/) | [proWES](https://github.com/elixir-cloud-aai/proWES) (1.0.1), [CWL-WES](https://github.com/elixir-cloud-aai/cwl-WES) (1.0.0) | see the READMEs |
 | [DRS][ga4gh-drs], for data | [1.5.0](https://ga4gh.github.io/data-repository-service-schemas/) | [DRS-Filer](https://github.com/elixir-cloud-aai/drs-filer) (1.1.0) | see the README |
 | [TRS][ga4gh-trs], for tools and workflows | [2.0.1](https://ga4gh.github.io/tool-registry-service-schemas/) | [TRS-Filer](https://github.com/elixir-cloud-aai/trs-filer) (2.0.1) | [TRS-Filer](https://trs-filer.readthedocs.io/en/latest/) |

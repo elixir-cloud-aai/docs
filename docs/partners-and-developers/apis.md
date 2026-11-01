@@ -54,18 +54,20 @@ To get one:
 2. Log in with your client through the OpenID Connect flow of LS Login. Ask
    for the scopes `openid profile eduperson_entitlement`. LS Login releases
    the groups of a user only for the scope `eduperson_entitlement`, and the
-   Cloud Registry uses the groups to decide what a user may do.
+   Cloud Registry uses the groups to decide what a user may do. The
+   registration of your client at LS Login must allow all these scopes.
+   Otherwise, the groups are missing and group-based access fails.
 3. Keep the access token that you receive.
 
 The endpoints of LS Login are in its [discovery
 document](https://login.aai.lifescience-ri.eu/oidc/.well-known/openid-configuration).
 
-!!! note "Your client ID must be on the service's list"
-    A service accepts tokens only for the client IDs on its list. If a request
-    fails with `401 Unauthorized` although the token is valid, the operators
-    of the service must add your client ID. Write to
-    [cloud-service@elixir-europe.org][elixir-on-cloud-email] and say which
-    service you want to call.
+!!! note "Your client ID must be on the list of the Cloud Registry"
+    The Cloud Registry accepts tokens only for the client IDs on its list. If
+    a write fails with `401 Unauthorized` although the token is valid, the
+    operators of the deployment must add your client ID. Write to
+    [cloud-service@elixir-europe.org][elixir-on-cloud-email]. For other
+    services, ask their operators which tokens and clients they accept.
 
 ## 3. Send a request
 
@@ -73,16 +75,22 @@ Send the token as a bearer token in the `Authorization` header. For example,
 to list your tasks at a TES service:
 
 ```bash
-curl "<API base URL>/tasks" -H "Authorization: Bearer <token>"
+read -rs TOKEN   # paste the token; it is not shown or saved in the history
+printf 'Authorization: Bearer %s\n' "$TOKEN" | curl "<API base URL>/tasks" -H @-
 ```
+
+The header goes to `curl` through standard input, so the token does not
+appear in the command line, the shell history or the process list.
 
 Replace `<API base URL>` with the base URL of the service's API. It starts
 with the `url` from the registry entry. The path depends on the product (for
 example, proTES serves its TES API at `/ga4gh/tes/v1`). Its docs list the
-operations. A request without a valid token gets `401
-Unauthorized`. A valid token without the required role gets `403 Forbidden`.
+operations. A service that requires a token answers a request without a
+valid token with `401 Unauthorized`, and a request with a valid token but
+without the required role with `403 Forbidden`.
 
-Treat tokens like passwords: never paste them into websites, tickets or chats.
+Treat tokens like passwords: never put them in command lines, websites,
+tickets or chats.
 
 ## Where to go next
 
