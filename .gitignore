@@ -1,6 +1,23 @@
+# Build output of MkDocs
 site/
 _site/
-.venv
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Tests and coverage
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+
+# Editors and local notes
+.idea/
+.vscode/
 .notes
 .codespell*
-*.egg-info/
+.DS_Store

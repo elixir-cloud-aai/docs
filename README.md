@@ -1,32 +1,58 @@
+<!-- markdownlint-disable MD033 MD041 -- logo first; <picture> for dark mode -->
+<a href="https://elixir-on.cloud/">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/logo_elixir_on_cloud_lockup_night.png">
+    <img src="docs/images/logo_elixir_on_cloud_lockup.png" alt="ELIXIR On-Cloud">
+  </picture>
+</a>
+<!-- markdownlint-enable MD033 MD041 -->
+
 # ELIXIR On-Cloud docs
 
-Documentation of the ELIXIR On-Cloud federated deployment, built with MkDocs Material and currently published at
-https://elixir-cloud-aai.github.io/ (it moves to Read the Docs, see
-[#61](https://github.com/elixir-cloud-aai/elixir-cloud-aai.github.io/issues/61)).
+[![License][badge-license]][badge-url-license]
+[![Build_status][badge-build-status]][badge-url-build-status]
+[![Docs][badge-docs]][badge-url-docs]
+
+Documentation hub of the [ELIXIR On-Cloud](https://elixir-on.cloud/) federated
+deployment: guides for node operators, partners and developers, and
+researchers. Built with [MkDocs Material](https://squidfunk.github.io/mkdocs-material/)
+and published on Read the Docs.
+
+**Read the [documentation][docs]** at https://docs.elixir-on.cloud/.
 
 ## Development
 
-For ease, certain scripts have been abbreviated in `Makefile`, make sure that
-you have installed the dependencies before running the commands.
-
-> **Note**: `make` commands are only available for Unix-based systems.
-
-To view the commands available, run:
+Install the dependencies in a virtual environment, check the spelling of the
+project names, and build the site (warnings fail the build):
 
 ```sh
-make
+python -m venv .venv
+source .venv/bin/activate
+pip install -e ".[docs,tests]"
+python scripts/check_names.py
+mkdocs build --strict
+pytest
 ```
 
-Here are some commands that you might find useful:
+To preview the site while you edit, run `mkdocs serve`.
 
-- Making a virtual environment
+## Contributing
 
-```sh
-make v
-```
+Contributions are welcome! See the organisation's [contributing
+guide][contributing] and mind our [code of conduct][code-of-conduct].
 
-- Installing dependencies
+## License
 
-```sh
-make i
-```
+The content is licensed under [Creative Commons Zero, version 1.0][license]
+(CC0).
+
+[badge-build-status]: <https://github.com/elixir-cloud-aai/docs/actions/workflows/ci.yml/badge.svg?branch=main>
+[badge-docs]: <https://img.shields.io/website?url=https%3A%2F%2Fdocs.elixir-on.cloud%2F&label=docs>
+[badge-license]: <https://img.shields.io/badge/license-CC0%201.0-blue.svg>
+[badge-url-build-status]: <https://github.com/elixir-cloud-aai/docs/actions/workflows/ci.yml?query=branch%3Amain>
+[badge-url-docs]: <https://docs.elixir-on.cloud/>
+[badge-url-license]: <https://creativecommons.org/publicdomain/zero/1.0/>
+[code-of-conduct]: <https://github.com/elixir-cloud-aai/.github/blob/main/CODE_OF_CONDUCT.md>
+[contributing]: <https://github.com/elixir-cloud-aai/.github/blob/main/CONTRIBUTING.md>
+[docs]: <https://docs.elixir-on.cloud/>
+[license]: LICENSE

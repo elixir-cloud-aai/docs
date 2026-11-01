@@ -1,0 +1,28 @@
+version: 2
+# Every entry targets `main`, the default branch (`target-branch`)
+updates:
+  # Dependencies in `pyproject.toml` (the `docs` and `tests` extras)
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: monthly
+    target-branch: main
+    versioning-strategy: increase-if-necessary
+    groups:
+      # Dependencies of the documentation, in pull requests of their own
+      docs-dependencies:
+        patterns: ["mkdocs", "mkdocs-*", "pymdown-extensions"]
+      # Dependencies match the first group listed
+      python-dependencies:
+        patterns: ["*"]
+  # Actions in the workflows, including the pins of the shared actions of
+  # `elixir-cloud-aai/.github` (to the commits of its releases,
+  # `@<commit> # vX.Y.Z`)
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    target-branch: main
+    groups:
+      github-actions:
+        patterns: ["*"]
