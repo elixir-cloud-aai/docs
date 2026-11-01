@@ -71,23 +71,25 @@ document](https://login.aai.lifescience-ri.eu/oidc/.well-known/openid-configurat
 
 ## 3. Send a request
 
-Send the token as a bearer token in the `Authorization` header. For example,
-to list your tasks at a TES service:
+Send the token as a bearer token in the `Authorization` header. This example
+asks the Cloud Registry who you are. It works with any valid token that the
+registry accepts:
 
 ```bash
 read -rs TOKEN   # paste the token; it is not shown or saved in the history
-printf 'Authorization: Bearer %s\n' "$TOKEN" | curl "<API base URL>/tasks" -H @-
+printf 'Authorization: Bearer %s\n' "$TOKEN" | curl "https://elixir-on.cloud/ga4gh/registry/v1/me" -H @-
 ```
 
 The header goes to `curl` through standard input, so the token does not
-appear in the command line, the shell history or the process list.
+appear in the command line, the shell history or the process list. The
+response shows the user that the token identifies.
 
-Replace `<API base URL>` with the base URL of the service's API. It starts
-with the `url` from the registry entry. The path depends on the product (for
-example, proTES serves its TES API at `/ga4gh/tes/v1`). Its docs list the
-operations. A service that requires a token answers a request without a
-valid token with `401 Unauthorized`, and a request with a valid token but
-without the required role with `403 Forbidden`.
+To call another service, use the base URL of its API instead. It starts with
+the `url` from the registry entry. The path depends on the product (for
+example, proTES serves its TES API at `/ga4gh/tes/v1`). The docs of the
+product list the operations. A service that requires a token answers a
+request without a valid token with `401 Unauthorized`, and a request with a
+valid token but without the required role with `403 Forbidden`.
 
 Treat tokens like passwords: never put them in command lines, websites,
 tickets or chats.
