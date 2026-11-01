@@ -3,3 +3,4 @@ _site/
 .venv
 .notes
 .codespell*
+*.egg-info/

@@ -7,7 +7,7 @@ help:
 
 	@echo "Environment Management --------------------------------------------------------"
 	@echo "  \033[1m\033[35mclean-venv\033[0m \033[37m(cv)\033[0m: \033[36mRemove virtual environment.\033[0m"
-	@echo "  \033[1m\033[35minstall\033[0m \033[37m(i)\033[0m: \033[36mInstall dependencies and {{ cookiecutter.project_slug }}.\033[0m"
+	@echo "  \033[1m\033[35minstall\033[0m \033[37m(i)\033[0m: \033[36mInstall dependencies and the documentation.\033[0m"
 	@echo "  \033[1m\033[35mvenv\033[0m \033[37m(v)\033[0m: \033[36mCreate virtual environment.\033[0m\n"
 
 	@echo "Documentation -----------------------------------------------------------------"
@@ -24,7 +24,7 @@ cv: clean-venv
 .PHONY: docs
 docs:
 	@echo "\nGenerating project documentation ++++++++++++++++++++++++++++++++++++++++++++++\n"
-	@mkdocs build
+	@mkdocs build --strict
 
 .PHONY: d
 d: docs
@@ -32,7 +32,7 @@ d: docs
 .PHONY: install
 install:
 	@echo "\nInstalling dependencies and with this package +++++++++++++++++++++++++++++++++\n"
-	@poetry install --no-root
+	@pip install -e ".[docs]"
 
 .PHONY: i
 i: install

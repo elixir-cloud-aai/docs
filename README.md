@@ -1,6 +1,6 @@
-# Documentation Hub
+# ELIXIR On-Cloud docs
 
-Documentation for the ELIXIR-on-Cloud project.
+Documentation of the ELIXIR On-Cloud federated deployment, hosted by Read the Docs.
 
 ## Development
 
