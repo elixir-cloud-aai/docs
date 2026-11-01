@@ -1,48 +1,79 @@
-# Processing Sensitive Data
+# Sensitive Data
 
-Processing sensitive human data is fundamental to biomedical research, enabling breakthroughs in disease understanding, biomarker discovery, and treatment development.
-Rapid and secure access to such data accelerates research but also introduces significant responsibilities for data protection and privacy.
-Cloud-based services are increasingly used in biomedical research to connect researchers, data, and tools throughout the data lifecycle.
-This page summarizes scenarios and requirements for handling sensitive data within the ELIXIR On-Cloud framework.
+Sensitive human data, for example genetic and clinical data, is central to
+biomedical research. Its use brings duties for data protection and privacy.
+This page gives the background that partners and developers need to design an
+integration for such data: the legal frameworks, the types of secure
+environments and the four ways in which researchers can reach data. It is
+background, not legal advice. Ask your data protection officer about your
+case.
 
-## Legal Frameworks
+## Legal frameworks
 
-Sensitive data processing in research is governed by several legal frameworks, most notably the General Data Protection Regulation (GDPR) and the European Health Data Space (EHDS):
+Two EU frameworks govern the use of sensitive data in research:
 
-* **GDPR**: Allows the use of sensitive personal data for research when specific safeguards are in place. Under GDPR, processing may rely on different legal bases, such as tasks carried out in the public interest or explicit informed consent from data subjects, depending on the research context and applicable national law. In all cases, measures such as data minimization, pseudonymization, and strict access controls should be implemented, and a Data Protection Impact Assessment (DPIA) is strongly recommended.
-* **EHDS**: Builds on GDPR by establishing a unified framework for secure sharing and secondary use of electronic health data across the EU. The EHDS is defined as "the first common EU data space dedicated to a specific sector, establishing a common framework for use and exchange of electronic health data across the EU" ([Regulation (EU) 2025/327][eur-lex-ehds]). The EHDS aims to improve individuals' access to their electronic health data and enable secondary use for research, innovation, policymaking, health threats preparedness, patient safety, and regulatory activities.
+- **GDPR** (General Data Protection Regulation) allows the use of sensitive
+  personal data for research if safeguards are in place. The legal basis can
+  differ, for example a task in the public interest or the informed consent
+  of the data subjects. It depends on the research and on national law.
+  Always minimise the data, pseudonymise it and control access. A Data
+  Protection Impact Assessment (DPIA) is strongly recommended.
+- **EHDS** (European Health Data Space) builds on GDPR. It sets one framework
+  for sharing electronic health data across the EU and for its secondary use,
+  for example in research, innovation and policymaking. See [Regulation (EU)
+  2025/327][eur-lex-ehds]. Under the EHDS, health data may be reused if it is
+  anonymised or pseudonymised and accessed in a Secure Processing
+  Environment.
 
-## Environments
+## Secure environments
 
-* A Trusted Execution Environment (TEE) is a secure and isolated area within a computer system or processor that ensures the confidentiality and integrity of code and data during execution. It aims to protect sensitive computations and data from potential threats, such as malware or unauthorized access.
-* A Secure Processing Environment (SPE) is a controlled environment designed to facilitate secure data processing and analysis while maintaining confidentiality, integrity, and privacy. It focuses on secure processing techniques, often including encryption, secure computation, or secure enclaves, to protect data during computation. Under the EHDS regulation, sensitive health data (e.g., genetic or clinical records) can be reused for research, innovation, and policymaking if anonymized or pseudonymized and accessed through an SPE ([Regulation (EU) 2025/327][eur-lex-ehds]).
-* A Trusted Research Environment (TRE) is a secure and controlled environment specifically tailored for research purposes, providing secure data access, analysis, collaboration, and compliance with legal and ethical requirements. TREs emphasize data governance, collaboration, and knowledge generation while ensuring privacy protection. For TREs, the **Five Safes framework** is particularly relevant as a comprehensive approach to data protection while enabling research access. This framework has been adopted by Health Data Research UK (HDR-UK), NIHR, and other major UK research institutions as the gold standard for balancing data protection with research utility ([What is the Five Safes framework?][ukdataservice-5-safes]).
+Three terms describe places where sensitive data can be processed safely:
 
-!!! note "SPEs vs TREs"
-    Secure Processing Environments (SPEs) and Trusted Research Environments (TREs) are conceptually very similar and serve comparable purposes in providing secure environments for sensitive data processing. The key difference lies in their regulatory and geographical context: SPEs are specifically required within the framework of the EHDS, while TREs are primarily a UK-developed concept and implementation approach.
+- **Trusted Execution Environment (TEE):** a protected area of a processor.
+  It keeps code and data confidential and intact while they run.
+- **Secure Processing Environment (SPE):** a controlled environment for
+  processing and analysing data with confidentiality, integrity and privacy.
+  The EHDS requires an SPE for the secondary use of health data.
+- **Trusted Research Environment (TRE):** a controlled environment for
+  research. It covers data access, analysis, collaboration, and legal and
+  ethical compliance. The [Five Safes framework][ukdataservice-5-safes] is a
+  common basis for TREs.
 
-### Similarities Between TEE, SPE, and TRE
+SPEs and TREs are very similar. The term SPE comes from the EHDS. The term
+TRE originates in the UK.
 
-* **Isolation**: Operates separately from the main platform it runs on.
-* **Security**: Provides a secure environment for computations and data storage, including cryptographic key management and protection against malware.
-* **Integrity**: Ensures the integrity of data and code within the environment.
-* **Confidentiality**: Aims to maintain confidentiality of sensitive information and protect against compromise.
-* **Controlled Access and Authentication**: Authenticates code and data before execution to ensure only trusted and verified code runs.
-* **Collaboration and Analysis**: Provides tools and infrastructure that enable researchers to perform analysis and collaborate within a secure environment. This allows for sharing and combining datasets while maintaining data privacy.
+All three aim to isolate their content from the platform they run on, to
+protect the data against compromise, to check who may run code and access
+data, and to let researchers analyse data and work together without moving
+the data out. How well they do this depends on how an environment is built
+and run. Before you rely on one, check its isolation and its controls for
+data leaving the environment.
 
-## Use Cases
+## Four ways to reach data
 
-Researchers may require access to sensitive data in different scenarios.
-The four use cases are derived from the two dimensions of data storage and data processing.
-Research data can be stored in a single location or in multiple locations and institutions.
-We also distinguish between whether the data should be processed in the cloud or in the researcher's own environment.
+The ways in which researchers reach sensitive data depend on two questions:
+is the data in one place or in many, and is it processed in the cloud or in
+the researcher's own environment?
 
-|                    | Local processing    | Cloud processing     |
-| ------------------ | ------------------- | -------------------- |
-| **Central data**   | Data repository     | Cloud platform       |
-| **Federated data** | Federated database  | Federated processing |
+|                    | Local processing   | Cloud processing     |
+| ------------------ | ------------------ | -------------------- |
+| **Central data**   | Data repository    | Cloud platform       |
+| **Federated data** | Federated database | Federated processing |
 
-* **Data repository**: Data is stored in a single database. Researchers request access, are authorized, and transfer encrypted data to their secure environment for analysis.
-* **Federated database**: Data is distributed across multiple nodes. Metadata is accessible via APIs and a central portal. Researchers request access to datasets at individual nodes, which then provide data for transfer or processing.
-* **Cloud platform**: Centralized sensitive data is hosted on a platform. Authorized users log in and analyze data directly within an SPE, using workflows or interactive tools.
-* **Federated processing**: Sensitive data remains on separate nodes with restricted transfer. Analysis is performed via APIs in an SPE, often combining results from multiple sources. A special case of this is federated learning, where models are trained through several iterations and updated with different datasets.
+- **Data repository:** the data is in one database. Researchers request
+  access. After approval, they download encrypted data to their own secure
+  environment.
+- **Federated database:** the data is spread over several nodes. A central
+  portal and APIs expose its metadata. Researchers request access at the
+  nodes that hold the data they need.
+- **Cloud platform:** the data is on one platform. Authorised users log in
+  and analyse it in an SPE, with workflows or interactive tools.
+- **Federated processing:** the data stays on separate nodes, and its
+  transfer is restricted (the nodes must enforce this). The analysis runs through APIs in an SPE and often combines results
+  from several sources. Federated learning is a special case: a model is
+  trained in several rounds with different datasets.
+
+## Where to go next
+
+- To try an analysis in an SPE, see [Researchers](../researchers/index.md).
+- To plan access for your users and service, see [User Stories](user-stories.md).

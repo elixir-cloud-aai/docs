@@ -104,6 +104,8 @@ nav:
   - Partners and Developers:
     - "partners-and-developers/index.md"
     - "GA4GH Standards": "partners-and-developers/ga4gh-standards.md"
+    - "Using the APIs": "partners-and-developers/apis.md"
+    - "Packages": "partners-and-developers/packages.md"
     - "Sensitive Data": "partners-and-developers/sensitive-data.md"
     - "User Stories": "partners-and-developers/user-stories.md"
   - Researchers:

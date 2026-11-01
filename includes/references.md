@@ -132,7 +132,6 @@
 [sem-ver]: <https://semver.org/>
 [slurm]: <https://slurm.schedmd.com/>
 [snakemake]: <https://snakemake.readthedocs.io/en/stable/>
-[snakemake-docs]: <https://snakemake.readthedocs.io/en/stable/executing/cloud.html#executing-a-snakemake-workflow-via-ga4gh-tes>
 [sphinx]: <https://www.sphinx-doc.org/en/master/>
 [tesk]: <https://github.com/elixir-cloud-aai/TESK>
 [tesk-docs-deploy]: <https://github.com/elixir-cloud-aai/TESK/blob/master/charts/tesk/README.md>
