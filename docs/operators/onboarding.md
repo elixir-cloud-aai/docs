@@ -1,117 +1,88 @@
-# Administrator guide
+# Onboarding
 
-Welcome to the systems administrator guide to the [ELIXIR On-Cloud][elixir-cloud].
-Whether you would like to onboard your data or compute center, set up your own
-[GA4GH][ga4gh]-based cloud or simply play around with our compute and storage
-solutions, this is the right place to get you off the ground.
+Follow these steps to connect your Node to the ELIXIR On-Cloud federation.
+At the end, your cluster is available through the [GA4GH Task Execution
+Service][ga4gh-tes] (TES) API, and others can find it in the [Cloud
+Registry][elixir-cloud-registry].
 
-## General deployment notes
+You need:
 
-Most of our services (see our [GitHub organization][elixir-on-cloud-github]
-for a comprehensive list) come with [Helm](https://helm.sh/) charts for
-deployment on Cloud Native infrastructure and [Docker
-Compose](https://docs.docker.com/compose/) configurations for
-testing/development deployments. If you do not have experience with these
-technologies, please find some brief primers with references to additional
-documentation below.
-
-### Using Helm
-
-[Helm][helm] is an IaC tool that is described as the "package manager for
-Kubernetes". It allows the management of the lifecycle of a Kubernetes
-application, i.e., its deployment, configuration, upgrade, retiring, etc.
-Applications ara packaged into "Charts".  Using Helm Charts allows us to
-version control an application and therefore follow its evolution over time,
-make identical copies (e.g., development, staging, production), make
-predictable upgrades, and share/publish the application. 
-
-Some useful Helm commands to manage a Chart are:
-
-- `helm create`: Create a Helm Chart
-- `helm install`: Install an application
-- `helm upgrade`: Upgrade an application
-- `helm uninstall`: Uninstall an application
-
-### Using Docker Compose
-
-Most of our services provide a [Docker Compose][docker-compose] configuration
-file for easy deployment of the software on a local machine. If the [Docker
-Engine][docker-engine] and [Docker Compose][docker-compose] are already
-installed on your system, it is as simple as cloning the service's Git
-repository, changing into the folder where the Docker Compose file resides
-(typically `docker-compose.yml` in a repository's root directory) and running
-the following:
-
-```sh
-docker-compose up -d
-```
-
-!!! note "Non-standard name or location of config file"
-    The command will be different if the Docker Compose config file is _not_ in
-    the current working directory and/or is _not_ called `docker-compose.yml`.
-
-This will bring the service up. The argument `-d` (or `--detach`) starts the
-app in daemonized mode, i.e., all launched containers that compose creates run
-in the background.
-
-In order to stop the deployment, simply run:
-
-```sh
-docker-compose down
-```
-
-## Onboarding your compute center
-
-Follow the instructions below to onboard your compute node with the [ELIXIR
-On-Cloud][elixir-cloud]. Afterwards, your compute cluster will be accessible
-through the [GA4GH][ga4gh] Task Execution Service ([TES][ga4gh-tes]) API and,
-optionally, available in the ELIXIR On-Cloud compute network.
-
-### Deploying compute
-
-Depending on whether you have a Native Cloud cluster or an HPC/HTC, you will
-need to follow the instructions for deploying [TESK](services/tesk.md) or [Funnel](services/funnel.md)
-respectively.
-
-### Deploying storage
-
-Follow the instructions to connect your TES endpoint to one or more
-ELIXIR On-Cloud storage solutions. The currently supported solutions are:
-
-- [MinIO][minio] (Amazon S3)
-- [vsftpd][vsftpd] (FTP)
-
-!!! note "Other storage solutions"
-    Other S3 and FTP implementations may work but have not been tested.
-
-#### Deploying MinIO (Amazon S3)
-
-In order to deploy the [MinIO][minio] server, follow the [official
-documentation][minio-docs-k8s]. It is very simple
-
-If you are deploying Minio to OpenShift, you may find this
-[Minio-OpenShift][minio-deploy-openshift-template] template useful.
-
-You can also follow the instructions of this [MinIO Helm Chart](https://github.com/CSCfi/helm-charts/tree/main/charts/minio)
-
-#### Deploying `vsftpd` (FTP)
-
-There are a lot of guides available online to deploy [`vsftpd`][vsftpd], for
-example [this one][vsftpd-deploy]. There are only two considerations:
-
-1. It is required to activate secure FTP support with `ssl_enable=YES`.
-2. For onboarding with the ELIXIR On-Cloud, currently the server should have one
-   account with a specific username and password created. Please [contact
-    us][elixir-on-cloud-email] for details.
-
-### Registering your TES service
-
-Register your TES endpoint in the [Cloud
-Registry][elixir-cloud-registry]: log in with LS Login and register the
-service; you become its owner and can update it later. Please also let us
-know about your new TES endpoint by [email][elixir-on-cloud-email].
-
-## Custom cloud deployments
+- a Kubernetes cluster, or an HPC or HTC cluster (Slurm or OpenPBS)
+- an LS Login account (see [LS Login](ls-login.md))
+- an HTTPS host name for your TES service
 
 !!! warning "Under construction"
-    More info coming soon...
+    The requirements for a Node to join are not written down yet. Write to
+    [cloud-service@elixir-europe.org][elixir-on-cloud-email] before you
+    start.
+
+## 1. Deploy compute
+
+Choose the TES service that fits your cluster:
+
+| Your cluster | TES service |
+|---|---|
+| Kubernetes or OpenShift | [TESK](services/tesk.md) |
+| Kubernetes | [Poiesis](services/poiesis.md) |
+| HPC or HTC (Slurm) | [Funnel](services/funnel.md) |
+
+Follow the product docs that each page links to. When it works,
+`GET /ga4gh/tes/v1/tasks` on your TES service returns a list of tasks.
+
+## 2. Deploy storage
+
+Tasks read and write files through a storage server. The ELIXIR On-Cloud
+supports two kinds:
+
+- S3: [MinIO][minio]
+- FTP: [vsftpd][vsftpd]
+
+Other S3 and FTP servers may work, but nobody has tested them.
+
+### MinIO (S3)
+
+1. Deploy MinIO with the [MinIO documentation][minio-docs-k8s].
+2. On OpenShift, you can use the
+   [Minio-OpenShift][minio-deploy-openshift-template] template.
+3. On Kubernetes, you can also use the CSC [MinIO Helm
+   chart](https://github.com/CSCfi/helm-charts/tree/main/charts/minio).
+4. Give your TES service the S3 credentials. For TESK, see the `storage`
+   value of its chart.
+
+### vsftpd (FTP)
+
+1. Deploy [vsftpd][vsftpd], for example with [this guide][vsftpd-deploy].
+2. Turn on secure FTP: set `ssl_enable=YES`.
+3. Create one account for the federation. Write to
+   [cloud-service@elixir-europe.org][elixir-on-cloud-email] for the user name
+   and password to use.
+
+## 3. Register your TES service
+
+1. Open the [Cloud Registry][elixir-cloud-registry] and log in with LS
+   Login.
+2. Register your TES service:
+    - **URL:** the URL of your TES service. It must start with `https`.
+    - **Type:** the TES type from the list. Only admins can add types. If it
+      is missing, write to
+      [cloud-service@elixir-europe.org][elixir-on-cloud-email].
+    - **Environment:** `prod` for a production Node, `test` for a test Node.
+3. You are now the owner of the entry. You can update or delete it later.
+4. Tell the admins about your new TES service:
+   [cloud-service@elixir-europe.org][elixir-on-cloud-email].
+
+An admin of the registry verifies the entry. Services such as proTES can use
+the verified TES services of a Cloud Registry (see [Discovery in a service
+registry](https://protes.readthedocs.io/en/latest/configuration/#discovery-in-a-service-registry)
+in the proTES docs). For the registry's API, see the [Cloud Registry
+docs](https://cloud-registry.readthedocs.io/en/latest/api/).
+
+!!! warning "Under construction"
+    The checks for the verification of a TES service are not written down
+    yet. It is also not documented which services of the ELIXIR On-Cloud
+    use the verified entries.
+
+## 4. Next steps
+
+- Deploy more [services](services/index.md).
+- Connect your own services to [LS Login](ls-login.md).

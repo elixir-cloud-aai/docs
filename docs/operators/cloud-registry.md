@@ -1,3 +1,5 @@
+# Cloud Registry
+
 ## Synopsis
 
 [Cloud Registry][cr-repo] is the ELIXIR On-Cloud implementation of the
@@ -8,7 +10,12 @@ verify them. Anyone can browse the registry.
 This page describes the **ELIXIR On-Cloud deployment** at
 <https://registry.elixir-on.cloud/>. It is an addendum to the Cloud Registry
 documentation, which covers everything that is not specific to this
-deployment:
+deployment.
+
+This page is for the admins who run the registry. To register the TES
+service of your Node, see [Onboarding](onboarding.md).
+
+Product documentation:
 
 - [Deployment][cr-deployment] (the Helm chart; in the repository:
   [`deployment/README.md`][cr-deployment-readme])
