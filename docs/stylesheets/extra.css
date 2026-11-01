@@ -1,0 +1,30 @@
+/* Day/night versions of the ELIXIR On-Cloud lockup: the image variants carry
+   the classes `only-light` and `only-dark`, shown by the colour scheme */
+[data-md-color-scheme="default"] .only-dark,
+[data-md-color-scheme="slate"] .only-light {
+  display: none;
+}
+
+/* Start page banner */
+.hub-banner {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: space-between;
+}
+
+.hub-banner a {
+  min-width: 0;
+}
+
+.hub-banner img {
+  height: auto;
+  max-width: 100%;
+}
+
+/* Footer mark */
+.md-social__link img {
+  height: 1.2rem;
+  vertical-align: middle;
+}
