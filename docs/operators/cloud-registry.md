@@ -133,10 +133,11 @@ notes][cr-ui-upgrading-1.0.0-rc1]). For this deployment:
    notes][cr-chart-1.0.0rc1] say.
 3. **Organization fields:** registrations and updates with organization
    fields other than `name` and `url` are now rejected. Before upgrading,
-   list the public services that have others (the app also warns of all
-   such services on startup, see [Checks](#checks-after-installing)), and
-   tell their owners, or clean them up as described in [Stored
-   services][cr-upgrading-stored-services]:
+   list the services that have others, and tell their owners, or clean
+   them up as described in [Stored
+   services][cr-upgrading-stored-services]. The public list leaves out
+   pending services; the app warns of all such services, pending ones
+   included, on startup (see [Checks](#checks-after-installing)):
 
     ```bash
     curl -fsS https://elixir-on.cloud/ga4gh/registry/v1/services \
@@ -156,7 +157,12 @@ notes][cr-ui-upgrading-1.0.0-rc1]). For this deployment:
    image](#verifying-the-chart-and-the-image)), upgrade with the verified
    chart file (see [Upgrades](#upgrades)), and wait for the app. Then
    restart it once, so that services that pods of 0.6.0 registered,
-   updated or deleted during the rollout are counted correctly:
+   updated or deleted during the rollout are counted correctly. Pods of
+   0.6.0 apply neither the limit of services nor the check of organization
+   fields, so writes during the rollout can bypass both; to rule that out,
+   scale the app to 0 replicas before upgrading instead (`helm upgrade`
+   restores the replicas of the values file), at the cost of a short
+   downtime:
 
     ```bash
     kubectl rollout status deploy/cloud-registry -n <namespace>
@@ -1331,6 +1337,9 @@ of services per user when it starts:
 
 ```bash
 kubectl scale deploy/cloud-registry --replicas=0 -n <namespace>
+# Waits until the app's pods are gone, so that none writes during the restore
+kubectl wait --for=delete pod -n <namespace> --timeout=120s \
+  -l app.kubernetes.io/instance=cloud-registry,app.kubernetes.io/component=app
 # Starts the app again only if the restore succeeded
 kubectl exec -i deploy/cloud-registry-mongodb -n <namespace> -- sh -c 'mongorestore \
   -u "$MONGO_INITDB_ROOT_USERNAME" -p "$MONGO_INITDB_ROOT_PASSWORD" \
