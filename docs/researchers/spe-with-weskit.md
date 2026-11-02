@@ -68,9 +68,10 @@ one for the S3 storage.
    dashboard](https://gitlab.com/one-touch-pipeline/weskit/gui/-/tree/spe4hd_demo)
    is a lightweight web app to run and watch workflows. You can use it as a
    template for your own.
-6. **Connect LS Login.** Register one service at LS Login (see the
-   [LS Login guide](https://www.lifescience-ri.eu/registering-integrating-and-managing-your-service/))
-   for WESkit, the S3 server and the web interface. Configure WESkit for
+6. **Connect LS Login.** Register one service at LS Login for each of
+   WESkit, the S3 server and the web interface (see the [LS Login
+   guide](https://www.lifescience-ri.eu/registering-integrating-and-managing-your-service/)),
+   each with its own client credentials and redirect URI. Configure WESkit for
    OpenID Connect as in its [login
    guide](https://gitlab.com/one-touch-pipeline/weskit/documentation/-/blob/master/admin/login.md).
    For MinIO, see [Using LS Login](../operators/ls-login.md).
@@ -85,8 +86,9 @@ one for the S3 storage.
 WESkit writes the file `log.json` into the log folder of a run when the run
 has finished. The script looks for new finished runs, uploads their file
 `results.csv` to the bucket if the run made the plot `plots/quals.svg`, and
-marks the run with the file `upload_token`,
-so that it uploads each run only once. Replace `USERNAME` and `PASSWORD`, and
+marks the run with the file `upload_token`
+after a successful upload, so that it uploads each run only once and retries
+failed uploads. Replace `USERNAME` and `PASSWORD`, and
 adapt the paths and files to your workflow.
 
 ```bash
@@ -99,10 +101,12 @@ process_directory() {
     local bucketname=$(basename $dir)
     if [[ ! -f "$dir/upload_token" ]]; then
       if [ -f "$dir/plots/quals.svg" ]; then
-          mc mb local/results/$bucketname;
-          mc cp $dir/results.csv local/results/$bucketname;
+          mc mb --ignore-existing local/results/$bucketname &&
+          mc cp $dir/results.csv local/results/$bucketname &&
+          touch "$dir/upload_token";
+      else
+          touch "$dir/upload_token"
       fi
-      touch "$dir/upload_token"
     fi
 }
 

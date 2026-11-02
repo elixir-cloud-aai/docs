@@ -40,7 +40,9 @@ gateway, which forwards each task to one of the TES services.
     - `.inputs`: the location and the URL of each input file, and one line
       `workflow` with the input of the workflow;
     - `.env`: `FUNNEL_SERVER_USER` and `FUNNEL_SERVER_PASSWORD` for Funnel
-      services, and `TES_GATEWAY`, the address of the proTES gateway.
+      services, and `TES_GATEWAY`, the address of the proTES gateway. It
+      holds passwords: never commit or share it, and make only you able to
+      read it (`chmod 600 .env`).
 3. Start the notebook:
 
     ```bash

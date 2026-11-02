@@ -1,7 +1,7 @@
 # Crypt4GH with proTES
 
 This page shows how researchers can analyse Crypt4GH-encrypted sensitive
-data without getting access to the decrypted data. A data holder encrypts
+data without opening the decrypted files themselves. A data holder encrypts
 the data with [Crypt4GH](https://crypt4gh.readthedocs.io/). The researcher
 sends a [GA4GH TES][ga4gh-tes] task to [proTES](https://protes.readthedocs.io/en/v0.3.0/).
 A middleware of proTES adds a step that decrypts the files inside a
@@ -28,6 +28,14 @@ the decrypted files.
     with. The configuration in step 4 is from the original tutorial and was
     not run again for this page.
 
+!!! danger "The task commands see the decrypted data"
+    The commands of a task run on the decrypted files. A command that
+    researchers write can copy the plaintext into the task outputs or send it
+    elsewhere. The setup protects the data only if the commands are trusted or
+    approved by the data holder, and if the outputs and the network access of
+    the containers are restricted. Use it for sensitive data only after you
+    have checked this.
+
 ## How it works
 
 1. The data holder encrypts the data with Crypt4GH and stores it, for
@@ -47,6 +55,12 @@ without the data holder.
 - Three virtual machines with Docker and network connections to each other:
   a Funnel server, a Funnel worker and a proTES gateway.
 - Space for the encrypted and decrypted files and for the results.
+- A private network for the machines. The Funnel server accepts tasks on
+  its HTTP and RPC ports (8000 and 9090 below) and the worker runs them, so
+  only the proTES gateway and the worker may reach these ports. If other
+  machines can reach them, enable authentication in Funnel (see `Server.BasicAuth`
+  in its [default
+  config](https://github.com/calypr/funnel/blob/develop/config/default-config.yaml)).
 
 ## Set up
 
@@ -368,11 +382,12 @@ curl -X POST http://localhost:8080/ga4gh/tes/v1/tasks \
 ```
 
 Use `task2_encrypt_file.json` and `task3_decrypt_and_write_size.json` in the
-same way. Replace `localhost:8080` with the address of your proTES. If your
+same way. `localhost:8080` is for local tests only. For a proTES on another machine,
+use its `https://` address, so that tokens and keys are not sent unencrypted. If your
 proTES requires access tokens (see its [access
 control](https://protes.readthedocs.io/en/v0.3.0/access-control/)), add an
-`Authorization: Bearer` header. Each submission returns a task ID. Use it to
-watch the task:
+`Authorization: Bearer` header to every request. Each submission returns a
+task ID. Use it to watch the task:
 
 ```bash
 curl http://localhost:8080/ga4gh/tes/v1/tasks/<task-id>
