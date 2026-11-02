@@ -1,8 +1,8 @@
 <!-- markdownlint-disable MD033 MD041 -- logo first; <picture> for dark mode -->
 <a href="https://elixir-on.cloud/">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/images/logo_elixir_on_cloud_lockup_night.png">
-    <img src="docs/images/logo_elixir_on_cloud_lockup.png" alt="ELIXIR On-Cloud">
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/logo_elixir_on_cloud_night.png">
+    <img src="docs/images/logo_elixir_on_cloud.png" alt="ELIXIR On-Cloud">
   </picture>
 </a>
 <!-- markdownlint-enable MD033 MD041 -->
