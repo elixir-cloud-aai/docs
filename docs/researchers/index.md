@@ -1,16 +1,40 @@
-# Researchers: start here
+# Researchers: Start Here
 
 This section is for researchers who want to try the federated analytics
-blueprint of ELIXIR On-Cloud.
+blueprint of ELIXIR On-Cloud: run analyses on compute that stays at the
+ELIXIR Nodes, and keep sensitive data under the control of its owner.
 
 --8<-- "includes/scope.md"
 
-## Where to go
+## What you can try
 
-- [Analysis of sensitive data in a Secure Processing Environment with
-  WESkit](spe-with-weskit.md)
-- [Crypt4GH with proTES](crypt4gh-with-protes.md)
+| Page | What you do | What you need |
+|---|---|---|
+| [Run Workflows Across Nodes](federated-workflows.md) | Run a Snakemake workflow on the TES services of several Nodes, through the proTES gateway. | A Python environment on your computer, and the addresses of TES services. |
+| [Sensitive Data in a Secure Processing Environment](spe-with-weskit.md) | Run workflows on sensitive data that you never see, and read the results. | An LS Login account and permission from the operator of the environment. |
+| [Crypt4GH with proTES](crypt4gh-with-protes.md) | Process Crypt4GH-encrypted files in a secure container. Needs proTES 0.3.0 or earlier. | Docker and three virtual machines. |
+
+## Before you start
+
+1. Get an [LS Login](https://www.lifescience-ri.eu/life-science-login/)
+   account. It is the identity provider of the deployment.
+2. Find the TES services that you can use. [Using the
+   APIs](../partners-and-developers/apis.md#1-find-the-services) shows how
+   to list them in the Cloud Registry.
+3. Choose a page above and follow its steps.
 
 !!! warning "Under construction"
-    A walk-through of the federated analytics blueprint is missing (see
-    issue #66).
+    The deployment does not publish the addresses of its TES services for
+    researchers yet, and it is not documented how a researcher gets access
+    to them. Until then, write to
+    [cloud-service@elixir-europe.org][elixir-on-cloud-email] to ask for
+    services that you can use.
+
+## Where to go next
+
+- The tasks and the API of a TES service: [GA4GH
+  TES][ga4gh-tes] and the [proTES docs](https://protes.readthedocs.io/en/latest/).
+- Workflow engines that can send their tasks to a TES service: [Run
+  workflows through TES](../partners-and-developers/ga4gh-standards.md#run-workflows-through-tes).
+- Questions: the [Discussions][elixir-on-cloud-forum] or the [About](../about.md)
+  page.

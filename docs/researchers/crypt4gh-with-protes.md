@@ -1,89 +1,78 @@
-# Crypt4GH Integration with proTES: A Guide to Secure Genomic Analysis
+# Crypt4GH with proTES
 
-This guide explains how to configure and deploy an environment that enables collaborative research on sensitive genomic data. Data holders can securely provide encrypted data for analysis while researchers process it through [Funnel](https://github.com/ohsu-comp-bio/funnel) and [proTES](https://github.com/elixir-cloud-aai/proTES), where automatic decryption occurs within secure containers without granting researchers direct access to the sensitive data. This setup leverages [GA4GH TES](https://github.com/ga4gh/task-execution-schemas) standard for scalable and secure task execution.
+This page shows how researchers can analyse Crypt4GH-encrypted sensitive
+data without opening the decrypted files themselves. A data holder encrypts
+the data with [Crypt4GH](https://crypt4gh.readthedocs.io/). The researcher
+sends a [GA4GH TES][ga4gh-tes] task to [proTES](https://protes.readthedocs.io/en/v0.3.0/).
+A middleware of proTES adds a step that decrypts the files inside a
+container of the [Funnel][funnel] TES service, and the task command runs on
+the decrypted files.
 
-## Use Case
+!!! warning "Needs proTES 0.3.0 or earlier"
+    The Crypt4GH middleware is a proof of concept. proTES 0.4.0 does not
+    run middlewares any more: it refuses `custom.middlewares` at startup and
+    uses plugins instead, and no port of the middleware exists in its repository or in
+    [foca-plugins](https://foca-plugins.readthedocs.io/en/latest/) (see the
+    [upgrade
+    steps](https://protes.readthedocs.io/en/latest/upgrading/#plugins)). The
+    steps below therefore need [proTES
+    0.3.0](https://protes.readthedocs.io/en/v0.3.0/). The README of the
+    middleware also warns that you must not use it in untrusted
+    environments: it needs secret keys to be sent and stores decrypted files
+    on disk.
 
-A data holder needs to provide sensitive genomic data for analysis to a researcher in a cloud environment. The data must remain encrypted during storage and transfer, with decryption occurring only within a secure computational environment (container), without granting direct data access to the researcher.
+!!! warning "Under construction"
+    Not documented: how to install the middleware into proTES 0.3.0 (the
+    repository describes only its development setup), a version of the
+    middleware for current proTES, and which versions the steps were tested
+    with. The configuration in step 4 is from the original tutorial and was
+    not run again for this page.
 
-1. The data holder encrypts sensitive data using Crypt4GH and stores them at a secure storage (e.g. S3 buckets).
-2. The researcher submits a GA4GH TES task to `proTES` for analysis of the encrypted data. 
-3. The installed `proTES middleware` automatically detects the encrypted data and decrypts them using Crypt4GH keys that are managed by `proTES`.
-4. The researcher's task command is executed on the decrypted data.
-5. The analysis results are stored at a dedicated storage accessible to the researcher
+!!! danger "The task commands see the decrypted data"
+    The commands of a task run on the decrypted files. A command that
+    researchers write can copy the plaintext into the task outputs or send it
+    elsewhere. The setup protects the data only if the commands are trusted or
+    approved by the data holder, and if the outputs and the network access of
+    the containers are restricted. Use it for sensitive data only after you
+    have checked this.
 
-`Note:` all computational steps are done in a secure containerized environment.
+## How it works
 
-This approach allows collaborative research where sensitive data can be processed in cloud environments without provisioning data access to the researcher but instead utilizing a combination of `Crypt4GH` and `proTES` for data encryption, decryption, and analysis.
-Additionally, the researcher can repeat the analysis with adjusted parameters anytime without further action of the data holder.
+1. The data holder encrypts the data with Crypt4GH and stores it, for
+   example in an S3 bucket.
+2. The researcher sends a task for the encrypted files to proTES.
+3. The middleware of proTES finds the encrypted files and adds an executor
+   that decrypts them with the keys in the task.
+4. Funnel runs the decrypt executor and then the executors of the
+   researcher on the decrypted files, all in containers.
+5. The results go to a storage that the researcher can read.
 
+The researcher can repeat the analysis with other parameters at any time,
+without the data holder.
 
-## Overview
+## What you need
 
-[Crypt4GH](https://crypt4gh.readthedocs.io/) is a standard for encrypting sensitive data. This setup demonstrates:
+- Three virtual machines with Docker and network connections to each other:
+  a Funnel server, a Funnel worker and a proTES gateway.
+- Space for the encrypted and decrypted files and for the results.
+- A private network for the machines. The Funnel server accepts tasks on
+  its HTTP and RPC ports (8000 and 9090 below) and the worker runs them, so
+  only the proTES gateway and the worker may reach these ports. If other
+  machines can reach them, enable authentication in Funnel (see `Server.BasicAuth`
+  in its [default
+  config](https://github.com/calypr/funnel/blob/develop/config/default-config.yaml)).
 
-- Generating cryptographic key pairs for data exchange between parties (data holder and researcher)
-- Encrypting files using the data holder's private key and researcher's public key
-- Automatically decrypting `.c4gh` encrypted files during task execution using [protes-middleware-crypt4gh](https://github.com/elixir-cloud-aai/protes-middleware-crypt4gh)
-- Securely processing sensitive data in containerized environments
+## Set up
 
-**Security Note:** Private keys should be stored in secure locations and used only for encryption/decryption. Consider using signed URLs for transferring private keys to the TES instance. 
+### 1. Install Funnel on the server and the worker
 
-**Goal of this tutorial:** You'll have a setup which encrypts sensitive data, stores them in a secure storage, automatic detection of encrypted data, decryption followed by processing, and ensuring that sensitive data remains protected.
+Install Funnel on both machines. See the [Funnel docs](https://calypr.org/tools/funnel/)
+and the [releases](https://github.com/calypr/funnel/releases) of
+[Funnel](https://github.com/calypr/funnel).
 
-## Setup
+### 2. Configure and start the Funnel server
 
-The complete setup consists of three main tasks:
-
-1. **Key Generation**: Generate Crypt4GH key pairs for the data holder and researcher parties (optional).
-2. **File Encryption**: Encrypt sensitive data using the Crypt4GH keys.
-3. **File Decryption**: automatic detection of encrypted data, their decryption and processing in a secure computing environment.
-
-
-## Prerequisites
-
-Before starting, ensure you have:
-
-- **Three VMs**:
-  - Funnel server VM
-  - Funnel worker VM
-  - ProTES deployment VM
-- [Docker](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository) installed on all VMs
-- Network connectivity between all VMs
-- Sufficient storage space for encrypted/decrypted files and results. 
-
-## Installation and Configuration
-
-### Step 1: Prepare Your VMs
-
-The setup requires three distinct components:
-
-- **Funnel Server**: Manages the database for storing task and scheduler data, and configures the compute backend
-- **Funnel Worker**: Executes requested tasks and handles logging
-- **ProTES Gateway**: Distributes tasks and provides middleware for automatic decryption
-
-#### Install Dependencies
-
-Run the following commands on both the Funnel server and worker VMs:
-
-```bash
-sudo apt update
-sudo apt install -y make golang-go protobuf-compiler
-
-# Install Go protocol buffer plugins (use pinned versions for reproducibility)
-go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-export PATH=$PATH:$(go env GOPATH)/bin
-
-# Clone and build Funnel
-git clone https://github.com/ohsu-comp-bio/funnel.git
-cd funnel
-make
-```
-
-### Step 2: Configure Funnel Server
-
-Create a configuration file named `server-config.yaml` in the cloned Funnel directory on your **server VM**:
+On the server machine, create `server-config.yaml`:
 
 ```yaml
 Server:
@@ -107,30 +96,31 @@ LocalStorage:
     - /tmp/funnel-storage
 ```
 
-**Configuration Details:**
+The server listens on all interfaces (`HostName`), serves its HTTP API on
+port 8000 and the RPC port for workers on 9090. `Compute: "manual"` means
+that you start the workers yourself. Start the server:
 
-- `HostName: 0.0.0.0`: Binds to all network interfaces
-- `HTTPPort: "8000"`: HTTP API port
-- `RPCPort: "9090"`: RPC communication port
-- `Database: boltdb`: Uses embedded BoltDB for task storage
-- `Compute: "manual"`: Manual node management mode
-- `LocalStorage.AllowedDirs`: Directories accessible for file I/O operations
+```bash
+funnel server run --config server-config.yaml &
+```
 
-### Step 3: Configure Funnel Worker
+### 3. Configure and start the Funnel worker
 
-Create a configuration file named `worker-config.yaml` in the cloned Funnel directory on your **worker VM**:
+On the worker machine, create `worker-config.yaml`. Replace `XXX` with the
+IP address of the server (the internal one, if both are in the same
+network):
 
 ```yaml
 Server:
-  HostName: XXX  # Replace with your Funnel server IP
+  HostName: XXX
   RPCPort: "9090"
 
 RPCClient:
-  ServerAddress: XXX:9090  # Replace with your Funnel server IP
+  ServerAddress: XXX:9090
 
 Worker:
   WorkDir: "/tmp/funnel-work"
-  
+
 Node:
   ID: "worker-node-1"
   Resources:
@@ -144,57 +134,36 @@ LocalStorage:
     - /tmp/funnel-storage
 ```
 
-**Important:** Replace `XXX` with the actual IP (internal if in the same network) address of your Funnel server VM.
-
-**Configuration Details:**
-
-- `ServerAddress`: Points to your Funnel server's RPC endpoint
-- `Node.ID`: Unique identifier for this worker node
-- `Node.Resources`: Define available CPU, RAM, and disk resources
-- `UpdateRate`: How frequently the worker reports its status
-
-
-### Step 4: Start Funnel Services
-
-Start the services on their respective VMs:
-
-**On the server VM:**
+Give the worker an ID that no other worker has, and set the resources to
+what the machine offers. Start the worker:
 
 ```bash
-cd funnel
-funnel server run --config server-config.yaml &
-```
-
-**On the worker VM:**
-
-```bash
-cd funnel
-# If worker terminates after one task execution, put the command in a while loop.
-# while true; do funnel node run --config worker-config.yaml; done
 funnel node run --config worker-config.yaml &
 ```
 
-Verify that both services are running by checking the logs or accessing the Funnel server API at `http://<server-ip>:8000`.
+If the worker stops after one task, run the command in a loop (`while true; do
+funnel node run --config worker-config.yaml; done`). Check that both
+processes run, and that the server answers at `http://<server-ip>:8000`.
 
-### Step 5: Configure ProTES
+### 4. Set up proTES
 
-ProTES acts as a gateway and provides middleware for automatic Crypt4GH decryption. Follow the [proTES](https://github.com/elixir-cloud-aai/proTES) installation guide to deploy proTES on your third VM.
-
-For detailed middleware installation, refer to the [protes-middleware-crypt4gh](https://github.com/elixir-cloud-aai/protes-middleware-crypt4gh) repository.
-
-**Note:** If the branch-specific changes are not yet merged, use the `adjust_middleware` branch for `proTES` and the `update_middleware` branch for `protes-middleware-crypt4gh`. Once those changes are merged, use each repository's default branch.
-
-Once installed, configure the Crypt4GH middleware by editing the `pro_tes/config.yaml` file:
+Deploy [proTES 0.3.0](https://protes.readthedocs.io/en/v0.3.0/) on the third
+machine, with the Funnel server as its TES service, and install the
+[Crypt4GH
+middleware](https://github.com/elixir-cloud-aai/protes-middleware-crypt4gh)
+(see "Under construction" above). Then enable the middleware in the
+`custom` section of `pro_tes/config.yaml`:
 
 ```yaml
-middlewares:
-  - - "pro_tes.plugins.middlewares.crypt4gh_decrypt.CryptMiddleware"
-    - "pro_tes.plugins.middlewares.task_distribution.random.TaskDistributionRandom"
+custom:
+  middlewares:
+    - - "pro_tes.plugins.middlewares.crypt4gh_decrypt.CryptMiddleware"
+      - "pro_tes.plugins.middlewares.task_distribution.random.TaskDistributionRandom"
 ```
 
-## Usage Examples
+## Run the tasks
 
-The following examples demonstrate the complete encryption/decryption workflow using three sequential tasks.
+The three tasks run one after the other. Each is a TES task in a JSON file.
 
 ### Task 1: Generate Crypt4GH Key Pairs
 
@@ -401,30 +370,24 @@ Create a file named `task3_decrypt_and_write_size.json`:
 - Computes an MD5 checksum of the decrypted data for verification
 - Stores the checksum in the output directory
 
-## Submitting Tasks
+## Submit the tasks
 
-Once your environment is configured, submit tasks to proTES using the following commands:
+Send each task to proTES. Wait until a task is complete before you send the
+next one:
 
 ```bash
-# Submit Task 1: Generate keys
 curl -X POST http://localhost:8080/ga4gh/tes/v1/tasks \
   -H "Content-Type: application/json" \
   -d @task1_keygen.json
-
-# Submit Task 2: Encrypt file (wait for Task 1 to complete)
-curl -X POST http://localhost:8080/ga4gh/tes/v1/tasks \
-  -H "Content-Type: application/json" \
-  -d @task2_encrypt_file.json
-
-# Submit Task 3: Decrypt file (wait for Task 2 to complete)
-curl -X POST http://localhost:8080/ga4gh/tes/v1/tasks \
-  -H "Content-Type: application/json" \
-  -d @task3_decrypt_and_write_size.json
 ```
 
-**Important:** Replace `localhost:8080` with your proTES server address if it's running on a different machine.
-
-Each task submission returns a task ID that you can use to monitor progress:
+Use `task2_encrypt_file.json` and `task3_decrypt_and_write_size.json` in the
+same way. `localhost:8080` is for local tests only. For a proTES on another machine,
+use its `https://` address, so that tokens and keys are not sent unencrypted. If your
+proTES requires access tokens (see its [access
+control](https://protes.readthedocs.io/en/v0.3.0/access-control/)), add an
+`Authorization: Bearer` header to every request. Each submission returns a
+task ID. Use it to watch the task:
 
 ```bash
 curl http://localhost:8080/ga4gh/tes/v1/tasks/<task-id>
@@ -432,41 +395,26 @@ curl http://localhost:8080/ga4gh/tes/v1/tasks/<task-id>
 
 ## Troubleshooting
 
-### Common Issues
+- **Tasks do not run.** Check that the Funnel server and the worker run and
+  that the machines reach each other.
+- **A file is not decrypted.** Check the configuration of the middleware in
+  proTES, and read the logs of the proTES container (`docker logs`) while you
+  submit a task. The encrypted files must have the extension `.c4gh`.
+- **Task details.** Ask the Funnel server:
+  `curl http://<server-ip>:8000/v1/tasks/<task-id>`.
 
-**Tasks not executing:**
-- Verify Funnel server and worker are running
-- Check network connectivity between VMs
+## Keep your keys safe
 
-**Decryption failures:**
-- Verify the Crypt4GH middleware is properly configured in proTES. Use `docker logs` during task submission.
-- Ensure `.c4gh` file extension is present on encrypted files
+- Never commit private keys to version control.
+- Store private keys encrypted, and restrict access to the storage
+  directories.
+- Use signed URLs or a key management system to send keys to the TES service.
+- Use TLS for all endpoints outside tests.
 
-### Checking Logs
+## More information
 
-View Funnel server logs:
-```bash
-ps aux | grep funnel
-# Find the process and check its output
-```
-
-View task details:
-```bash
-curl http://localhost:8000/v1/tasks/<task-id>
-```
-
-## Additional Resources
-
-- [Funnel Documentation](https://github.com/calypr/funnel)
-- [proTES Documentation](https://github.com/elixir-cloud-aai/proTES)
-- [Crypt4GH Specification](https://crypt4gh.readthedocs.io/)
-- [GA4GH TES API](https://github.com/ga4gh/task-execution-schemas)
-- [Crypt4GH Middleware](https://github.com/elixir-cloud-aai/protes-middleware-crypt4gh)
-
-## Security Best Practices
-
-- **Never commit private keys** to version control
-- Use **encrypted storage** for private keys in production
-- Implement **access controls** on storage directories
-- Use **signed URLs** or secure key management systems for key distribution
-- Enable **TLS/SSL** for all API endpoints in production
+- [Funnel](https://github.com/calypr/funnel)
+- [proTES](https://protes.readthedocs.io/en/v0.3.0/)
+- [Crypt4GH middleware](https://github.com/elixir-cloud-aai/protes-middleware-crypt4gh)
+- [Crypt4GH](https://crypt4gh.readthedocs.io/)
+- [GA4GH TES][ga4gh-tes]
