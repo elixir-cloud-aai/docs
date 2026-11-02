@@ -110,6 +110,7 @@ nav:
     - "User Stories": "partners-and-developers/user-stories.md"
   - Researchers:
     - "researchers/index.md"
+    - "Run Workflows Across Nodes": "researchers/federated-workflows.md"
     - "SPE with WESkit": "researchers/spe-with-weskit.md"
     - "Crypt4GH with proTES": "researchers/crypt4gh-with-protes.md"
   - About: "about.md"
