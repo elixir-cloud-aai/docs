@@ -86,7 +86,7 @@ markdown_extensions:
       permalink: true
 nav:
   - Home: "index.md"
-  - Node Operators:
+  - Architects & Operators:
     - "operators/index.md"
     - "Onboarding": "operators/onboarding.md"
     - "Cloud Registry": "operators/cloud-registry.md"
