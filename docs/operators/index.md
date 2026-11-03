@@ -1,4 +1,4 @@
-# Node Operators: Start Here
+# Architects & Operators: Start Here
 
 This section is for admins of ELIXIR Nodes. It shows how a Node runs a TES
 service in the ELIXIR On-Cloud federation and how it connects to the

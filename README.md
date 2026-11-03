@@ -14,8 +14,8 @@
 [![Docs][badge-docs]][badge-url-docs]
 
 Documentation hub of the [ELIXIR On-Cloud](https://elixir-on.cloud/) federated
-deployment: guides for node operators, partners and developers, and
-researchers. Built with [MkDocs Material](https://squidfunk.github.io/mkdocs-material/)
+deployment: guides for architects and operators, partners and developers,
+and researchers. Built with [MkDocs Material](https://squidfunk.github.io/mkdocs-material/)
 and published on Read the Docs.
 
 **Read the [documentation][docs]** at https://docs.elixir-on.cloud/.

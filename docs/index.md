@@ -24,7 +24,7 @@ Welcome to the documentation of [ELIXIR On-Cloud][elixir-on-cloud], a
 
 Choose the section that fits you:
 
-=== ":material-database: Node Operators"
+=== ":material-database: Architects & Operators"
 
     You run services at an ELIXIR Node or want to join the federation.
 
