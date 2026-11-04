@@ -1,6 +1,8 @@
 # Architects & Operators: Start Here
 
-This section is for admins of ELIXIR Nodes. It shows how a Node runs a TES
+This section is primarily for architects, who decide whether to adopt GA4GH
+products and patterns, and also for operators, who want their Node safe and
+to keep controlling access to their resources. It shows how a Node runs a TES
 service in the ELIXIR On-Cloud federation and how it connects to the
 deployment's other services.
 
