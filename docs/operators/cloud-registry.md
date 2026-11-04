@@ -244,7 +244,9 @@ then deploys the image of its release (see [Image][cr-image] and
 [Installation][cr-installation]). Don't deploy the moving image tags `latest`
 or `dev`, nor the chart from the repository's `deployment` folder (which
 deploys `dev`): a restart of a pod could then start another version than the
-one the config was written for.
+one the config was written for. Local checkouts of the repositories are
+for reading the documentation and the chart, not for building images;
+`git describe --tags` shows whether a checkout matches the deployed release.
 
 ### Verifying the chart and the image
 
@@ -309,6 +311,15 @@ scopes `openid profile eduperson_entitlement`** (`profile` for `name`), and
 their client registration in LS Login must allow them; otherwise, admins act
 as ordinary users and roles of groups don't apply. LS Login access tokens are
 JWTs as per RFC 9068 (`typ: at+jwt`), as the registry requires.
+
+If every create, update and delete fails with `401 Unauthorized` although
+the audience is right, and the app logs `JWT type is not accepted`, the
+tokens lack that `typ` header (e.g., for some clients or scopes). Check the
+header of a token (decoded locally, see [Audience](#audience)), and report it
+to [cloud-service@elixir-europe.org][elixir-on-cloud-email]. As a
+workaround, set `config.security.auth.verify_token_type: false` in the values
+file: the chart passes it on, and the registry still checks the issuer, the
+audience and the signature (see [Configuration][cr-configuration]).
 
 The public reads (`GET /services`, `GET /services/types` and the
 verifications) accept an optional token: with one, they apply that user's
@@ -592,6 +603,58 @@ mongodb:
     existingSecret: cloud-registry-mongodb-credentials
 ```
 
+### Ingress controller
+
+This page assumes an ingress controller in the cluster and, if TLS is served
+in the cluster, [cert-manager][cert-manager-install] with the ClusterIssuer
+`letsencrypt-prod` (the chart's default,
+`cloudRegistry.ingress.https.issuer`). If TLS is terminated in front of the
+cluster, cert-manager isn't needed (see [TLS at a proxy in front of the
+cluster](#tls-at-a-proxy-in-front-of-the-cluster)). Check what the cluster
+has:
+
+```bash
+kubectl get ingressclass
+kubectl get clusterissuer
+```
+
+**If the cluster has no ingress controller, install a maintained one, e.g.,
+Traefik** (with its [Helm chart][traefik-helm-chart]). ingress-nginx is
+[retired][ingress-nginx-retirement] and gets no more releases since March
+2026; its examples on this page are kept for clusters that still run it.
+Run the controller with 2 replicas and a PodDisruptionBudget, for the same
+reasons as the app (see [Replicas](#replicas)); each replica then counts the
+rate limits on its own (see [Rate limits](#rate-limits)). *Example for
+Traefik*, in the namespace `traefik`, which the examples below assume:
+
+```yaml title="traefik-values.yaml"
+deployment:
+  replicas: 2
+podDisruptionBudget:
+  enabled: true
+  maxUnavailable: 1
+# Spread the pods over nodes, so that a node drain keeps one running
+topologySpreadConstraints:
+- maxSkew: 1
+  topologyKey: kubernetes.io/hostname
+  whenUnsatisfiable: ScheduleAnyway
+  labelSelector:
+    matchLabels:
+      app.kubernetes.io/name: traefik
+# Not the cluster's default Ingress class
+ingressClass:
+  enabled: true
+  isDefaultClass: false
+service:
+  type: LoadBalancer
+```
+
+```bash
+helm repo add traefik https://traefik.github.io/charts
+helm install traefik traefik/traefik --version <chart version> \
+  -n traefik --create-namespace -f traefik-values.yaml
+```
+
 ### Exposing the API
 
 The chart routes all paths of `hostName` to the app, including FOCA's
@@ -608,8 +671,10 @@ cluster allows:
 - **Without the chart's Ingress (any ingress controller):** disable the
   chart's Ingress and Route, and route only `/ga4gh/registry/v1/` to the
   app's Service (`cloud-registry`, port `http`) with an Ingress (or
-  HTTPRoute) of your own. This is also the way to go if `elixir-on.cloud`
-  serves other apps too:
+  HTTPRoute) of your own. **Take this way if `elixir-on.cloud` serves other
+  apps too**, e.g., the ELIXIR On-Cloud [landing page][landing-page-repo] at
+  all other paths: the chart's Ingress routes all paths of `hostName` to the
+  app, so in the same cluster it would take over the landing page:
 
     ```yaml title="values-prod.yaml"
     cloudRegistry:
@@ -650,10 +715,13 @@ cluster allows:
     ```
 
     Apply it with `kubectl apply -f ingress-cloud-registry.yaml` and keep it
-    in the infrastructure repository next to the values file.
+    in the infrastructure repository next to the values file. With Traefik,
+    use the IngressRoute of [Rate limits](#rate-limits) instead: it routes
+    only the base path too, and applies the rate limits.
 
 - **With the chart's Ingress:** block `/admin/` at the proxy in front of the
-  cluster, or in the ingress controller. *Example for ingress-nginx*, which
+  cluster, or in the ingress controller. *Example for ingress-nginx*
+  (retired, see [Ingress controller](#ingress-controller)), which
   needs snippet annotations to be allowed by the controller
   (`allow-snippet-annotations: "true"` and, from controller 1.12,
   `annotations-risk-level: Critical` in its ConfigMap; many clusters refuse
@@ -678,6 +746,65 @@ If the API moves to another host name, change `hostName` and the API URL in
 the front end's deployment together, keeping the base path
 `/ga4gh/registry/v1`.
 
+### TLS at a proxy in front of the cluster
+
+If a reverse proxy in front of the cluster terminates TLS and passes plain
+HTTP on to the ingress controller, leave out `tls` and the cert-manager
+annotations (as noted for the old release, step 2 of the one-time
+replacement), and set `cloudRegistry.ingress.https.enabled: false` if you
+use the chart's Ingress. Then:
+
+- **Keep the public URL at `https://`.** The chart sets the app's public URL
+  (`server.public_url`) to `https://<hostName>/`, which is what clients see,
+  although the cluster serves plain HTTP; don't change it to `http://`. Set
+  `publicUrl` only if the proxy serves the API under another URL, e.g., with
+  a path prefix.
+- **Send the API's base path to the cluster.** If the proxy sends the paths
+  of `elixir-on.cloud` to different backends (e.g., the API to the cluster
+  and all other paths to the landing page), it must send
+  `/ga4gh/registry/v1/` to the cluster, and nothing under `/admin/`.
+- **Let the controller trust the proxy's `X-Forwarded-For`, but only from
+  the addresses that it really receives connections from.** The rate limits
+  count per client address (see [Rate limits](#rate-limits)), which only
+  that header carries. Which addresses these are depends on the load
+  balancer and the network plugin: the load balancer's own addresses, and,
+  if the network plugin source-NATs connections that it forwards to a pod on
+  another node (e.g., Cilium's kube-proxy replacement, with the Service's
+  default `externalTrafficPolicy: Cluster`), also the cluster's pod CIDR.
+  If one is missing, the controller drops the header for some of the
+  requests, and their clients all share one counter. *Example for Traefik*,
+  per entrypoint, in the values of its chart:
+
+    ```yaml title="traefik-values.yaml"
+    ports:
+      web:
+        forwardedHeaders:
+          trustedIPs: ["<addresses of the load balancer>", "<pod CIDR>"]
+    ```
+
+- **Count the address that the proxy added.** Traefik's rate limits count
+  the TCP peer by default, which here is the load balancer or a node. Have
+  them count the rightmost entry of `X-Forwarded-For`, the one that the
+  proxy appended (`sourceCriterion.ipStrategy.depth: 1`, see [Rate
+  limits](#rate-limits)); entries further left come from the client and can
+  be forged. Without a proxy in front, leave `ipStrategy` out.
+
+Check it with the controller's access log, which must show the clients'
+real addresses, not those of the load balancer or the nodes. Traefik's
+default log format leaves out the headers; log them as JSON:
+
+```yaml title="traefik-values.yaml"
+accessLog:
+  enabled: true
+  format: json
+  fields:
+    headers:
+      names:
+        X-Forwarded-For: keep
+```
+
+See Traefik's [forwarded headers][traefik-forwarded-headers].
+
 ### Rate limits
 
 **Limit the request rate per client IP address at the ingress: write
@@ -691,7 +818,14 @@ several reads per page. The controller must see the clients' addresses, not
 those of a proxy in front of the cluster (e.g., with `use-forwarded-headers`
 or the PROXY protocol); otherwise, all requests count for the proxy.
 
-*Example for ingress-nginx.* The annotations limit all requests;
+**The controller counts per replica**: each pod of Traefik, and each
+replica of ingress-nginx, keeps counters of its own, so with 2 replicas,
+clients get twice the limits. Divide the limits by the number of replicas,
+as in the Traefik example below, or keep the counters in a shared store
+(e.g., the Redis option of Traefik's `rateLimit` middleware).
+
+*Example for ingress-nginx* (retired, see [Ingress
+controller](#ingress-controller)). The annotations limit all requests;
 annotations can't tell methods apart, so the limit of writes needs a
 `limit_req` zone keyed by the client address for writes only, in the
 controller's ConfigMap (set by the cluster's admins), and a snippet
@@ -727,9 +861,81 @@ cloudRegistry:
 
 Without the chart's Ingress, set the same annotations on your own Ingress
 (`metadata.annotations` of `ingress-cloud-registry.yaml` in [Exposing the
-API](#exposing-the-api)). With other controllers, use their own means, e.g.,
-Traefik's `rateLimit` middleware on routes that match the methods, or the
-rate limit policies of a Gateway implementation (see [Rate
+API](#exposing-the-api)).
+
+*Example for Traefik*, with 2 pods, without the chart's Ingress (see
+[Exposing the API](#exposing-the-api)): two [`rateLimit`
+middlewares][traefik-ratelimit], and an IngressRoute that routes only the
+API's base path, with a second route for writes, which Traefik prefers as
+its rule is longer. Each pod allows half of the limits:
+
+```yaml title="ingressroute-cloud-registry.yaml"
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: cloud-registry-rl-all
+  namespace: <namespace>
+spec:
+  # All requests: 300 per minute and client IP address, with a burst of as
+  # many; per pod, half
+  rateLimit:
+    average: 150
+    period: 1m
+    burst: 150
+    # Behind a proxy that appends X-Forwarded-For only (see "TLS at a proxy
+    # in front of the cluster"); otherwise, leave `sourceCriterion` out
+    sourceCriterion:
+      ipStrategy:
+        depth: 1
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: cloud-registry-rl-writes
+  namespace: <namespace>
+spec:
+  # Writes: 10 per minute and client IP address, a burst of 5; per pod, half
+  rateLimit:
+    average: 5
+    period: 1m
+    burst: 3
+    sourceCriterion:
+      ipStrategy:
+        depth: 1
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: cloud-registry-api
+  namespace: <namespace>
+spec:
+  # `web` if TLS is terminated in front of the cluster
+  entryPoints: [websecure]
+  routes:
+  - kind: Rule
+    match: Host(`elixir-on.cloud`) && PathPrefix(`/ga4gh/registry/v1/`)
+    middlewares:
+    - name: cloud-registry-rl-all
+    services:
+    - name: cloud-registry
+      port: http
+  - kind: Rule
+    match: Host(`elixir-on.cloud`) && PathPrefix(`/ga4gh/registry/v1/`) && (Method(`POST`) || Method(`PUT`) || Method(`DELETE`))
+    middlewares:
+    - name: cloud-registry-rl-all
+    - name: cloud-registry-rl-writes
+    services:
+    - name: cloud-registry
+      port: http
+  # With TLS in the cluster: the Secret of a cert-manager Certificate for
+  # the host; leave it out if TLS is terminated in front of the cluster
+  tls:
+    secretName: cloud-registry-api-tls
+```
+
+Requests to other paths, `/admin/` included, get Traefik's `404`. Excess
+requests get `429 Too Many Requests`. With other controllers, use their own
+means, e.g., the rate limit policies of a Gateway implementation (see [Rate
 limits][cr-rate-limits]).
 
 ### Network policies
@@ -764,6 +970,21 @@ cloudRegistry:
       podSelector:
         matchLabels:
           app.kubernetes.io/name: <name label of its pods>
+```
+
+For Traefik, installed as in [Ingress controller](#ingress-controller):
+
+```yaml title="values-prod.yaml"
+cloudRegistry:
+  networkPolicy:
+    enabled: true
+    ingressFrom:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: traefik
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: traefik
 ```
 
 See [Network policies][cr-network-policies] and FOCA's [NetworkPolicy
@@ -829,6 +1050,21 @@ and a later upgrade or rollback sets it back without notice.
     Rendering fails if the issuer, the audience or the admin group is
     missing. Without the chart's Ingress, apply your own (see [Exposing the
     API](#exposing-the-api)).
+
+    The commands on this page assume the release name `cloud-registry`: the
+    chart names the Deployment (`deploy/cloud-registry`), the Service, the
+    MongoDB claim (`cloud-registry-mongodb`) and the pod labels after it,
+    and the backup job's NetworkPolicy selects these labels (see
+    [Backups](#backups)). With another release name, adapt them.
+
+    MongoDB gets a volume of 1 Gi (`mongodb.persistence.size`) of the
+    cluster's default storage class (`mongodb.persistence.storageClass`),
+    and requests and limits of 200m CPU and 512 Mi memory
+    (`mongodb.resources`). That leaves ample room for the services of the
+    network; set them in the values file if the cluster needs another
+    storage class or bigger volumes. Choose the storage class before
+    installing: the claim's class can't be changed later, and its size can
+    only grow if the storage class allows volume expansion.
 
 4. Set up the backups, and test a restore once (see [Backups](#backups)).
 
@@ -927,6 +1163,34 @@ Secret and pass them with `envFrom` and a `secretRef`; set the settings
 them with `docker run --env-file`, from a file outside any repository
 (`NAME=value` per line, values not quoted).
 
+Create the Secret from such a file (here `settings.env`) without writing
+it to another file or printing it, taking `LOGIN_PROVIDERS` from the file
+and setting `LOGIN_REDIRECT_URI` explicitly:
+
+```bash
+kubectl create secret generic cloud-registry-ui-login -n <namespace> --from-env-file=<(
+  grep -E '^LOGIN_PROVIDERS=' settings.env
+  echo 'LOGIN_REDIRECT_URI=https://registry.elixir-on.cloud/auth/api/callback')
+```
+
+!!! warning "Don't reuse the redirect URI of a local setup"
+    A settings file made for local development or Docker Compose holds
+    `LOGIN_REDIRECT_URI=http://localhost:3000/auth/api/callback`, which may
+    have been overridden there without notice. Copied as it is, it breaks
+    logging in, as LS Login redirects users to their own computer.
+
+The non-secret settings go in the ConfigMap:
+
+```yaml title="cloud-registry-ui.yaml"
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloud-registry-ui-settings
+  namespace: <namespace>
+data:
+  NEXT_PUBLIC_CLOUD_REGISTRY_URL: https://elixir-on.cloud/ga4gh/registry/v1
+```
+
 The front end takes the allowed environments and URL schemes of services
 from the registry's service info (see [Registry][cr-ui-registry-settings]):
 don't set `NEXT_PUBLIC_SERVICE_ENVIRONMENTS` or
@@ -981,7 +1245,7 @@ any headers by default, so there is nothing to configure for it.
 For example (with the settings of [Settings](#settings) in the Secret
 `cloud-registry-ui-login` and the ConfigMap `cloud-registry-ui-settings`):
 
-```yaml title="deployment-cloud-registry-ui.yaml"
+```yaml title="cloud-registry-ui.yaml"
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -1043,6 +1307,96 @@ spec:
         emptyDir: {}
 ```
 
+The Deployment needs a Service, a PodDisruptionBudget, so that node drains
+evict one pod at a time, and a NetworkPolicy that lets only the ingress
+controller connect, as for the app (see [Network
+policies](#network-policies); most network plugins let the kubelet's probes
+through regardless, so check that the pods become ready). In the same file,
+with the peer of the Traefik example:
+
+```yaml title="cloud-registry-ui.yaml"
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloud-registry-ui
+  namespace: <namespace>
+spec:
+  selector:
+    app.kubernetes.io/name: cloud-registry-ui
+  ports:
+  - name: http
+    port: 3000
+    targetPort: http
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: cloud-registry-ui
+  namespace: <namespace>
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cloud-registry-ui
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cloud-registry-ui
+  namespace: <namespace>
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: cloud-registry-ui
+  policyTypes: [Ingress]
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: traefik
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: traefik
+    ports:
+    - {port: 3000, protocol: TCP}
+```
+
+Route `registry.elixir-on.cloud` to the Service, e.g., with an Ingress
+(TLS as for the API, see [Exposing the API](#exposing-the-api); leave
+`tls` and the cert-manager annotations out if TLS is terminated in front of
+the cluster):
+
+```yaml title="cloud-registry-ui.yaml"
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cloud-registry-ui
+  namespace: <namespace>
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: <Ingress class>
+  rules:
+  - host: registry.elixir-on.cloud
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: cloud-registry-ui
+            port:
+              name: http
+  tls:
+  - hosts: [registry.elixir-on.cloud]
+    secretName: cloud-registry-ui-tls
+```
+
+With Traefik, an IngressRoute like the API's does the same, with the rule
+``Host(`registry.elixir-on.cloud`)`` and the Service `cloud-registry-ui`.
+Apply the file with `kubectl apply -f cloud-registry-ui.yaml`, after
+creating the Secret.
+
 Users stay logged in as long as their LS Login access token is valid, at
 most 12 hours; the front end doesn't refresh tokens. Logins that are in
 progress while the front end is updated may fail once; users then log in
@@ -1053,6 +1407,13 @@ the services are listed; then go on with the [checks](#checks-after-installing)
 below, which include logging in as an admin.
 
 ## Checks after installing
+
+The checks use the public URLs. To check a new cluster before switching
+DNS or the proxy in front to it, send the same requests to the ingress
+controller's address instead, with the public host name, e.g., with
+`curl --resolve elixir-on.cloud:443:<address of the ingress>` for HTTPS,
+or `-H 'Host: elixir-on.cloud' http://<address of the ingress>/…` if TLS
+is terminated in front of the cluster.
 
 1. The service info shows version `1.0.0rc1` and the deployment's fields.
    Its registration rules show the recommended settings: the environments
@@ -1122,7 +1483,12 @@ below, which include logging in as an admin.
 
 8. The rate limit of writes applies: of 20 quick `POST` requests without a
    token, the first ones get `401` from the app, the rest `429` (or `503`)
-   from the ingress. This blocks writes from your address for a minute:
+   from the ingress. This blocks writes from your address for a minute. If
+   far more requests get `401` than the limit and its burst allow (e.g.,
+   twice as many), the controller's replicas count separately, or the
+   controller doesn't see your address (see [Rate limits](#rate-limits) and
+   [TLS at a proxy in front of the
+   cluster](#tls-at-a-proxy-in-front-of-the-cluster)):
 
     ```bash
     for i in $(seq 20); do
@@ -1145,8 +1511,9 @@ below, which include logging in as an admin.
 
     ```bash
     kubectl get networkpolicy -n <namespace>
-    kubectl run np-check --rm -it --restart=Never -n <namespace> \
-      --image=curlimages/curl -- curl -sS -m 5 http://cloud-registry/ga4gh/registry/v1/service-info
+    kubectl run np-check --rm -i --restart=Never -n <namespace> \
+      --image=docker.io/curlimages/curl:8.11.1 -- \
+      curl -sS -m 5 http://cloud-registry/ga4gh/registry/v1/service-info
     ```
 
 ## Backups
@@ -1166,6 +1533,39 @@ fail with the cluster, and test a restore once**:
     kubectl get volumesnapshotclass
     ```
 
+    **Before relying on them, take one snapshot while MongoDB runs**, and
+    check that it becomes ready. Some storage providers can't snapshot
+    volumes that are attached to a node: OpenStack's Cinder CSI driver, for
+    example, refuses unless the cloud forces such snapshots, and
+    `kubectl describe` then shows `status must be available, but current
+    status is: in-use`. Such a snapshot never becomes ready, and the driver
+    retries for as long as the `VolumeSnapshot` exists, so a job that waits
+    for it times out:
+
+    ```yaml title="snapshot-test.yaml"
+    apiVersion: snapshot.storage.k8s.io/v1
+    kind: VolumeSnapshot
+    metadata:
+      name: cloud-registry-mongodb-test
+      namespace: <namespace>
+    spec:
+      volumeSnapshotClassName: <snapshot class>
+      source:
+        persistentVolumeClaimName: cloud-registry-mongodb
+    ```
+
+    ```bash
+    kubectl apply -f snapshot-test.yaml
+    kubectl wait volumesnapshot/cloud-registry-mongodb-test -n <namespace> \
+      --for=jsonpath='{.status.readyToUse}'=true --timeout=5m
+    kubectl describe volumesnapshot cloud-registry-mongodb-test -n <namespace>
+    kubectl delete volumesnapshot cloud-registry-mongodb-test -n <namespace>
+    ```
+
+    Delete failed snapshots in the same way; that may take several minutes,
+    as the snapshot controller finishes its retries first. If the snapshot
+    doesn't become ready, use dumps.
+
 - **Otherwise, dump the database daily with `mongodump` to storage outside
   the cluster, and keep the dumps for 14 days**, e.g., with a CronJob (see
   below).
@@ -1183,6 +1583,17 @@ days. The bucket's credentials go in a Secret of their own
 never in a file in a repository. A lifecycle rule of the bucket that
 deletes objects after 14 days can replace the `rclone delete`, so that the
 job needs no right to delete. Pin both images (e.g., by digest).
+
+On OpenStack, the project's object store (Swift) usually offers such a
+bucket through its S3 API: create a container in it, and EC2 credentials
+for the S3 API with [`openstack ec2 credentials
+create`][openstack-ec2-credentials]; they are the access key ID and the
+secret access key of the Secret (`RCLONE_CONFIG_OFFSITE_PROVIDER=Other`,
+with the S3 endpoint that the cloud's documentation or support names).
+These credentials give access to all containers of the project, so prefer
+a project of their own for the backups. Storage in the same cloud survives
+the loss of the cluster, not that of the cloud; keep a copy elsewhere too
+if that matters.
 
 The chart's MongoDB is a single server without an oplog, so a dump is not a
 point-in-time copy: writes during the dump (a few seconds for this small
@@ -1457,3 +1868,10 @@ policy is `Retain`.
 [cr-ui-services-limit]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc1/user-guide/registering/#limit-on-registered-services>
 [gh-cli]: <https://cli.github.com/>
 [rclone]: <https://rclone.org/>
+[cert-manager-install]: <https://cert-manager.io/docs/installation/helm/>
+[ingress-nginx-retirement]: <https://kubernetes.io/blog/2025/11/11/ingress-nginx-retirement/>
+[landing-page-repo]: <https://github.com/elixir-cloud-aai/landing-page>
+[openstack-ec2-credentials]: <https://docs.openstack.org/python-openstackclient/latest/cli/command-objects/ec2-credentials-v3.html>
+[traefik-forwarded-headers]: <https://doc.traefik.io/traefik/routing/entrypoints/#forwarded-headers>
+[traefik-helm-chart]: <https://github.com/traefik/traefik-helm-chart>
+[traefik-ratelimit]: <https://doc.traefik.io/traefik/middlewares/http/ratelimit/>
