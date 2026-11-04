@@ -26,6 +26,7 @@ source code. You need Git and [Rust](https://www.rust-lang.org/tools/install).
 ```bash
 git clone https://github.com/ga4gh/ga4gh-sdk.git
 cd ga4gh-sdk
+git checkout ed795ea   # the commit that this page describes
 cargo build
 ./target/debug/cli --version
 ```
@@ -190,19 +191,23 @@ call the API with `curl`. Replace `<HOST>` with the address of the service, and
 ask its operators which tokens they accept.
 
 ```bash
+unset TOKEN      # so that the token can't stay exported to other programs
 read -rs TOKEN   # paste the token; it is not shown or saved in the history
 ```
+
+With `--fail-with-body`, `curl` shows the answer of the service and ends with
+an error code if the service reports an error.
 
 Send a task to a TES service such as proTES:
 
 ```bash
-printf 'Authorization: Bearer %s\n' "$TOKEN" | curl -X POST "https://<HOST>/ga4gh/tes/v1/tasks" -H @- -H 'Content-Type: application/json' -d @task.json
+printf 'Authorization: Bearer %s\n' "$TOKEN" | curl --fail-with-body -X POST "https://<HOST>/ga4gh/tes/v1/tasks" -H @- -H 'Content-Type: application/json' -d @task.json
 ```
 
 Read the task:
 
 ```bash
-printf 'Authorization: Bearer %s\n' "$TOKEN" | curl "https://<HOST>/ga4gh/tes/v1/tasks/<TASK_ID>?view=BASIC" -H @-
+printf 'Authorization: Bearer %s\n' "$TOKEN" | curl --fail-with-body "https://<HOST>/ga4gh/tes/v1/tasks/<TASK_ID>?view=BASIC" -H @-
 ```
 
 Send a workflow to a WES service. The path and the supported workflow types
@@ -211,7 +216,7 @@ specification](https://github.com/ga4gh/workflow-execution-service-schemas)
 describes the fields.
 
 ```bash
-printf 'Authorization: Bearer %s\n' "$TOKEN" | curl -X POST "https://<HOST>/ga4gh/wes/v1/runs" -H @- \
+printf 'Authorization: Bearer %s\n' "$TOKEN" | curl --fail-with-body -X POST "https://<HOST>/ga4gh/wes/v1/runs" -H @- \
   -F workflow_type=CWL \
   -F workflow_type_version=v1.2 \
   -F workflow_url=https://example.org/workflow.cwl \
