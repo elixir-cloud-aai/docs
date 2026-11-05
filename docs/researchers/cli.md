@@ -26,7 +26,7 @@ source code. You need Git and [Rust](https://www.rust-lang.org/tools/install).
 ```bash
 git clone https://github.com/ga4gh/ga4gh-sdk.git
 cd ga4gh-sdk
-git checkout ed795ea   # the commit that this page describes
+git checkout 82432c3   # the commit that this page describes
 cargo build
 ./target/debug/cli --version
 ```
@@ -37,7 +37,7 @@ copy it to a directory on your `PATH`. The commands below use the name `cli`.
 
 Build the whole project with `cargo build`, as shown. `cargo build -p
 ga4gh-cli` and `cargo install --path cli` currently fail with a compile
-error in commit `ed795ea`.
+error in commit `82432c3`.
 
 The build was tested on that commit in the `rust:1` container image (Rust
 1.99.1), which comes with the system libraries that the build uses. The
@@ -68,8 +68,7 @@ The CLI reads the address of the service from `~/.ga4gh-cli/config.json`:
 
 !!! danger "Don't put credentials in the configuration file"
     The file also accepts a user name and password (`basic_auth`) and a token
-    (`oauth_access_token`). The CLI never sends them, and `cli tes create`
-    prints them in plain text to your terminal. Keep both set to `null`.
+    (`oauth_access_token`). The CLI never sends them. Keep both set to `null`.
 
 ## Which services work
 
@@ -113,10 +112,11 @@ Then send it:
 cli tes create task.json
 ```
 
-The output starts with the ID of the new task, followed by the configuration:
+The output is the ID of the new task and nothing else, so scripts can use it
+directly:
 
 ```text
-Ok(Task { id: "dbl8msskodig00bsscsg", transport: Transport { config: ...
+dbl8msskodig00bsscsg
 ```
 
 The argument must be a file: the CLI doesn't accept the JSON text directly,
@@ -171,10 +171,25 @@ cli tes cancel <TASK_ID>
 
 ### Check for errors
 
-If `tes create` or `tes get` fail, or `tes list` gets an error from the
-service, the CLI still ends with the exit code `0`. In scripts, read the
-output: `tes create` and `tes get` print `Err(...)`, and `tes list` prints an
-error message instead of the table.
+If the service answers `tes create` or `tes list` with an error, the CLI writes
+the message to stderr, leaves stdout empty and still ends with the exit code
+`0`. In scripts, check for empty stdout, not the exit code:
+
+```bash
+TASK_ID=$(cli tes create task.json)
+if [ -z "$TASK_ID" ]; then
+  echo "The task was not created" >&2
+  exit 1
+fi
+```
+
+This check also covers failures that do change the exit code: if the CLI can't
+read the task file or reach the service, or if the service info is missing or
+not of the type `tes`, it ends with the exit code `1` and stdout stays empty.
+
+`tes get` works differently: it prints `Err(...)` to stdout, also with the exit
+code `0`, so look for that text in its output instead. `tes status` and
+`tes cancel` report errors on stderr and end with the exit code `1`.
 
 ## Authentication
 
@@ -225,21 +240,26 @@ printf 'Authorization: Bearer %s\n' "$TOKEN" | curl --fail-with-body -X POST "ht
 
 ## How this page was tested
 
-We tested the CLI at commit `ed795ea` of the SDK, on one computer:
+We built the CLI at commit `82432c3` of the SDK and ran it in the `rust:1`
+container image, on one computer:
 
 - **Funnel in a container, no authentication:** all `tes` commands reached
-  the service. The test task ended in `EXECUTOR_ERROR`, because the container
-  has no Docker to run it with, so no task was seen to finish.
+  the service, and `tes create` printed only the ID. The test task ended in
+  `EXECUTOR_ERROR`, because the container has no Docker to run it with, so no
+  task was seen to finish.
 - **Local mock service:** it recorded the requests of the CLI. With a token and
   a password in the configuration, none of them had an `Authorization`
   header. With the API only at `/ga4gh/tes/v1`, as in proTES, the requests went
-  to the wrong paths and failed.
-- **`curl`:** the commands above were sent to the mock service, which
-  recorded the token for all of them. It has no WES API and answered the
-  workflow request with `404`.
+  to the wrong paths and failed. When it answered with errors, or when no
+  service was listening, the CLI behaved as [Check for
+  errors](#check-for-errors) describes, and the script there stopped.
+- **`curl`:** the commands above were sent to the mock service over HTTP, not
+  HTTPS, with the token passed to `read` by a redirect instead of being pasted.
+  The mock service recorded the token for all of them. It has no WES API and
+  answered the workflow request with `404`.
 
 We did not test against a deployed service, a real proTES or a real WES
-service.
+service, and we saw no task finish.
 
 ## Where to go next
 
