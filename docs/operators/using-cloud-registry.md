@@ -49,17 +49,10 @@ public service info: it never sends a token.
 Keep sync on, so that the entry follows your service. Entries without sync can
 drift from what the service says.
 
-For example, with the API, and an access token of the front end (see [Copying
-the access token][cr-ui-copy-token]):
-
-```bash
-curl -X POST "https://elixir-on.cloud/ga4gh/registry/v1/services/import" \
-  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
-  -d '{"serviceInfoUrl": "https://tes.example.org/ga4gh/tes/v1/service-info"}'
-```
-
-This stores nothing: send the returned values to `POST /services`, then turn on
-sync with `PUT /services/<id>/sync`.
+Scripts use `POST /services/import`, which stores nothing, then `POST /services`
+with the returned values, then `PUT /services/<id>/sync` to turn on sync. They
+need a token of an LS Login client that the registry accepts: write to
+[cloud-service@elixir-europe.org][elixir-on-cloud-email] to have yours added.
 
 The settings of this deployment apply to the service info too: `https`
 addresses, the environments `prod` and `test`, and API types that admins have
@@ -157,6 +150,5 @@ sharing services step by step.
 [cr-notifications]: <https://cloud-registry.readthedocs.io/en/latest/api/#notifications>
 [cr-synced]: <https://cloud-registry.readthedocs.io/en/latest/api/#synced-services>
 [cr-ui-browsing]: <https://cloud-registry-ui.readthedocs.io/en/latest/user-guide/browsing/>
-[cr-ui-copy-token]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc1/operator-guide/login/#copying-the-access-token>
 [cr-ui-user-guide]: <https://cloud-registry-ui.readthedocs.io/en/latest/user-guide/>
 [cr-verified]: <https://cloud-registry.readthedocs.io/en/latest/api/#verified-services>
