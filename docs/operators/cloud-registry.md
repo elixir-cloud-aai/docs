@@ -13,7 +13,9 @@ documentation, which covers everything that is not specific to this
 deployment.
 
 This page is for the admins who run the registry. To register the TES
-service of your Node, see [Onboarding](onboarding.md).
+service of your Node, see [Onboarding](onboarding.md); to look up, register
+and maintain services, see [Using the Cloud
+Registry](using-cloud-registry.md).
 
 Product documentation:
 

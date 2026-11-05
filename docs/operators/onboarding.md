@@ -79,6 +79,9 @@ registry](https://protes.readthedocs.io/en/latest/configuration/#discovery-in-a-
 in the proTES docs). For the registry's API, see the [Cloud Registry
 docs](https://cloud-registry.readthedocs.io/en/latest/api/).
 
+For the policies of the registry and what its labels mean, see [Using the
+Cloud Registry](using-cloud-registry.md).
+
 !!! warning "Under construction"
     The checks for the verification of a TES service are not written down
     yet. It is also not documented which services of the ELIXIR On-Cloud

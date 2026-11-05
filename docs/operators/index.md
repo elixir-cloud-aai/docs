@@ -39,6 +39,7 @@ deployment.
 |---|---|
 | [Onboarding](onboarding.md) | The steps for a Node to join the federation. |
 | [Cloud Registry](cloud-registry.md) | The settings of the deployment's registry, for the admins who run it. |
+| [Using the Cloud Registry](using-cloud-registry.md) | How to look up, register and maintain services, and what the labels mean. |
 | [LS Login](ls-login.md) | How to connect JupyterHub, HedgeDoc and MinIO to LS Login. |
 | [Services](services/index.md) | The services of the deployment and their role. |
 
