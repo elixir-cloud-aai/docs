@@ -91,6 +91,7 @@ nav:
     - "Onboarding": "operators/onboarding.md"
     - "Cloud Registry": "operators/cloud-registry.md"
     - "Using the Cloud Registry": "operators/using-cloud-registry.md"
+    - "Using the Cloud Registry UI": "operators/using-cloud-registry-ui.md"
     - "LS Login": "operators/ls-login.md"
     - Services:
       - "operators/services/index.md"

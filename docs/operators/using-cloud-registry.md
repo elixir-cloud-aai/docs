@@ -140,7 +140,8 @@ its reason changes. See [Notifications][cr-notifications].
   mode][cr-admin-mode].
 
 The [user guide of the UI][cr-ui-user-guide] covers registering, editing and
-sharing services step by step.
+sharing services step by step; [Using the Cloud Registry
+UI](using-cloud-registry-ui.md) adds what applies to this deployment.
 
 [cr-access-control]: <https://cloud-registry.readthedocs.io/en/latest/access-control/>
 [cr-admin-mode]: <https://cloud-registry.readthedocs.io/en/latest/access-control/#admin-mode>
