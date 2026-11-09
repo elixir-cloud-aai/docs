@@ -4,6 +4,7 @@ updates:
   # Dependencies in `pyproject.toml` (the `docs` and `tests` extras)
   - package-ecosystem: pip
     directory: /
+    labels: ["type: dependencies"]
     schedule:
       interval: monthly
     target-branch: main
@@ -20,6 +21,7 @@ updates:
   # `@<commit> # vX.Y.Z`)
   - package-ecosystem: github-actions
     directory: /
+    labels: ["type: dependencies"]
     schedule:
       interval: monthly
     target-branch: main
