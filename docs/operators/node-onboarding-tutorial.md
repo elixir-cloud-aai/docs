@@ -78,6 +78,11 @@ today:
 | Access by membership in `ECP_CLN` | by a claim of the user info | no, any valid token ([generic-issues#21][gi-21]) | no, any valid token ([generic-issues#20][gi-20]) |
 | Service info for the registry | set in a file of the chart | fixed by the code, without `environment` | fixed by the code, with an environment that this registry refuses |
 
+**Poiesis and Funnel can't enforce the `ECP_CLN` policy yet:** they accept
+every valid token of the provider, so anyone with an LS Login account who
+gets such a token could run tasks on your cluster. Ask the
+[admins][elixir-on-cloud-email] before you join with one of them.
+
 The rest of this step deploys TESK. For the alternatives, follow their own
 docs and continue with [step 3](#3-enable-ls-login-and-ecp_cln-access):
 
@@ -89,7 +94,21 @@ docs and continue with [step 3](#3-enable-ls-login-and-ecp_cln-access):
 ### Install TESK
 
 The [deployment guide of TESK][tesk-deployment] covers the installation;
-this is the short path. Write your settings into `my-values.yaml`. For an
+this is the short path. Check out the TESK repository at the commit that
+this tutorial was checked against (chart 0.3.0 before its release), and
+work in the checkout, where the files below live:
+
+```bash
+git clone https://github.com/elixir-cloud-aai/TESK.git
+cd TESK
+git checkout 65db464017def4cddf8dc8571ec5161186d84517
+```
+
+Once chart 0.3.0 is released, install it from its release instead, after
+checking its attestation and signature, as described in [From a
+release][tesk-from-release].
+
+Write your settings into `my-values.yaml`, in the checkout. For an
 Ingress with a certificate of cert-manager (see [Exposing the
 API][tesk-exposing]; on OpenShift, use a Route instead, as described
 there):
@@ -117,21 +136,19 @@ info][tesk-service-info]). The registry reads these values in [step
 5](#5-register-the-service), and this deployment accepts only the
 environments `prod` and `test`: the chart's default, `dev`, is refused.
 
-Install the chart from a checkout of the TESK repository, into a namespace
-of its own. `secrets.yaml` holds credentials, e.g., of FTP: leave out
-`-f secrets.yaml` if you need none.
+**Add the `auth` values of [step 3](#tesk) to `my-values.yaml` before you
+install.** With the default, `auth.mode: noauth`, all endpoints are open, so
+anyone who reaches the Ingress could run tasks on your cluster. If you can't
+set them yet, keep `ingress.enabled: false` until you can.
+
+Install the chart into a namespace of its own. `secrets.yaml` holds
+credentials, e.g., of FTP: leave out `-f secrets.yaml` if you need none.
 
 ```bash
-git clone https://github.com/elixir-cloud-aai/TESK.git
-cd TESK
 helm upgrade --install tesk charts/tesk \
     --namespace tesk --create-namespace \
     -f my-values.yaml -f secrets.yaml
 ```
-
-Once chart 0.3.0 is released, install it from its release instead, after
-checking its attestation and signature, as described in [From a
-release][tesk-from-release].
 
 Check the installation:
 
@@ -186,9 +203,9 @@ auth:
 Users with one of the values may create tasks, which belong to them only,
 and list, get and cancel their own tasks. Everyone with one of the values
 can run any image with any command on your cluster: read the [security
-implications][tesk-api-claim-security] in the docs of tesk-api. Run the
-`helm upgrade --install` command of [step 2](#install-tesk) again to apply
-the values.
+implications][tesk-api-claim-security] in the docs of tesk-api. Set these
+values before the first installation (see [step 2](#install-tesk)); to
+change them later, run its `helm upgrade --install` command again.
 
 !!! warning "Gaps"
     - **User info endpoint:** tesk-api validates tokens at the user info
