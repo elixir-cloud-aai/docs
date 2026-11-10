@@ -247,6 +247,9 @@ UI's [Compatibility][cr-ui-compatibility]). For this deployment:
     register them again, by importing their service info, with sync on
     (see [Using the Cloud Registry](using-cloud-registry.md)), and to share
     them again.
+12. **List the registry itself:** an admin adds the registry to its own
+    services (see [Listing the registry
+    itself](#listing-the-registry-itself)).
 
 Then go through the [checks](#checks-after-installing).
 
@@ -677,10 +680,12 @@ for, and expired invitations that weren't accepted are kept for 30 days
 (`keep_expired_days`, also a default), so that owners see who needs a new
 link. With these defaults, an invitation that expires unaccepted keeps its
 label, which may name a person, and who created it and when, for up to 37
-days after it was created (7 before 1.0.0rc2). **Check this against the
-deployment's privacy statement**; `keep_expired_days: 0` removes
-invitations when they expire, as before. The front end requires a label
-for new invitations by default (see [Settings](#settings)).
+days after it was created (7 before 1.0.0rc2). **This deployment keeps
+the default of 30 days**, so that owners can follow up on invitations that
+weren't accepted; `keep_expired_days: 0` would remove invitations when they
+expire, as before. Keep the deployment's privacy statement in line with
+it. The front end requires a label for new invitations, as this
+deployment keeps its default (see [Settings](#settings)).
 
 ### Service info import and sync
 
@@ -788,9 +793,8 @@ config:
       # Only admins add service types (see "Service types");
       # `max_unused_service_types` keeps its default
       service_types: controlled
-      # See "Services per user"; `invitations` keeps its defaults (see
-      # "Invitations", and check `keep_expired_days` against the privacy
-      # statement)
+      # See "Services per user"; `invitations` keeps its defaults, also
+      # `keep_expired_days: 30` (see "Invitations")
       max_services_per_user: 20
   service_info:
     service:
@@ -995,18 +999,59 @@ peers][foca-networkpolicy-peers] for the peers of common ingress
 controllers and Gateways. The policies only take effect if the cluster's
 network plugin enforces them.
 
-These policies restrict the connections **to** the pods. From 1.0.0rc2, the
-app also connects out, to fetch service info from public addresses (see
-[Service info import and sync](#service-info-import-and-sync)), on top of
-its connections to MongoDB and LS Login. The chart can restrict these too,
-with an optional NetworkPolicy (`egressNetworkPolicy.enabled`, default
-`false`; see [The app's connections][cr-apps-connections]): it lets the
-app's pods connect only to DNS, the release's MongoDB and public addresses
-on port 443. With its defaults, this covers the connections of this
-deployment, as LS Login and the registered services are reached at public
-`https` addresses; private addresses would need rules of their own
-(`egressNetworkPolicy.to`). The values file doesn't enable it. The app
-checks the addresses of service info itself either way.
+#### The app's outgoing connections
+
+The policies above restrict the connections **to** the pods. The app also
+connects out: to MongoDB, to LS Login (to check tokens and read the user
+info), and, from 1.0.0rc2, to the addresses of service info that users
+import or sync (see [Service info import and
+sync](#service-info-import-and-sync)). The app checks these addresses
+itself and connects only to public ones, whatever the cluster allows.
+
+The chart can restrict the outgoing connections too, with an optional
+NetworkPolicy (see [The app's connections][cr-apps-connections]),
+independent of `cloudRegistry.networkPolicy`. When enabled, it lets the
+app's pods connect only to:
+
+- DNS (port 53, anywhere, as clusters serve it differently);
+- the MongoDB of the release;
+- public addresses on `egressNetworkPolicy.ports` (default `[443]`), which
+  are all addresses but those of `egressNetworkPolicy.exceptCidrs` (by
+  default, the private, loopback, link-local and other ranges that aren't
+  public).
+
+Anything private that the app must reach (e.g., an identity provider or a
+MongoDB inside the cluster, or services in `private_networks`) needs a rule
+of its own in `egressNetworkPolicy.to`, as in `spec.egress` of a
+NetworkPolicy; NetworkPolicies add up, so another policy that selects the
+app's pods can allow more.
+
+**This deployment leaves the policy off for now** (`egressNetworkPolicy`
+isn't in the values file, so the chart's default, `enabled: false`,
+applies). It is the first deployment of the registry on de.NBI's cluster:
+the policy only takes effect if the cluster's network plugin enforces
+NetworkPolicies, and it must allow exactly what the app needs, i.e., DNS,
+MongoDB, LS Login, and public addresses on port 443 for importing and
+syncing service info. A rule that is missing breaks logins (if LS Login
+can't be reached) or imports and syncs, so this is better added once the
+deployment runs.
+
+To enable it later, add it to the values file and upgrade (see
+[Upgrades](#upgrades)). With the defaults, it covers the connections of
+this deployment, as LS Login and the registered services are reached at
+public `https` addresses and MongoDB is the chart's:
+
+```yaml title="values-prod.yaml"
+# Restricts the app's outgoing connections (see "The app's outgoing
+# connections"); `ports` (`[443]`) and `exceptCidrs` keep their defaults
+egressNetworkPolicy:
+  enabled: true
+```
+
+Then check that the policy exists (`kubectl get networkpolicy -n
+<namespace>`), that an admin can log in (checks 5 and 6 of
+[Checks](#checks-after-installing)), and that importing service info still
+works.
 
 ### Replicas
 
@@ -1076,9 +1121,44 @@ and a later upgrade or rollback sets it back without notice.
    registry. The database starts empty: there are no service types,
    services or roles yet.
 
-Admins can also list the registry among its own services, in admin mode,
-from the front end's service info page (see [Listing the registry
-itself][cr-listing-itself]); nothing changes until they do.
+7. List the registry among its own services (see [Listing the registry
+   itself](#listing-the-registry-itself)).
+
+### Listing the registry itself
+
+**List the registry among its own services**, so that clients find it like
+any other service. The registry doesn't list itself by default. An admin, in
+admin mode, opens the service info page of the front end (the "i" icon in
+the top bar) and selects **Add to services** in the section **Service
+Listing** (see [Listing the registry itself][cr-ui-listing-itself] in the
+UI's user guide). Scripts send `PUT /service-info/listing` in admin mode
+(see [Listing the registry itself][cr-listing-itself-api]):
+
+```bash
+read -rs TOKEN
+printf 'Authorization: Bearer %s\nX-Request-Roles: admin\n' "$TOKEN" \
+  | curl -fsS -X PUT -H @- \
+    https://elixir-on.cloud/ga4gh/registry/v1/service-info/listing
+```
+
+The response is `{"listed": true, "serviceId": "ELIXIR_CLOUD_SERVICE_REGISTRY_1"}`
+(`201 Created` when the registry is added, `200 OK` if it was listed).
+The registry builds the entry from its service info (see [Values
+file](#values-file)) and its public URL, which the chart sets from
+`hostName`: its URL is `https://elixir-on.cloud/ga4gh/registry/v1`, and its
+service type is added and approved if it is missing, also in the mode
+`controlled`. The entry has no owner, doesn't count for any user's limit of
+services, and is verified. While it is listed, the app brings it up to date
+when it starts, so edits of the entry only last until then; the registry
+never syncs it with service info. To end the listing, use **Remove from
+services** (`DELETE /service-info/listing`): deleting the entry like other
+services leaves its service type behind.
+
+The registry refuses, saying why, if the environment of its service info
+(`prod`) or the scheme of its public URL (`https`) isn't allowed for
+services, both of which this deployment allows, or if another service has
+the same URL and API type or the identifier of the service info: delete or
+rename that service first.
 
 ### Front end
 
@@ -1177,16 +1257,17 @@ refuses to start otherwise. It authenticates its token requests with
 `client_secret_post`, which LS Login lists in its discovery document, so
 there is nothing to set for it.
 
-Two settings of the access dialog are new in 1.0.0-rc2; this deployment
-doesn't set them, so their defaults apply (see [Access
+Two settings of the access dialog are new in 1.0.0-rc2. **Keep their
+defaults**: the deployment doesn't set them (see [Access
 dialog][cr-ui-access-dialog]):
 
 - `NEXT_PUBLIC_ACCESS_PAGE_SIZE` (default `5`): the entries per page of the
-  tables of the **Manage access** dialog.
+  tables of the **Manage access** dialog, which then fit a window of 1366 x
+  768 pixels without scrolling.
 - `NEXT_PUBLIC_INVITATION_LABEL_REQUIRED` (default `true`): new invitations
-  need a label that says who they are for; `false` makes it optional. Labels
-  may name people, and the registry keeps them with the invitations (see
-  [Invitations](#invitations)).
+  need a label that says who they are for, so that owners can tell them
+  apart. Labels may name people, and the registry keeps them with the
+  invitations (see [Invitations](#invitations)).
 
 The settings `NEXT_PUBLIC_*` reach the browser, so they are public; the
 login settings stay on the server. Keep the login settings in a Kubernetes
@@ -1435,6 +1516,18 @@ below, which include logging in as an admin.
     kubectl get networkpolicy -n <namespace>
     kubectl run np-check --rm -it --restart=Never -n <namespace> \
       --image=curlimages/curl -- curl -sS -m 5 http://cloud-registry/ga4gh/registry/v1/service-info
+    ```
+
+11. The registry lists itself (see [Listing the registry
+    itself](#listing-the-registry-itself)): `GET /services` has the entry
+    `ELIXIR_CLOUD_SERVICE_REGISTRY_1`, with the URL
+    `https://elixir-on.cloud/ga4gh/registry/v1`, and it is verified:
+
+    ```bash
+    curl -fsS https://elixir-on.cloud/ga4gh/registry/v1/services \
+      | jq '.[] | select(.id == "ELIXIR_CLOUD_SERVICE_REGISTRY_1") | {id, url, type}'
+    curl -fsS https://elixir-on.cloud/ga4gh/registry/v1/verifications \
+      | jq '.[] | select(.serviceId == "ELIXIR_CLOUD_SERVICE_REGISTRY_1")'
     ```
 
 ## Backups
@@ -1757,6 +1850,7 @@ policy is `Retain`.
 [cr-ui-access-dialog]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/operator-guide/configuration/#access-dialog>
 [cr-ui-reverse-proxy]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/operator-guide/deployment/#behind-a-reverse-proxy>
 [cr-ui-timeouts]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/operator-guide/deployment/#timeouts>
-[cr-listing-itself]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/operator-guide/admins/#listing-the-registry-itself>
+[cr-ui-listing-itself]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/user-guide/admin-mode/#listing-the-registry-itself>
+[cr-listing-itself-api]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/api/#listing-the-registry-itself>
 [gh-cli]: <https://cli.github.com/>
 [rclone]: <https://rclone.org/>

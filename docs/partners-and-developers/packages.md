@@ -33,7 +33,7 @@ FOCA apps. Cloud Registry, proTES and TRS-Filer come with a Docker image and a H
 
 - [Cloud Registry](https://cloud-registry.readthedocs.io/en/latest/): a
   GA4GH Service Registry. It has a [web front
-  end](https://cloud-registry-ui.readthedocs.io/en/latest/).
+  end](https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/).
 - [proTES](https://protes.readthedocs.io/en/latest/): a TES gateway that
   federates TES services.
 - [TRS-Filer](https://trs-filer.readthedocs.io/en/latest/): a TRS service for
