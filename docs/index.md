@@ -46,5 +46,7 @@ Choose the section that fits you:
     [:octicons-arrow-right-24: Start
     here](researchers/index.md){ .md-button }
 
+To see the stack at work, try one of the [Demos](demos/index.md).
+
 Questions, contributing, funding, license and contact: see [About and
 contributing](about.md).
