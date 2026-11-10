@@ -89,6 +89,7 @@ nav:
   - Architects & Operators:
     - "operators/index.md"
     - "Onboarding": "operators/onboarding.md"
+    - "Tutorial: Onboard a Node": "operators/node-onboarding-tutorial.md"
     - "Cloud Registry": "operators/cloud-registry.md"
     - "Using the Cloud Registry": "operators/using-cloud-registry.md"
     - "Using the Cloud Registry UI": "operators/using-cloud-registry-ui.md"
