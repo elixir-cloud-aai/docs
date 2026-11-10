@@ -117,6 +117,10 @@ nav:
     - "Run Workflows Across Nodes": "researchers/federated-workflows.md"
     - "SPE with WESkit": "researchers/spe-with-weskit.md"
     - "Crypt4GH with proTES": "researchers/crypt4gh-with-protes.md"
+  - Demos:
+    - "demos/index.md"
+    - "Token Exchange Testbed": "demos/token-exchange-testbed.md"
+    - "NVFlare Testbed": "demos/nvflare-wes-testbed.md"
   - About: "about.md"
 extra_css:
   - stylesheets/extra.css

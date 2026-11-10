@@ -41,11 +41,14 @@ The engines below support TES. Each one's docs describe the configuration.
 
 - **Snakemake** uses the [TES executor
   plugin](https://github.com/snakemake/snakemake-executor-plugin-tes). A
-  [demo workflow][elixir-cloud-demo-smk] is available.
+  [demo workflow][elixir-cloud-demo-smk] for Snakemake 7, which had TES
+  support built in, is available: see [Run Workflows Across
+  Nodes](../researchers/federated-workflows.md).
 - **Nextflow** uses the [`nf-ga4gh`
   plugin](https://github.com/nextflow-io/nf-ga4gh). Set `plugins { id
   'nf-ga4gh' }` and `process.executor = 'tes'` in `nextflow.config`.
 - **cwl-tes** runs CWL workflows with a TES backend: see [cwl-tes][cwl-tes].
-  A [demo workflow][elixir-cloud-demo-cwl] is available.
+  Its [demo of 2023][elixir-cloud-demo-cwl] is
+  [retired](../demos/index.md#retired-demos).
 
 For the researcher's view, see [Researchers](../researchers/index.md).
