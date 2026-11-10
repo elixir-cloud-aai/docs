@@ -17,8 +17,14 @@ Registry][elixir-cloud-registry] (see [Onboarding](../onboarding.md)).
 ## Notes for the deployment
 
 - TESK has been tested with Kubernetes, OpenShift and Minikube.
-- The cluster needs a `ReadWriteMany` storage class, for example NFS or
-  CephFS. TESK uses persistent volume claims as temporary storage for the
-  files of a task and deletes them when the task ends.
+- The cluster needs a default storage class (or the chart's
+  `storageClass`). TESK uses persistent volume claims as temporary storage
+  for the files of a task; from chart 0.3.0 on, the TESK docs say that
+  `ReadWriteOnce` is enough (see
+  [Requirements](https://tesk.readthedocs.io/en/latest/deployment/#requirements)).
+  A `ReadWriteMany` volume is needed only to share files with a workflow
+  engine (`transfer`).
+- For a step-by-step setup, see the [Node onboarding
+  tutorial](../node-onboarding-tutorial.md).
 - To use the Node's S3 storage (see [Onboarding](../onboarding.md)), set the
   chart's `storage` value to `s3` and follow the chart's README.

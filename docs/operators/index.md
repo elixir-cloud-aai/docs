@@ -38,6 +38,7 @@ deployment.
 | Page | What it covers |
 |---|---|
 | [Onboarding](onboarding.md) | The steps for a Node to join the federation. |
+| [Tutorial: Onboard a Node](node-onboarding-tutorial.md) | Step by step, from a cluster to a registered, verified TES service behind the gateway. |
 | [Cloud Registry](cloud-registry.md) | The settings of the deployment's registry, for the admins who run it. |
 | [Using the Cloud Registry](using-cloud-registry.md) | How to look up, register and maintain services, and what the labels mean. |
 | [Using the Cloud Registry UI](using-cloud-registry-ui.md) | How to log in to the registry's front end, who has which rights, and whom to ask. |

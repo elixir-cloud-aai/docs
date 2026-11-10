@@ -3,7 +3,8 @@
 Follow these steps to connect your Node to the ELIXIR On-Cloud federation.
 At the end, your cluster is available through the [GA4GH Task Execution
 Service][ga4gh-tes] (TES) API, and others can find it in the [Cloud
-Registry][elixir-cloud-registry].
+Registry][elixir-cloud-registry]. For the same steps in detail, with the
+commands of each product, follow the [tutorial](node-onboarding-tutorial.md).
 
 You need:
 
