@@ -50,11 +50,13 @@ README.
 
 The CLI reads the addresses of the services from `~/.ga4gh-cli/config.json`.
 It has one section per kind of service: `REGISTRY`, `TES` and `DRS`. To start,
-point the CLI at the Cloud Registry of ELIXIR On-Cloud:
+point the CLI at the Cloud Registry of ELIXIR On-Cloud. The commands below
+create the file only if it doesn't exist yet; to change an existing file, edit
+it in a text editor instead, so that its other sections stay.
 
 ```bash
 mkdir -p ~/.ga4gh-cli
-cat > ~/.ga4gh-cli/config.json <<'JSON'
+[ -e ~/.ga4gh-cli/config.json ] || cat > ~/.ga4gh-cli/config.json <<'JSON'
 {
   "REGISTRY": {
     "base_path": "https://elixir-on.cloud/ga4gh/registry/v1"
@@ -253,18 +255,24 @@ code:
 
 ```bash
 if ! TASK_ID=$(ga4gh-cli tes create task.json); then
-  echo "The task was not created" >&2
+  echo "The task may not have been created" >&2
   exit 1
 fi
 ```
 
+An error from `tes create` doesn't always mean that there is no task: if the
+service accepted the task but its answer got lost, for example in a timeout,
+the task runs anyway. Before you send it again, check with `ga4gh-cli tes list
+-n "<name of the task>"` whether it exists, so that it doesn't run twice.
+
 ## Look up objects with DRS
 
-Add a `DRS` section to the configuration, as shown above. Read the metadata of
-an object, by its ID:
+Add a `DRS` section to the configuration, as shown above. Set the ID of the
+object, then read its metadata:
 
 ```bash
-ga4gh-cli drs get <OBJECT_ID>
+OBJECT_ID='the ID of the object'
+ga4gh-cli drs get "$OBJECT_ID"
 ```
 
 The output is the JSON of the service, with the size, the checksums and the
@@ -272,13 +280,28 @@ The output is the JSON of the service, with the size, the checksums and the
 the `access_id` of one of its access methods:
 
 ```bash
-ga4gh-cli drs access <OBJECT_ID> <ACCESS_ID>
+ACCESS_ID='the access_id of the access method'
+ga4gh-cli drs access "$OBJECT_ID" "$ACCESS_ID"
 ```
 
 The answer can contain headers that you need to download the bytes. The CLI
 doesn't download them; use a tool such as `curl` with the URL. Both commands
 end with the exit code `1` on errors and `2` on missing arguments, like the
 `tes` commands.
+
+!!! warning "Treat access URLs like passwords"
+    An access URL can be signed: anyone who has it can download the object
+    until it expires. Don't paste it into a command line, where it stays in
+    the shell history and other users of the computer can see it. Pass it to
+    `curl` through standard input instead, for example with
+    [`jq`](https://jqlang.org/):
+
+    ```bash
+    ga4gh-cli drs access "$OBJECT_ID" "$ACCESS_ID" | jq -r '"url = \"\(.url)\""' | curl -K - -o object.bin
+    ```
+
+    This doesn't send the headers of the answer; add them if the service
+    returns any.
 
 ## Authentication
 
