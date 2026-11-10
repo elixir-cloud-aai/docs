@@ -32,8 +32,9 @@ Anyone can browse the services and service types without logging in. See
 
 To register services and manage your own, log in with
 [LS Login][ls-login]: select **Log in** in the top bar, then LS Login. This
-deployment offers no other login provider. See [Logging
-in][cr-ui-logging-in] for sessions and logging out.
+deployment offers no other login provider. You need an LS Login account:
+to get one, see the [LS Login and registration guide][ls-login-guide]. See
+[Logging in][cr-ui-logging-in] for sessions and logging out.
 
 Owners share services with others by their user ID, which the UI shows in
 the menu at the bottom of the sidebar (see [Your user ID][cr-ui-user-id]).
@@ -69,11 +70,12 @@ admin rights, write to
 - **Bugs in the UI:** open an issue in the [Cloud Registry UI
   repository][cr-ui-repo].
 
-[cr-ui-access]: <https://cloud-registry-ui.readthedocs.io/en/latest/user-guide/access/>
-[cr-ui-admin-mode]: <https://cloud-registry-ui.readthedocs.io/en/latest/user-guide/admin-mode/>
-[cr-ui-browsing]: <https://cloud-registry-ui.readthedocs.io/en/latest/user-guide/browsing/>
-[cr-ui-logging-in]: <https://cloud-registry-ui.readthedocs.io/en/latest/user-guide/#logging-in>
+[cr-ui-access]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/user-guide/access/>
+[cr-ui-admin-mode]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/user-guide/admin-mode/>
+[cr-ui-browsing]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/user-guide/browsing/>
+[cr-ui-logging-in]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/user-guide/#logging-in>
 [cr-ui-repo]: <https://github.com/elixir-cloud-aai/cloud-registry-ui>
-[cr-ui-user-guide]: <https://cloud-registry-ui.readthedocs.io/en/latest/user-guide/>
-[cr-ui-user-id]: <https://cloud-registry-ui.readthedocs.io/en/latest/user-guide/#your-user-id>
+[cr-ui-user-guide]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/user-guide/>
+[cr-ui-user-id]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/user-guide/#your-user-id>
 [ls-login]: <https://www.lifescience-ri.eu/life-science-login/>
+[ls-login-guide]: <https://www.lifescience-ri.eu/ls-login-and-registration-guide/>
