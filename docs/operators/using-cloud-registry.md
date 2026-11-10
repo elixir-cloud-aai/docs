@@ -9,12 +9,11 @@ registry works in general, it links the [Cloud Registry
 documentation][cr-docs]. If you run the registry itself, see [Cloud
 Registry](cloud-registry.md).
 
-!!! info "Coming with 1.0.0-rc2"
-    Importing, syncing, the labels and the notifications are not released
-    yet: they come with Cloud Registry 1.0.0rc2 and Cloud Registry UI
-    1.0.0-rc2, and this page describes them as of these releases. Links to
-    the Cloud Registry documentation point to its latest version, which may
-    be ahead of the deployed release.
+!!! info "Last checked against Cloud Registry v1.0.0rc2 and Cloud Registry UI v1.0.0-rc2"
+    Importing, syncing, the labels and the notifications came with these
+    releases. Links to the UI's documentation point to the deployed
+    release, 1.0.0-rc2. Links to the Cloud Registry documentation point to
+    its latest version, which may be ahead of the deployed release.
 
 For anything this page doesn't answer, write to
 [cloud-service@elixir-europe.org][elixir-on-cloud-email].
@@ -114,9 +113,6 @@ fix: tell the [admins][elixir-on-cloud-email].
 
 ## Notifications
 
-!!! info "Coming with 1.0.0-rc2"
-    The bell described here is being built and is not released yet.
-
 After you log in, a bell in the front end shows what needs your attention:
 
 - **Users with a role on a service** see when it is out of sync, with the
@@ -149,6 +145,6 @@ sharing services step by step.
 [cr-import]: <https://cloud-registry.readthedocs.io/en/latest/api/#importing-service-info>
 [cr-notifications]: <https://cloud-registry.readthedocs.io/en/latest/api/#notifications>
 [cr-synced]: <https://cloud-registry.readthedocs.io/en/latest/api/#synced-services>
-[cr-ui-browsing]: <https://cloud-registry-ui.readthedocs.io/en/latest/user-guide/browsing/>
-[cr-ui-user-guide]: <https://cloud-registry-ui.readthedocs.io/en/latest/user-guide/>
+[cr-ui-browsing]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/user-guide/browsing/>
+[cr-ui-user-guide]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/user-guide/>
 [cr-verified]: <https://cloud-registry.readthedocs.io/en/latest/api/#verified-services>

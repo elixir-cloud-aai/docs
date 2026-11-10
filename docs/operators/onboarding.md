@@ -63,7 +63,11 @@ Other S3 and FTP servers may work, but nobody has tested them.
 
 1. Open the [Cloud Registry][elixir-cloud-registry] and log in with LS
    Login.
-2. Register your TES service:
+2. Register your TES service. **Import its values from its public service
+   info endpoint** in the registration form, and keep sync on, so that the
+   entry follows your service (see [Using the Cloud
+   Registry](using-cloud-registry.md#registering-a-service)). Check the
+   values before registering them:
     - **URL:** the URL of your TES service. It must start with `https`.
     - **Type:** the TES type from the list. Only admins can add types. If it
       is missing, write to
