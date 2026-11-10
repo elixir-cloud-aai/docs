@@ -22,7 +22,9 @@ also evaluates the ways to do this, and lists the shortcuts it takes.
 - Nothing else: no Python on your computer, no free ports, no account.
 
 The Funnel containers get the Docker socket of your computer, to start the
-containers of the tasks. Read the repository's
+containers of the tasks. Access to the Docker socket amounts to full control
+of the computer, so run the testbed in a virtual machine or on a Docker host
+that you can throw away, and read the repository's
 [`compose.yaml`](https://github.com/elixir-cloud-aai/nvflare-wes-testbed/blob/dev/compose.yaml)
 before you start.
 

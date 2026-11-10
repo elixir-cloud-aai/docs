@@ -22,15 +22,17 @@ Each demo has one of these states:
 |---|---|---|---|
 | [Token exchange testbed][repo-txf] | Current | Per-hop OAuth 2.0 token exchange with LS Login along a chain of services, from a front end through a WES and the proTES gateway to TES nodes. Runs on your computer against a local mock of LS Login. | [Token Exchange Testbed](token-exchange-testbed.md) |
 | [NVFlare on WES and TES testbed][repo-nvflare] | Current | A federated learning job with NVIDIA FLARE, started through GA4GH WES, with one GA4GH TES task per site, also through proTES. Runs on your computer with two local Funnel instances and synthetic data. | [NVFlare Testbed](nvflare-wes-testbed.md) |
-| [GA4GH SDK upgrade][repo-sdk] | Current | Plan and guide of a BioHackathon Europe 2026 project: the command line tool of the GA4GH SDK sends tasks to proTES with an LS Login token. Nothing to run beyond building the tool yet. | [Use the Command Line](../researchers/cli.md) and the [project docs][docs-sdk] |
+| [GA4GH SDK upgrade][repo-sdk] | Current | Plan and guide of a BioHackathon Europe 2026 project. Its goal: the command line tool of the GA4GH SDK sends tasks to proTES with an LS Login token. The tool doesn't send tokens yet, so it can only use services that need none; nothing to run beyond building it. | [Use the Command Line](../researchers/cli.md) and the [project docs][docs-sdk] |
 | [Hybrid cloud via TES][repo-hybrid] (`demo-tes-hybrid-cloud`) | Outdated | A Snakemake workflow on the TES services of several Nodes, one after the other, and then on all of them through proTES. | [Run Workflows Across Nodes](../researchers/federated-workflows.md) |
+| [Crypt4GH with proTES][repo-crypt4gh] (`protes-middleware-crypt4gh`) | Outdated | A task on Crypt4GH-encrypted files that are decrypted only inside the task's container, through a proTES middleware and Funnel. Needs proTES 0.3.0 or earlier, as later versions run plugins instead of middlewares. | [Crypt4GH with proTES](../researchers/crypt4gh-with-protes.md) |
 | [Demo 2023-ecp-f2f][repo-f2f] (`elixir-cloud-demos`) | Retired | Tasks with `curl` and `py-tes` on TESK and Funnel, distribution through proTES, and a CWL workflow with `cwl-tes`, as shown at the ELIXIR Compute Platform meeting in February 2023. | [Retired demos](#retired-demos) |
 | [Demo workflows][repo-workflows] (`demo-workflows`) | Retired | CWL and Snakemake workflows (GWAS, hash splitter, sequence comparison, rare diseases) for tests of the stack from 2019 to 2022. | [Retired demos](#retired-demos) |
 
 The states were checked on 2026-11-10, against the default branch of each
 repository: `token-exchange-flow-testbed` at `7585c99`,
 `nvflare-wes-testbed` at `ca418a6`, `biohackeu26-ga4gh-sdk-upgrade` at
-`290cb80`, `demo-tes-hybrid-cloud` at `a9fcf13`, `elixir-cloud-demos` at
+`290cb80`, `demo-tes-hybrid-cloud` at `a9fcf13`,
+`protes-middleware-crypt4gh` at `2c33121`, `elixir-cloud-demos` at
 `5a7576b` and `demo-workflows` at `a069bea`.
 
 ## Test beds and demos
@@ -79,6 +81,7 @@ Propose a new demo, or report one that no longer works, in the
 repository](https://github.com/elixir-cloud-aai/docs/issues).
 
 [docs-sdk]: <https://biohackeu26-ga4gh-sdk-upgrade.readthedocs.io/en/latest/>
+[repo-crypt4gh]: <https://github.com/elixir-cloud-aai/protes-middleware-crypt4gh>
 [repo-f2f]: <https://github.com/elixir-cloud-aai/elixir-cloud-demos/tree/main/demos/2023-ecp-f2f>
 [repo-hybrid]: <https://github.com/elixir-cloud-aai/demo-tes-hybrid-cloud>
 [repo-nvflare]: <https://github.com/elixir-cloud-aai/nvflare-wes-testbed>

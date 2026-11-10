@@ -71,9 +71,10 @@ gateway, which forwards each task to one of the TES services.
 
 5. Run the cells of the notebook in order. It lists the TES services, runs
    the workflow on each of them, and then runs it through the gateway, which
-   forwards each task to one of the TES services. Before the cell that uses
-   the gateway, add a cell with `unset FUNNEL_SERVER_USER
-   FUNNEL_SERVER_PASSWORD` (see below).
+   forwards each task to one of the TES services. The notebook runs Bash
+   (`bash_kernel`, from the `environment.yml`), and Snakemake inherits the
+   environment of its cells. Before the cell that uses the gateway, add a
+   cell with `unset FUNNEL_SERVER_USER FUNNEL_SERVER_PASSWORD` (see below).
 
 The notebook has the details of each step.
 
