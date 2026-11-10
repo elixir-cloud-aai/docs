@@ -117,6 +117,9 @@ nav:
     - "Run Workflows Across Nodes": "researchers/federated-workflows.md"
     - "SPE with WESkit": "researchers/spe-with-weskit.md"
     - "Crypt4GH with proTES": "researchers/crypt4gh-with-protes.md"
+    - Run Interactive Services on TES:
+      - "tutorials/tes-services/interactive_services_tes.md"
+      - "Commands": "tutorials/tes-services/interactive_services_tes_commands.md"
   - Demos:
     - "demos/index.md"
     - "Token Exchange Testbed": "demos/token-exchange-testbed.md"

@@ -14,6 +14,7 @@ ELIXIR Nodes, and keep sensitive data under the control of its owner.
 | [Run Workflows Across Nodes](federated-workflows.md) | Run a Snakemake workflow on the TES services of several Nodes, through the proTES gateway. | A Python environment on your computer, and the addresses of TES services. |
 | [Sensitive Data in a Secure Processing Environment](spe-with-weskit.md) | Run workflows on sensitive data that you never see, and read the results. | An LS Login account and permission from the operator of the environment. |
 | [Crypt4GH with proTES](crypt4gh-with-protes.md) | Process Crypt4GH-encrypted files in a secure container. Needs proTES 0.3.0 or earlier. | Docker and three virtual machines. |
+| [Run Interactive Services on TES](../tutorials/tes-services/interactive_services_tes.md) | Run RStudio, JupyterLab or Atlas with OMOP demo data as TES tasks, and open them in your browser. Synthetic data only. | A virtual machine with a public host name and an open HTTPS port, and a TES service. |
 
 ## Before you start
 
