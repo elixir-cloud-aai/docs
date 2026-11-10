@@ -44,7 +44,7 @@ the menu at the bottom of the sidebar (see [Your user ID][cr-ui-user-id]).
 | Who | Can |
 |---|---|
 | Anyone | browse services and service types |
-| Logged-in users | register up to 20 services; only admins add service types here |
+| Logged-in users | register up to 20 services (admins aren't limited); only admins add service types here |
 | Maintainers of a service | edit it |
 | Owners of a service | edit and delete it, and manage access to it (see [Access and permissions][cr-ui-access]) |
 | Admins, in admin mode | everything, e.g. verify services and approve service types (see [Admin mode][cr-ui-admin-mode]) |
@@ -68,7 +68,8 @@ admin rights, write to
 - **Problems with LS Login itself,** e.g. your account: see the [LS
   Login][ls-login] pages.
 - **Bugs in the UI:** open an issue in the [Cloud Registry UI
-  repository][cr-ui-repo].
+  repository][cr-ui-repo]. Report security problems privately instead, as
+  the [security policy][security-policy] describes.
 
 [cr-ui-access]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/user-guide/access/>
 [cr-ui-admin-mode]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/user-guide/admin-mode/>
@@ -78,4 +79,5 @@ admin rights, write to
 [cr-ui-user-guide]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/user-guide/>
 [cr-ui-user-id]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/user-guide/#your-user-id>
 [ls-login]: <https://www.lifescience-ri.eu/life-science-login/>
+[security-policy]: <https://github.com/elixir-cloud-aai/.github/blob/main/SECURITY.md>
 [ls-login-guide]: <https://www.lifescience-ri.eu/ls-login-and-registration-guide/>
