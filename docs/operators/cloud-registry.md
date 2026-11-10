@@ -138,9 +138,19 @@ UI's [Compatibility][cr-ui-compatibility]). For this deployment:
    issuer in `LOGIN_PROVIDERS` and `LOGIN_REDIRECT_URI` must be `https`
    URLs, as they are in [Settings](#settings); the front end refuses to
    start otherwise.
-2. **Export what is registered**, as a reference for registering it again
+2. **Stop the front end** for the whole upgrade:
+
+    ```bash
+    kubectl scale deploy/cloud-registry-ui --replicas=0 -n <namespace>
+    ```
+
+3. **Export what is registered**, as a reference for registering it again
    (the lists are public). Roles and invitations aren't public, so owners
-   share their services again after the upgrade:
+   share their services again after the upgrade. The public lists leave out
+   pending services and service types: an admin exports these from
+   `GET /approvals`, in admin mode. The backup of step 5, taken after the
+   app is stopped, holds everything, including what is written after the
+   export:
 
     ```bash
     curl -fsS https://elixir-on.cloud/ga4gh/registry/v1/services \
@@ -150,38 +160,48 @@ UI's [Compatibility][cr-ui-compatibility]). For this deployment:
     curl -fsS https://elixir-on.cloud/ga4gh/registry/v1/verifications \
       > verifications-1.0.0rc1.json
     jq length services-1.0.0rc1.json
+    read -rs TOKEN
+    printf 'Authorization: Bearer %s\nX-Request-Roles: admin\n' "$TOKEN" \
+      | curl -fsS -H @- https://elixir-on.cloud/ga4gh/registry/v1/approvals \
+      > approvals-1.0.0rc1.json
     ```
 
-3. **Back up the database of 1.0.0rc1** (see [Backups](#backups)), e.g.,
-   with a dump by the CronJob, and check that it arrived. Going back to
-   1.0.0rc1 needs its database as it was:
-
-    ```bash
-    kubectl create job --from=cronjob/cloud-registry-backup backup-before-1.0.0rc2 -n <namespace>
-    kubectl logs job/backup-before-1.0.0rc2 -n <namespace> --all-containers
-    ```
-
-4. **Stop the front end** for the whole upgrade:
-
-    ```bash
-    kubectl scale deploy/cloud-registry-ui --replicas=0 -n <namespace>
-    ```
-
-5. **Empty the database:** scale the app to 0 replicas, wait until its pods
-   are gone, and drop the database `serviceStore`, as the [chart's
-   notes][cr-chart-1.0.0rc2] show. Dropping the database keeps its users,
-   so the Secret with the MongoDB credentials stays valid:
+4. **Stop the app:** scale it to 0 replicas, and wait until its pods are
+   gone, so that nothing is written during the backup:
 
     ```bash
     kubectl scale deploy/cloud-registry --replicas=0 -n <namespace>
     kubectl wait --for=delete pod -n <namespace> --timeout=120s \
       -l app.kubernetes.io/instance=cloud-registry,app.kubernetes.io/component=app
-    kubectl exec deploy/cloud-registry-mongodb -n <namespace> -- sh -c 'mongosh serviceStore --quiet \
+    ```
+
+5. **Back up the database of 1.0.0rc1** (see [Backups](#backups)), e.g.,
+   with a dump by the CronJob. Going back to 1.0.0rc1 needs its database as
+   it was, so wait until the job has completed, and check that the dump
+   arrived in the bucket, before going on:
+
+    ```bash
+    kubectl create job --from=cronjob/cloud-registry-backup backup-before-1.0.0rc2 -n <namespace>
+    kubectl wait --for=condition=complete job/backup-before-1.0.0rc2 -n <namespace> --timeout=600s
+    kubectl logs job/backup-before-1.0.0rc2 -n <namespace> --all-containers
+    ```
+
+6. **Empty the database:** drop the database `serviceStore`, as the
+   [chart's notes][cr-chart-1.0.0rc2] show, only if no pod of the app runs
+   (the command stops otherwise). Dropping a database keeps its users, so
+   the Secret with the MongoDB credentials stays valid:
+
+    ```bash
+    # Stops with an error if pods of the app are listed (or kubectl fails)
+    pods=$(kubectl get pods -n <namespace> -o name \
+      -l app.kubernetes.io/instance=cloud-registry,app.kubernetes.io/component=app) \
+      && test -z "$pods" \
+      && kubectl exec deploy/cloud-registry-mongodb -n <namespace> -- sh -c 'mongosh serviceStore --quiet \
       -u "$MONGO_INITDB_ROOT_USERNAME" -p "$MONGO_INITDB_ROOT_PASSWORD" \
       --authenticationDatabase admin --eval "db.dropDatabase()"'
     ```
 
-6. **Values file:** nothing must change. It gives no
+7. **Values file:** nothing must change. It gives no
    `config.security.access_control.policies`, so the new rules of imports,
    syncs and notifications, and the moved rule `owners-change-permissions`,
    apply as they are. The environment of its service info, `prod`, is one
@@ -189,13 +209,13 @@ UI's [Compatibility][cr-ui-compatibility]). For this deployment:
    startup. The new settings keep their defaults (see [Service info import
    and sync](#service-info-import-and-sync), [Notifications](#notifications)
    and [Invitations](#invitations)).
-7. **Outgoing connections:** the registry now fetches service info from
+8. **Outgoing connections:** the registry now fetches service info from
    public addresses, when users import it and for syncs. If the cluster
    restricts the connections of the namespace's pods, allow the app's pods
    to connect to public addresses on port 443, as for LS Login (see
    [Network policies](#network-policies)); otherwise, imports fail and
    synced services become `out-of-sync`.
-8. Download and verify the chart and the image of v1.0.0rc2 (see
+9. Download and verify the chart and the image of v1.0.0rc2 (see
    [Verifying the chart and the
    image](#verifying-the-chart-and-the-image)), upgrade with the verified
    chart file (see [Upgrades](#upgrades); `helm upgrade` restores the
@@ -207,7 +227,7 @@ UI's [Compatibility][cr-ui-compatibility]). For this deployment:
     kubectl rollout status deploy/cloud-registry -n <namespace>
     ```
 
-9. **Front end:** deploy the release image of v1.0.0-rc2, verified and
+10. **Front end:** deploy the release image of v1.0.0-rc2, verified and
    pinned by its digest (see [Verifying the UI
    image](#verifying-the-ui-image)), with the same settings (see
    [Settings](#settings); the two new ones keep their defaults), and wait
@@ -221,7 +241,7 @@ UI's [Compatibility][cr-ui-compatibility]). For this deployment:
 
     The session cookies have new names (`__Host-…`), so users who were
     logged in log in once more.
-10. **Register again:** admins add the service types, in admin mode (see
+11. **Register again:** admins add the service types, in admin mode (see
     [Service types](#service-types)), and verify services as they are
     registered again; ask the operators of the exported services to
     register them again, by importing their service info, with sync on
@@ -240,7 +260,7 @@ rely on request paths must follow too: from FOCA 0.22, the logs name routes
 (e.g., `/ga4gh/registry/v1/services/{serviceId}`) instead of paths.
 
 **Going back** to 1.0.0rc1 needs its database, as it was: roll the registry
-and the front end back together, and restore the backup of step 3 (see
+and the front end back together, and restore the backup of step 5 (see
 [Testing a restore](#testing-a-restore)).
 
 ## Upgrading from 0.6.0
