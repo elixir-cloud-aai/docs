@@ -48,11 +48,13 @@ In the TES task:                                                    |
 - **The task checks the hub:** the task gets the fingerprint of the hub's
   key, and refuses a server with another key.
 - **A keep-alive loop:** a loop on the virtual machine sends a new task when
-  the old one ends.
+  the old one ends. If the old pod still holds the port, the loop first
+  locks it out (see the next point).
 - **Stopping locks the old task out:** on the TESK of ELIXIR-FI, a cancelled
   task is marked `CANCELED`, but its pod keeps running and its tunnel stays
-  connected. `down` therefore also gives the service a new password and
-  restarts the hub. The other tunnels reconnect within about 30 seconds.
+  connected. `down` therefore first gives the service a new password and
+  restarts the hub, and then cancels the task. The other tunnels reconnect
+  within about 30 seconds.
 
 | File | What it does |
 |---|---|
@@ -70,8 +72,8 @@ passwords (readable only by you), the task IDs and the logs.
 
 ## What you need
 
-- A Linux virtual machine with `bash`, `curl`, `python3`, `ss` and `setsid`,
-  that you can reach with SSH. The services run on the TES service, not on
+- A Linux virtual machine (x86-64 or ARM64) with `bash`, `curl`, `python3`,
+  `ss`, `setsid` and `flock`, that you can reach with SSH. The services run on the TES service, not on
   the virtual machine.
 - A public host name for the virtual machine (`<HOST>` below), and port 443
   open to the internet. The tasks must reach this port: the TESK of
@@ -149,7 +151,7 @@ exactly this text.
 ## Start RStudio Server
 
 ```bash
-./tes-hub/tes-service.sh rstudio-tesk selftest   # optional: a short task without tunnel; prints SELFTEST_OK
+./tes-hub/tes-service.sh rstudio-tesk selftest   # optional: a short task without tunnel; fails unless it prints SELFTEST_OK
 ./tes-hub/tes-service.sh rstudio-tesk up
 ```
 
@@ -169,22 +171,25 @@ and gives R a home folder in `/tmp/home`.
 ## Start Atlas with OMOP demo data
 
 ```bash
-./omop-tesk/omop-tesk-fi.sh selftest db   # optional: loads the CDM in a short task; prints SELFTEST_OK
+./omop-tesk/omop-tesk-fi.sh selftest db   # optional: loads the CDM in a short task; fails unless it prints SELFTEST_OK
 ./omop-tesk/omop-tesk-fi.sh up
 ```
 
 `up` creates the hub user `omop` and a password for the database the first
-time, and sends three tasks:
+time, sends three tasks and starts the keep-alive loop:
 
 | Task | Image | Port on the virtual machine |
 |---|---|---|
 | `db` | `postgres:16-alpine`, with the Eunomia GiBleed CDM 5.3 | 15432 |
-| `webapi` | `ohdsi/webapi:latest`. Reaches the database through the hub. | 18081 |
-| `atlas` | `ohdsi/atlas:latest`. Reaches WebAPI through the hub. | 8080 (`HUB_ATLAS_PORT`) |
+| `webapi` | `ohdsi/webapi:2.15.2`. Reaches the database through the hub. | 18081 |
+| `atlas` | `ohdsi/atlas:2.15.0`. Reaches WebAPI through the hub. | 8080 (`HUB_ATLAS_PORT`) |
 
 When WebAPI runs, the `db` task creates the results schema and registers
 the CDM as the data source `EUNOMIA`. The first start takes 10 to 15
-minutes, because WebAPI creates its tables. `up` waits up to 40 minutes.
+minutes, because WebAPI creates its tables. `up` waits up to 40 minutes,
+until Atlas answers and WebAPI lists the data source. All three tasks share
+one hub user, so the keep-alive loop replaces the whole stack when the
+database ends: a new database is empty.
 Then forward the port and open <http://localhost:8080/atlas/>:
 
 ```bash
@@ -229,7 +234,7 @@ has an example for JupyterLab. Start it with
 | `logs` | Shows the logs of the task. The TESK of ELIXIR-FI fills them only when the task ends. |
 | `print` | Shows the TES task that the script would send. |
 | `restart` | Replaces the service with a new one (`down`, then `up`). |
-| `down` | Stops the keep-alive loop, cancels the task and locks the old task out of the hub. |
+| `down` | Stops the keep-alive loop, locks the old task out of the hub and cancels it. |
 
 For example: `./tes-hub/tes-service.sh rstudio-tesk status` or
 `./omop-tesk/omop-tesk-fi.sh logs webapi`. `./tes-hub/tes-hub.sh status`
@@ -248,6 +253,9 @@ keep-alive loop again.
 - **Nothing is kept:** files, R packages and the database are in `/tmp` of
   the task. They are lost when the task ends or is replaced. Copy out what
   you want to keep.
+- **WebAPI 2 only:** the WebAPI 3 images (`ohdsi/webapi:latest` since
+  November 2026) start differently, and `pod/webapi.sh` doesn't support them
+  yet. Keep `WEBAPI_IMAGE` at a 2.x version.
 - **Outbound HTTPS only:** tasks can download files, for example from
   GitHub, but can't use other ports, for example SSH.
 - **Old tasks keep running:** locked-out tasks keep running and use
@@ -261,11 +269,11 @@ To change a default, set the environment variable before you run a script:
 | Variable | Default | Used by |
 |---|---|---|
 | `TES_URL` | `https://csc-tesk-noauth.rahtiapp.fi` | all scripts |
-| `HUB_LISTEN_PORT` | `8090` | `tes-hub.sh` |
+| `HUB_LISTEN_PORT` | `8090` (`setup` saves it) | `tes-hub.sh` |
 | `CHISEL_VERSION` | `1.12.0` | `tes-hub.sh` |
 | `WATCH_INTERVAL` | `60` (seconds) | the keep-alive loops |
 | `HUB_ATLAS_PORT`, `HUB_WEBAPI_PORT`, `HUB_DB_PORT` | `8080`, `18081`, `15432` | `omop-tesk-fi.sh` |
-| `DB_IMAGE`, `WEBAPI_IMAGE`, `ATLAS_IMAGE` | `postgres:16-alpine`, `ohdsi/webapi:latest`, `ohdsi/atlas:latest` | `omop-tesk-fi.sh` |
+| `DB_IMAGE`, `WEBAPI_IMAGE`, `ATLAS_IMAGE` | `postgres:16-alpine`, `ohdsi/webapi:2.15.2`, `ohdsi/atlas:2.15.0` | `omop-tesk-fi.sh` |
 | `EUNOMIA_URL` | the GiBleed CDM 5.3 of [EunomiaDatasets](https://github.com/OHDSI/EunomiaDatasets) | `omop-tesk-fi.sh` |
 | `WEBAPI_RAM_GB`, `WEBAPI_JAVA_OPTS` | `1`, `-Xmx640m -XX:MaxMetaspaceSize=192m ...` | `omop-tesk-fi.sh` |
 
@@ -297,11 +305,31 @@ reverse proxy of `elixir-on.cloud`. According to the notes of the project,
 RStudio Server, JupyterLab, and Atlas with the Eunomia data worked, and a
 cohort created through WebAPI had 479 persons.
 
-Two files of the project are fixed on this page: the script of the database
-task is named `db.sh` (the launcher loads `pod/<ROLE>.sh`), and
-`rstudio-tesk/service.conf` is filled in. With these fixes, we only checked
-on a second virtual machine that the scripts build valid TES tasks. We did
-not send them again.
+This page fixes and changes the scripts of the project. Among others, the
+script of the database task is named `db.sh`, `rstudio-tesk/service.conf`
+is filled in, and the OMOP images are pinned to `ohdsi/webapi:2.15.2` and
+`ohdsi/atlas:2.15.0`, because `ohdsi/webapi:latest` (WebAPI 3.0.1) doesn't
+start with `pod/webapi.sh`.
+
+We tested the changed scripts on a second virtual machine, without TESK:
+a small local TES service ran each task as a Docker container with a
+random user ID and 1 GB of memory, and, like the TESK of ELIXIR-FI, kept a
+container running when its task was cancelled. It also gave the random
+user ID an entry in `/etc/passwd`, which RStudio Server needs. The hub ran
+on the virtual machine, and the tasks connected to it over HTTP, without
+nginx:
+
+- **Self-tests:** `selftest` passed for RStudio, `db` and `atlas`, and
+  failed for RStudio without the entry in `/etc/passwd`.
+- **Services:** RStudio answered through the tunnel. The Atlas stack was
+  ready within a few minutes, and a cohort created through WebAPI had 479
+  persons.
+- **Replacing and stopping:** after a cancel, the keep-alive loop locked the
+  still-running container out and the new task got the port. After `down`,
+  no task was sent again, and all tunnels were closed.
+
+We did not run the changed scripts on the TESK of ELIXIR-FI, and did not
+test nginx with TLS or JupyterLab.
 
 ## Where to go next
 

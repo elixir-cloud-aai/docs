@@ -1,3 +1,4 @@
+# shellcheck shell=sh
 # Pod-side tunnel helpers, prepended to the pod script by the launchers
 # (tes-service.sh, ../omop-tesk/omop-tesk-fi.sh).
 # Runs inside a TES pod: random UID, read-only image, outbound HTTPS only.
@@ -20,5 +21,4 @@ start_tunnel() {
   log "tunnel to $HUB_URL: $*"
   /tmp/chisel client --auth "$HUB_AUTH" --keepalive 25s --max-retry-interval 30s \
     ${HUB_FINGERPRINT:+--fingerprint "$HUB_FINGERPRINT"} "$HUB_URL" "$@" &
-  TUNNEL_PID=$!
 }

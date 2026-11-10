@@ -45,9 +45,10 @@ WEB=$!
 sleep 2
 
 if [ "${SELFTEST:-0}" = 1 ]; then
+  rc=1
   wget -q -O - http://127.0.0.1:8080/atlas/js/config-local.js | grep -n 'webapi_url = ' \
-    && wget -q -O /dev/null http://127.0.0.1:8080/atlas/ && log "SELFTEST_OK"
-  kill $WEB; exit 0
+    && wget -q -O /dev/null http://127.0.0.1:8080/atlas/ && { log "SELFTEST_OK"; rc=0; }
+  kill $WEB; exit $rc
 fi
 
 log "Atlas serving on :8080"

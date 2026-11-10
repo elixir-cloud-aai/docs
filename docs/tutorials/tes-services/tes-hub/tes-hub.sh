@@ -35,7 +35,11 @@ HUB_URL="${HUB_URL:-}"                                              # public URL
 HUB_LISTEN_HOST="${HUB_LISTEN_HOST:-127.0.0.1}"                     # where the proxy reaches the VM
 HUB_LISTEN_PORT="${HUB_LISTEN_PORT:-8090}"
 CHISEL_VERSION="${CHISEL_VERSION:-1.12.0}"
-CHISEL_URL="https://github.com/jpillora/chisel/releases/download/v${CHISEL_VERSION}/chisel_${CHISEL_VERSION}_linux_amd64.gz"
+chisel_url() { echo "https://github.com/jpillora/chisel/releases/download/v${CHISEL_VERSION}/chisel_${CHISEL_VERSION}_linux_$1.gz"; }
+# The hub runs on this VM, the clients in the TES pods: their CPUs may differ.
+HUB_ARCH="${HUB_ARCH:-$(case "$(uname -m)" in aarch64|arm64) echo arm64 ;; *) echo amd64 ;; esac)}"
+POD_ARCH="${POD_ARCH:-amd64}"
+CHISEL_URL="$(chisel_url "$POD_ARCH")"                              # sent to the tasks
 # ------------------------------------------------------------------------------------------
 
 CHISEL="$STATE_DIR/bin/chisel"
@@ -51,17 +55,17 @@ fingerprint() { grep -o 'Fingerprint [^ ]*' "$LOGF" 2>/dev/null | tail -1 | cut 
 cmd_setup() {
   HUB_URL="${1:-$HUB_URL}"; HUB_LISTEN_HOST="${2:-$HUB_LISTEN_HOST}"
   [[ "$HUB_URL" == https://*/ ]] || die "usage: $0 setup https://<proxy-host>/<path>/ [LISTEN_HOST]"
-  printf 'HUB_URL=%q\nHUB_LISTEN_HOST=%q\n' "$HUB_URL" "$HUB_LISTEN_HOST" > "$CONFIG"
+  printf 'HUB_URL=%q\nHUB_LISTEN_HOST=%q\nHUB_LISTEN_PORT=%q\n' "$HUB_URL" "$HUB_LISTEN_HOST" "$HUB_LISTEN_PORT" > "$CONFIG"
   if [[ ! -x "$CHISEL" ]]; then
     mkdir -p "$STATE_DIR/bin"
-    curl -fsSL "$CHISEL_URL" | gunzip > "$CHISEL" && chmod 755 "$CHISEL"
+    curl -fsSL "$(chisel_url "$HUB_ARCH")" | gunzip > "$CHISEL" && chmod 755 "$CHISEL"
     echo "installed chisel $("$CHISEL" --version 2>&1 | head -1) to $CHISEL"
   fi
   [[ -s "$KEYF" ]] || { "$CHISEL" server --keygen "$KEYF" >/dev/null; chmod 600 "$KEYF"; echo "generated hub key $KEYF"; }
   [[ -f "$AUTHFILE" ]] || { echo '{}' > "$AUTHFILE"; chmod 600 "$AUTHFILE"; }
   local host path
-  host="$(python3 -c "from urllib.parse import urlparse; print(urlparse('$HUB_URL').hostname)")"
-  path="$(python3 -c "from urllib.parse import urlparse; print(urlparse('$HUB_URL').path or '/')")"
+  host="$(python3 -c 'import sys; from urllib.parse import urlparse; print(urlparse(sys.argv[1]).hostname)' "$HUB_URL")"
+  path="$(python3 -c 'import sys; from urllib.parse import urlparse; print(urlparse(sys.argv[1]).path or "/")' "$HUB_URL")"
   cat <<EOF
 
 Add this to the server block of $host on your proxy, then reload it:
@@ -131,14 +135,22 @@ cmd_add_user() {
   local auth="${1:-}"; shift || true
   [[ "$auth" == *:* && $# -gt 0 ]] || die "usage: $0 add-user <user:password> <regex>..."
   [[ -f "$AUTHFILE" ]] || die "run: $0 setup <HUB_URL>"
-  python3 - "$AUTHFILE" "$auth" "$@" <<'PY'
-import json, sys
+  # Several services may run setup at the same time: one writer at a time.
+  (
+    flock -w 30 9 || die "authfile locked by another process"
+    python3 - "$AUTHFILE" "$auth" "$@" <<'PY'
+import json, os, sys
 p, auth, regexes = sys.argv[1], sys.argv[2], sys.argv[3:]
 user = auth.split(":")[0] + ":"
 a = {k: v for k, v in json.load(open(p)).items() if not k.startswith(user)}
 a[auth] = regexes
-json.dump(a, open(p, "w"), indent=2)
+# Write a new file and rename it, so chisel never reads a half-written authfile.
+with open(p + ".tmp", "w") as f:
+    json.dump(a, f, indent=2)
+os.chmod(p + ".tmp", 0o600)
+os.replace(p + ".tmp", p)
 PY
+  ) 9>"$STATE_DIR/authfile.lock"
   echo "hub user '${auth%%:*}' may open: $*"
 }
 

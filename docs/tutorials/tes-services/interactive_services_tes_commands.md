@@ -91,7 +91,7 @@ sudo systemctl reload nginx
 # Atlas uses port 8088 on this VM, because the cloud-registry container holds 127.0.0.1:8080
 # (set permanently in ~/.bashrc)
 export HUB_ATLAS_PORT=8088
-# create credentials, submit DB, WebAPI and Atlas tasks, wait until ready (first start ~15 min)
+# create credentials, submit DB, WebAPI and Atlas tasks, start the keep-alive loop, wait until ready (first start ~15 min)
 ./omop-tesk/omop-tesk-fi.sh up
 # laptop: forward Atlas, then open http://localhost:8088/atlas/
 ssh -N -L 8088:127.0.0.1:8088 ubuntu@eoc-services
@@ -129,9 +129,10 @@ APP=$!
 
 if [ "${SELFTEST:-0}" = 1 ]; then
   sleep 15
+  rc=1
   python3 -c "import urllib.request; print(urllib.request.urlopen('http://127.0.0.1:$PORT/api').read().decode())" \
-    && log "SELFTEST_OK"
-  kill $APP; exit 0
+    && { log "SELFTEST_OK"; rc=0; }
+  kill $APP; exit $rc
 fi
 
 start_tunnel "R:127.0.0.1:${HUB_PORT}:127.0.0.1:${PORT}"
@@ -212,7 +213,7 @@ export TES_URL=https://csc-tesk-noauth.rahtiapp.fi
 # hub port and chisel version (defaults)
 export HUB_LISTEN_PORT=8090 CHISEL_VERSION=1.12.0
 # Atlas stack images (defaults)
-export DB_IMAGE=postgres:16-alpine WEBAPI_IMAGE=ohdsi/webapi:latest ATLAS_IMAGE=ohdsi/atlas:latest
+export DB_IMAGE=postgres:16-alpine WEBAPI_IMAGE=ohdsi/webapi:2.15.2 ATLAS_IMAGE=ohdsi/atlas:2.15.0
 # Atlas stack dataset: Eunomia GiBleed (default)
 export EUNOMIA_URL=https://raw.githubusercontent.com/OHDSI/EunomiaDatasets/main/datasets/GiBleed/GiBleed_5.3.zip
 # WebAPI memory (defaults)
@@ -245,15 +246,15 @@ docker ps --format '{{.Names}}\t{{.Ports}}' | grep 8080
 ./omop-tesk/omop-tesk-fi.sh selftest db
 # WebAPI answers through the tunnel (long timeout, it is slow)
 curl -fsS -m 60 http://127.0.0.1:18081/WebAPI/info
-# Atlas answers on the VM
-curl -fsS -m 30 -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8088/atlas/
+# Atlas answers on the VM (HUB_ATLAS_PORT: 8088 on this VM, 8080 by default)
+curl -fsS -m 30 -o /dev/null -w '%{http_code}\n' "http://127.0.0.1:${HUB_ATLAS_PORT:-8080}/atlas/"
 ```
 
 ```bash
 # create and generate a cohort through the WebAPI REST interface; expected: cohort <id> persons: 479
 python3 - <<'EOF'
-import json, time, urllib.request
-W = "http://127.0.0.1:8088/WebAPI"
+import json, os, time, urllib.request
+W = f"http://127.0.0.1:{os.environ.get('HUB_ATLAS_PORT', '8080')}/WebAPI"
 def call(method, path, body=None):
     req = urllib.request.Request(W + path, method=method, headers={"Content-Type": "application/json"},
                                  data=None if body is None else json.dumps(body).encode())

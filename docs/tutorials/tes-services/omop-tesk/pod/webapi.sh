@@ -10,6 +10,9 @@ until pg_alive; do sleep 10; done
 sleep 20
 
 cd /var/lib/ohdsi/webapi || exit 1
+# The start command of the WebAPI 2.x images (exploded WAR; java expands only WEB-INF/lib/*,
+# the Spring Boot WarLauncher loads the jars itself). WebAPI 3 images have only WebAPI.jar
+# and start with "java -jar WebAPI.jar": this script does not support them yet.
 log "starting WebAPI (first start runs all Flyway migrations, this takes several minutes)"
 # shellcheck disable=SC2086
 java $WEBAPI_JAVA_OPTS -cp ".:WebAPI.jar:WEB-INF/lib/*.jar" org.springframework.boot.loader.WarLauncher &

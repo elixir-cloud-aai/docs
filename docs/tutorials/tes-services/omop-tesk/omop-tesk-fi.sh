@@ -12,16 +12,17 @@
 # Browser on another machine: ssh -N -L 8080:127.0.0.1:8080 <user>@<this VM>
 #
 # Usage:
-#   ./omop-tesk-fi.sh up                 # start what isn't running, wait until Atlas works
-#   ./omop-tesk-fi.sh down               # cancel all, lock the old pods out of the hub
+#   ./omop-tesk-fi.sh up                 # start what isn't running and the keep-alive loop,
+#                                        # wait until Atlas works
+#   ./omop-tesk-fi.sh down               # stop the loop, lock the old pods out of the hub, cancel all
 #   ./omop-tesk-fi.sh restart            # down + up: a fresh stack
 #   ./omop-tesk-fi.sh status             # tasks, tunnels, WebAPI and data source
 #   ./omop-tesk-fi.sh setup              # once: credentials + hub user "omop" (needs tes-hub setup)
 #   ./omop-tesk-fi.sh submit [db|webapi|atlas|all]   (default: all)
 #   ./omop-tesk-fi.sh logs <role>        # executor logs (TESK fills them when a task ends)
 #   ./omop-tesk-fi.sh cancel [role|all]
-#   ./omop-tesk-fi.sh watch              # keep all three running (run under tmux/systemd)
-#   ./omop-tesk-fi.sh selftest db|atlas  # short task without tunnel that checks the role works
+#   ./omop-tesk-fi.sh watch              # the keep-alive loop (up starts it in the background)
+#   ./omop-tesk-fi.sh selftest db|atlas  # short task without tunnel; fails unless SELFTEST_OK
 #   ./omop-tesk-fi.sh print <role>       # print the TES request JSON
 #
 # SECURITY: csc-tesk-noauth is unauthenticated. Anyone can read a task with ?view=FULL,
@@ -50,8 +51,9 @@ EUNOMIA_URL="${EUNOMIA_URL:-https://raw.githubusercontent.com/OHDSI/EunomiaDatas
 CDM_DDL_URL="${CDM_DDL_URL:-https://raw.githubusercontent.com/OHDSI/CommonDataModel/v5.4.1/inst/ddl/5.3/postgresql/OMOPCDM_postgresql_5.3_ddl.sql}"
 
 DB_IMAGE="${DB_IMAGE:-postgres:16-alpine}"
-WEBAPI_IMAGE="${WEBAPI_IMAGE:-ohdsi/webapi:latest}"
-ATLAS_IMAGE="${ATLAS_IMAGE:-ohdsi/atlas:latest}"
+# Pinned: WebAPI 3 (ohdsi/webapi:latest since 2026-11) starts differently, see pod/webapi.sh.
+WEBAPI_IMAGE="${WEBAPI_IMAGE:-ohdsi/webapi:2.15.2}"
+ATLAS_IMAGE="${ATLAS_IMAGE:-ohdsi/atlas:2.15.0}"
 # Requests with ram_gb > 1 or any disk_gb never started on this TESK (2026-10-01), so
 # WebAPI gets 1 GB with a small heap.
 WEBAPI_RAM_GB="${WEBAPI_RAM_GB:-1}"
@@ -67,6 +69,15 @@ json_get() { python3 -c 'import json,sys; d=json.load(sys.stdin); print(eval(sys
 id_file() { echo "$STATE_DIR/task_$1"; }
 task_id() { [[ -s "$(id_file "$1")" ]] && cat "$(id_file "$1")" || true; }
 task_state() { curl -fsS -m 30 "$TES_API/tasks/$1?view=MINIMAL" | json_get 'd["state"]'; }
+WATCH_PID="$STATE_DIR/watch.pid"
+# The pid must still be this stack's loop: after a reboot, another process may have it.
+watching() {
+  local pid; pid="$(cat "$WATCH_PID" 2>/dev/null)" || return 1
+  [[ -n "$pid" ]] && tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null | grep -qF -- "$HERE/omop-tesk-fi.sh watch"
+}
+# One process at a time submits, cancels or rotates credentials (up, down and watch).
+lock() { exec 9>"$STATE_DIR/lock"; flock -w 300 9 || die "another omop-tesk-fi.sh holds $STATE_DIR/lock"; }
+unlock() { flock -u 9; }
 check_role() { [[ " ${ROLES[*]} " == *" $1 "* ]] || die "unknown role '$1' (db|webapi|atlas)"; }
 
 # build_task <role> [selftest]
@@ -127,8 +138,8 @@ PY
 submit_role() {
   local role="$1" resp id
   [[ "$("$HUB" status)" == *"hub running"* ]] || die "hub not running (run: setsid -f $HUB start)"
-  resp="$(build_task "$role" | curl -fsS -X POST -H 'Content-Type: application/json' --data-binary @- "$TES_API/tasks")" \
-    || die "submitting $role to $TES_API failed"
+  resp="$(build_task "$role" | curl -fsS --connect-timeout 10 -m 60 -X POST -H 'Content-Type: application/json' \
+    --data-binary @- "$TES_API/tasks")" || die "submitting $role to $TES_API failed"
   id="$(json_get 'd["id"]' <<<"$resp")"
   echo "$id" > "$(id_file "$role")"
   echo "$role: submitted $id"
@@ -136,7 +147,7 @@ submit_role() {
 
 cancel_role() {
   local id; id="$(task_id "$1")"
-  [[ -n "$id" ]] && curl -fsS -X POST "$TES_API/tasks/$id:cancel" >/dev/null && echo "$1: canceled $id" || true
+  [[ -n "$id" ]] && curl -fsS -m 30 -X POST "$TES_API/tasks/$id:cancel" >/dev/null && echo "$1: canceled $id" || true
 }
 
 roles_arg() { if [[ -z "${1:-}" || "$1" == all ]]; then echo "${ROLES[@]}"; else check_role "$1"; echo "$1"; fi; }
@@ -161,6 +172,8 @@ is_done() { [[ "$1" =~ ^(NOT_SUBMITTED|COMPLETE|EXECUTOR_ERROR|SYSTEM_ERROR|CANC
 tunnel_up() { [[ "$(ss -tln 2>/dev/null)" == *"127.0.0.1:$1 "* ]]; }
 webapi_ready() { curl -fs -m 60 "http://127.0.0.1:$HUB_WEBAPI_PORT/WebAPI/info" 2>/dev/null; }
 source_ready() { curl -fs -m 60 "http://127.0.0.1:$HUB_WEBAPI_PORT/WebAPI/source/sources" 2>/dev/null | grep -q '"EUNOMIA"'; }
+atlas_ready() { curl -fs -m 30 -o /dev/null "http://127.0.0.1:$HUB_ATLAS_PORT/atlas/" 2>/dev/null; }
+stack_ready() { webapi_ready >/dev/null && source_ready && atlas_ready; }
 
 cmd_status() {
   local r p info
@@ -170,79 +183,115 @@ cmd_status() {
   done
   if info="$(webapi_ready)"; then echo "WebAPI ready:   $(grep -o '"version":"[^"]*"' <<<"$info" | head -1)"; else echo "WebAPI not ready (its first start takes 10-15 minutes)"; fi
   source_ready && echo "data source EUNOMIA registered" || echo "data source EUNOMIA not registered yet"
+  atlas_ready && echo "Atlas ready:    http://localhost:$HUB_ATLAS_PORT/atlas/" || echo "Atlas not ready"
+  watching && echo "keep-alive loop running (pid $(cat "$WATCH_PID"))" || echo "keep-alive loop not running"
 }
 
-# up: submit the roles that aren't running, then wait until Atlas can use the data source.
+# up: submit the roles that aren't running, start the keep-alive loop, then wait until
+# Atlas answers and WebAPI has the data source.
 cmd_up() {
   [[ -n "$HUB_AUTH" ]] || cmd_setup
   local r state i p n
+  lock
   for r in "${ROLES[@]}"; do
     state="$(role_state "$r")"
     if ! is_done "$state"; then echo "$r: task $(task_id "$r") is $state, not resubmitting"
     elif [[ $r == db ]] && ! is_done "$(role_state webapi)"; then
       # A new database is empty, and WebAPI only migrates on its first start.
-      die "the database task ended while WebAPI runs: run $0 restart"
+      unlock; die "the database task ended while WebAPI runs: run $0 restart"
     else submit_role "$r"; fi
   done
-  echo "waiting for WebAPI and the data source (first start 10-15 minutes; Ctrl-C is safe, the tasks keep running)"
+  unlock
+  if ! watching; then
+    setsid -f "$HERE/omop-tesk-fi.sh" watch >> "$STATE_DIR/watch.log" 2>&1 < /dev/null
+    echo "keep-alive loop started (log: $STATE_DIR/watch.log)"
+  fi
+  echo "waiting for Atlas, WebAPI and the data source (first start 10-15 minutes; Ctrl-C is safe, the tasks keep running)"
   for ((i = 0; i < 240; i++)); do
-    webapi_ready >/dev/null && source_ready && break
+    stack_ready && break
     if (( i % 30 == 29 )); then
       n=0; for p in "$HUB_ATLAS_PORT" "$HUB_WEBAPI_PORT" "$HUB_DB_PORT"; do tunnel_up "$p" && n=$((n + 1)); done
       echo "$(date +%H:%M) still waiting: $n of 3 tunnels up, WebAPI $(webapi_ready >/dev/null && echo up || echo starting)"
     fi
     sleep 10
   done
-  webapi_ready >/dev/null && source_ready || die "not ready after 40 minutes, see: $0 status, $0 logs webapi"
+  stack_ready || die "not ready after 40 minutes, see: $0 status, $0 logs webapi"
   echo "Atlas is up on this VM at 127.0.0.1:$HUB_ATLAS_PORT. On your laptop run:"
   echo "  ssh -N -L $HUB_ATLAS_PORT:127.0.0.1:$HUB_ATLAS_PORT $(id -un)@$(hostname -f)"
   echo "and open http://localhost:$HUB_ATLAS_PORT"
 }
 
-# down: cancel marks the tasks CANCELED, but their pods keep running on TESK. New credentials
-# and a hub restart lock them out.
+# Cancel marks the tasks CANCELED, but their pods keep running on TESK. New credentials and
+# a hub restart lock them out. All three roles share the hub user, so this replaces the stack.
+lock_out() { rm -f "$STATE_DIR/config"; HUB_AUTH="" DB_PASSWORD=""; cmd_setup; "$HUB" restart; }
+
+# down: stop the loop first (it would resubmit), lock the pods out before cancelling, so that
+# an interrupted down never leaves them connected.
 cmd_down() {
+  if watching; then kill "$(cat "$WATCH_PID")" && rm -f "$WATCH_PID" && echo "keep-alive loop stopped"; fi
+  lock
+  lock_out
   local r; for r in "${ROLES[@]}"; do cancel_role "$r"; done
-  rm -f "$STATE_DIR/config"; cmd_setup
-  "$HUB" restart
+  unlock
 }
 
 cmd_logs() {
   local id; check_role "${1:-}"; id="$(task_id "$1")"; [[ -n "$id" ]] || die "$1 not submitted"
-  curl -fsS "$TES_API/tasks/$id?view=FULL" | json_get \
+  curl -fsS -m 60 "$TES_API/tasks/$id?view=FULL" | json_get \
     '"state: " + d["state"] + "\n" + "\n".join((l.get("stdout") or "") + (l.get("stderr") or "") for t in d.get("logs",[]) for l in t.get("logs",[]))'
 }
 
 cmd_selftest() {
-  local role="${1:-}" resp id state i
+  local role="${1:-}" resp id state i out
   [[ "$role" == db || "$role" == atlas ]] || die "usage: $0 selftest db|atlas"
-  resp="$(build_task "$role" selftest | curl -fsS -X POST -H 'Content-Type: application/json' --data-binary @- "$TES_API/tasks")"
+  [[ -n "$HUB_AUTH" && -n "$DB_PASSWORD" ]] || cmd_setup
+  resp="$(build_task "$role" selftest | curl -fsS --connect-timeout 10 -m 60 -X POST \
+    -H 'Content-Type: application/json' --data-binary @- "$TES_API/tasks")" || die "submitting to $TES_API failed"
   id="$(json_get 'd["id"]' <<<"$resp")"; echo "selftest $role: $id"
   for ((i = 0; i < 90; i++)); do
     state="$(task_state "$id" 2>/dev/null || echo UNKNOWN)"
     case "$state" in COMPLETE|EXECUTOR_ERROR|SYSTEM_ERROR|CANCELED) break ;; esac
     sleep 10
   done
-  curl -fsS "$TES_API/tasks/$id?view=FULL" | json_get \
-    '"state: " + d["state"] + "\n" + "\n".join((l.get("stdout") or "") + (l.get("stderr") or "") for t in d.get("logs",[]) for l in t.get("logs",[]))'
+  out="$(curl -fsS -m 60 "$TES_API/tasks/$id?view=FULL" | json_get \
+    '"state: " + d["state"] + "\n" + "\n".join((l.get("stdout") or "") + (l.get("stderr") or "") for t in d.get("logs",[]) for l in t.get("logs",[]))')"
+  echo "$out"
+  [[ "$out" == "state: COMPLETE"* && "$out" == *SELFTEST_OK* ]] || die "selftest $role failed"
+}
+
+port_of() { case $1 in db) echo "$HUB_DB_PORT" ;; webapi) echo "$HUB_WEBAPI_PORT" ;; atlas) echo "$HUB_ATLAS_PORT" ;; esac; }
+
+# Replace the whole stack: lock the old pods out, cancel them, submit all roles.
+replace_stack() {
+  local r
+  lock_out
+  for r in "${ROLES[@]}"; do cancel_role "$r"; done
+  for r in "${ROLES[@]}"; do submit_role "$r"; done
 }
 
 cmd_watch() {
-  echo "keeping OMOP tasks alive on $TES_URL (every ${WATCH_INTERVAL}s, Ctrl-C to stop)"
+  echo $$ > "$WATCH_PID"
+  trap 'rm -f "$WATCH_PID"' EXIT
+  echo "$(date -Is) keeping OMOP tasks alive on $TES_URL (every ${WATCH_INTERVAL}s)"
   local r id state
   while true; do
+    lock
     for r in "${ROLES[@]}"; do
       id="$(task_id "$r")"; state=NONE
       [[ -n "$id" ]] && state="$(task_state "$id" 2>/dev/null || echo UNREACHABLE)"
       case "$state" in
         QUEUED|INITIALIZING|RUNNING|PAUSED|UNREACHABLE|UNKNOWN) ;;
         *)
-          echo "$(date -Is) $r task ${id:-<none>} is $state, resubmitting"
-          submit_role "$r" || true
-          # A new DB starts empty, so WebAPI has to run its migrations again.
-          if [[ $r == db ]]; then cancel_role webapi; submit_role webapi || true; fi ;;
+          echo "$(date -Is) $r task ${id:-<none>} is $state"
+          # A new DB starts empty, so WebAPI has to migrate again; and an ended task whose
+          # pod still holds its port can't be replaced alone. Both need a fresh stack.
+          if [[ $r == db ]] || tunnel_up "$(port_of "$r")"; then
+            echo "$(date -Is) replacing the stack"; (replace_stack) || true; break
+          fi
+          (submit_role "$r") || true ;;
       esac
     done
+    unlock
     sleep "$WATCH_INTERVAL"
   done
 }
@@ -252,7 +301,7 @@ case "${1:-}" in
   down)     cmd_down ;;
   restart)  cmd_down; cmd_up ;;
   setup)    cmd_setup ;;
-  submit)   for r in $(roles_arg "${2:-}"); do submit_role "$r"; done ;;
+  submit)   lock; for r in $(roles_arg "${2:-}"); do submit_role "$r"; done; unlock ;;
   status)   cmd_status ;;
   logs)     cmd_logs "${2:-}" ;;
   cancel)   for r in $(roles_arg "${2:-}"); do cancel_role "$r"; done ;;

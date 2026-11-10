@@ -12,12 +12,12 @@
 #
 # Usage: tes-service.sh <service-dir> <command>
 #   up         start: hub user (once), task (unless running), keep-alive loop; waits for the tunnel
-#   down       stop: keep-alive loop, cancel, lock the old pod out of the hub (new password +
-#              hub restart, because cancel does not stop the pod on TESK)
+#   down       stop: keep-alive loop, lock the old pod out of the hub (new password + hub
+#              restart, because cancel does not stop the pod on TESK), cancel
 #   restart    down + up
 #   status     task, tunnel and keep-alive loop
 #   logs       task logs (TESK fills them when the task ends)
-#   selftest   short task without tunnel (pod.sh sees SELFTEST=1)
+#   selftest   short task without tunnel (pod.sh sees SELFTEST=1); fails unless SELFTEST_OK
 #   print      the TES request JSON
 #   setup | submit | cancel | watch    single steps, used by up/down
 
@@ -60,7 +60,11 @@ task_state() { curl -fsS -m 30 "$TES_API/tasks/$1?view=MINIMAL" | json_get 'd["s
 current_state() { local id; id="$(task_id)"; [[ -n "$id" ]] && { task_state "$id" 2>/dev/null || echo UNREACHABLE; } || echo NONE; }
 is_done() { [[ "$1" =~ ^(NONE|COMPLETE|EXECUTOR_ERROR|SYSTEM_ERROR|CANCELED|PREEMPTED)$ ]]; }
 tunnel_up() { [[ "$(ss -tln 2>/dev/null)" == *"127.0.0.1:$HUB_PORT "* ]]; }
-watching() { [[ -s "$WATCH_PID" ]] && kill -0 "$(cat "$WATCH_PID")" 2>/dev/null; }
+# The pid must still be this service's loop: after a reboot, another process may have it.
+watching() {
+  local pid; pid="$(cat "$WATCH_PID" 2>/dev/null)" || return 1
+  [[ -n "$pid" ]] && tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null | grep -qF -- "tes-service.sh $DIR watch"
+}
 print_logs() {
   json_get '"state: " + d["state"] + "\n" + "\n".join((l.get("stdout") or "") + (l.get("stderr") or "") for t in d.get("logs",[]) for l in t.get("logs",[]))'
 }
@@ -95,7 +99,10 @@ PY
   rm -f "$STATE_DIR/pod.env"
 }
 
-post_task() { build_task "$@" | curl -fsS -X POST -H 'Content-Type: application/json' --data-binary @- "$TES_API/tasks" | json_get 'd["id"]'; }
+post_task() {
+  build_task "$@" | curl -fsS --connect-timeout 10 -m 60 -X POST -H 'Content-Type: application/json' \
+    --data-binary @- "$TES_API/tasks" | json_get 'd["id"]'
+}
 
 cmd_setup() {
   if [[ -z "$HUB_AUTH" ]]; then
@@ -106,15 +113,25 @@ cmd_setup() {
   "$HUB" add-user "$HUB_AUTH" "^R:127\\.0\\.0\\.1:$HUB_PORT\$"
 }
 
+# Lock out the pods of this service: a new hub password and a hub restart.
+lock_out() { rm -f "$STATE_DIR/config"; HUB_AUTH=""; cmd_setup; "$HUB" restart; }
+
+# One submission at a time (up, watch and submit may run together), and only if no task
+# of this service runs, so that two tasks never compete for the port.
 cmd_submit() {
   [[ "$("$HUB" status)" == *"hub running"* ]] || die "hub not running (run: $HUB start)"
-  local id; id="$(post_task)" || die "submitting to $TES_API failed"
+  exec 9>"$STATE_DIR/submit.lock"
+  flock -w 120 9 || die "another submission is running"
+  local id state; state="$(current_state)"
+  is_done "$state" || { echo "task $(task_id) is $state, not submitting"; flock -u 9; return 0; }
+  id="$(post_task)" || { flock -u 9; die "submitting to $TES_API failed"; }
   echo "$id" > "$ID_FILE"; echo "submitted $id"
+  flock -u 9
 }
 
 cmd_cancel() {
   local id; id="$(task_id)"
-  [[ -n "$id" ]] && curl -fsS -X POST "$TES_API/tasks/$id:cancel" >/dev/null && echo "canceled $id" || true
+  [[ -n "$id" ]] && curl -fsS -m 30 -X POST "$TES_API/tasks/$id:cancel" >/dev/null && echo "canceled $id" || true
 }
 
 cmd_status() {
@@ -125,23 +142,28 @@ cmd_status() {
 }
 
 cmd_selftest() {
-  local id i
-  id="$(post_task selftest)"; echo "selftest: $id"
+  local id i out
+  id="$(post_task selftest)" || die "submitting to $TES_API failed"; echo "selftest: $id"
   for ((i = 0; i < 60; i++)); do
     is_done "$(task_state "$id" 2>/dev/null || echo UNKNOWN)" && break
     sleep 10
   done
-  curl -fsS "$TES_API/tasks/$id?view=FULL" | print_logs
+  out="$(curl -fsS -m 60 "$TES_API/tasks/$id?view=FULL" | print_logs)"; echo "$out"
+  [[ "$out" == "state: COMPLETE"* && "$out" == *SELFTEST_OK* ]] || die "selftest failed"
 }
 
 cmd_watch() {
   echo $$ > "$WATCH_PID"
+  trap 'rm -f "$WATCH_PID"' EXIT
   echo "$(date -Is) keeping $NAME alive on $TES_URL (every ${WATCH_INTERVAL}s)"
   local state
   while true; do
     state="$(current_state)"
     if is_done "$state"; then
-      echo "$(date -Is) task $(task_id) is $state, resubmitting"; cmd_submit || true
+      echo "$(date -Is) task $(task_id) is $state, resubmitting"
+      # A canceled task's pod may still hold the port: lock it out first.
+      if tunnel_up; then echo "$(date -Is) port $HUB_PORT still taken, locking the old pod out"; lock_out || true; fi
+      (cmd_submit) || true
     fi
     sleep "$WATCH_INTERVAL"
   done
@@ -165,10 +187,10 @@ cmd_up() {
 
 cmd_down() {
   if watching; then kill "$(cat "$WATCH_PID")" && rm -f "$WATCH_PID" && echo "keep-alive loop stopped"; fi
+  # Cancel marks the task CANCELED but the pod keeps running: lock it out of the hub first,
+  # so that an interrupted down never leaves the old pod connected.
+  lock_out
   cmd_cancel
-  # Cancel marks the task CANCELED but the pod keeps running: lock it out of the hub.
-  rm -f "$STATE_DIR/config"; HUB_AUTH=""; cmd_setup
-  "$HUB" restart
 }
 
 case "$CMD" in
@@ -178,7 +200,7 @@ case "$CMD" in
   setup)    cmd_setup ;;
   submit)   cmd_submit ;;
   status)   cmd_status ;;
-  logs)     id="$(need_id)"; curl -fsS "$TES_API/tasks/$id?view=FULL" | print_logs ;;
+  logs)     id="$(need_id)"; curl -fsS -m 60 "$TES_API/tasks/$id?view=FULL" | print_logs ;;
   cancel)   cmd_cancel ;;
   watch)    cmd_watch ;;
   selftest) cmd_selftest ;;
