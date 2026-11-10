@@ -114,6 +114,7 @@ nav:
     - "researchers/index.md"
     - "Use the Command Line": "researchers/cli.md"
     - "Run Workflows Across Nodes": "researchers/federated-workflows.md"
+    - "Federate Workflows with Conquest": "researchers/federated-workflows-conquest.md"
     - "SPE with WESkit": "researchers/spe-with-weskit.md"
     - "Crypt4GH with proTES": "researchers/crypt4gh-with-protes.md"
   - About: "about.md"

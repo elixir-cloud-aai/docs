@@ -12,6 +12,7 @@ ELIXIR Nodes, and keep sensitive data under the control of its owner.
 |---|---|---|
 | [Use the Command Line](cli.md) | Send tasks to a TES service from your terminal with `ga4gh-cli`. Doesn't support tokens, proTES or WES yet. | Git and Rust on your computer, and the address of a TES service. |
 | [Run Workflows Across Nodes](federated-workflows.md) | Run a Snakemake workflow on the TES services of several Nodes, through the proTES gateway. | A Python environment on your computer, and the addresses of TES services. |
+| [Federate Workflows with Conquest](federated-workflows-conquest.md) | Run Nextflow, Snakemake and WDL workflows whose tasks Conquest sends to its own cluster and to remote TES services (Funnel, TESK). Draft: describes test deployments. | A Conquest deployment (WES and TES), and the addresses of TES services. |
 | [Sensitive Data in a Secure Processing Environment](spe-with-weskit.md) | Run workflows on sensitive data that you never see, and read the results. | An LS Login account and permission from the operator of the environment. |
 | [Crypt4GH with proTES](crypt4gh-with-protes.md) | Process Crypt4GH-encrypted files in a secure container. Needs proTES 0.3.0 or earlier. | Docker and three virtual machines. |
 

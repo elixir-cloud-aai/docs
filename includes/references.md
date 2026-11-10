@@ -1,3 +1,4 @@
+[conquest]: <https://github.com/anuragxxd/conquest>
 [cwl-tes]: <https://github.com/ohsu-comp-bio/cwl-tes>
 [elixir-on-cloud]: <https://elixir-on.cloud/>
 [elixir-on-cloud-github]: <https://github.com/elixir-cloud-aai/>
