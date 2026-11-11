@@ -15,6 +15,13 @@ Registry][elixir-cloud-registry] (see [Onboarding](../onboarding.md)).
 - [Deploying Poiesis](https://poiesis.jaeaeich.com/docs/deploy/deploying-poiesis.html)
 - [Authentication](https://poiesis.jaeaeich.com/docs/deploy/authentication.html)
 
+## Notes for the deployment
+
+- Poiesis's service info can't be set yet
+  ([JaeAeich/poiesis#112](https://github.com/JaeAeich/poiesis/issues/112)):
+  it describes the project, not your Node. Register it by hand (see [Manual
+  entry, the fallback](../service-info.md#manual-entry-the-fallback)).
+
 !!! warning "Under construction"
     It is not documented yet how Poiesis is used in the ELIXIR On-Cloud
     (for example, which Nodes run it, and with which storage).

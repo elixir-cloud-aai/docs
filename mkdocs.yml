@@ -93,6 +93,7 @@ nav:
     - "Cloud Registry": "operators/cloud-registry.md"
     - "Using the Cloud Registry": "operators/using-cloud-registry.md"
     - "Using the Cloud Registry UI": "operators/using-cloud-registry-ui.md"
+    - "Prepare Your Service Info": "operators/service-info.md"
     - "LS Login": "operators/ls-login.md"
     - Services:
       - "operators/services/index.md"
