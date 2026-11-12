@@ -17,10 +17,11 @@ explanations.
     [cloud-service@elixir-europe.org][elixir-on-cloud-email].
 
 !!! danger "Use synthetic data only"
-    The TESK of ELIXIR-FI has no authentication. Anyone can read a task with
-    `?view=FULL`, including the passwords of the hub and of the database that
-    the scripts put into it. RStudio, JupyterLab and Atlas have no login.
-    Don't use real or sensitive data with this setup.
+    Whoever may read your tasks on the TES service (on a service without
+    tokens: anyone) can read a task with `?view=FULL`, including the
+    passwords of the hub and of the database that the scripts put into it.
+    RStudio, JupyterLab and Atlas have no login. Don't use real or sensitive
+    data with this setup.
 
 ## How it works
 
@@ -60,6 +61,7 @@ In the TES task:                                                    |
 |---|---|
 | [`tes-hub/tes-hub.sh`](tes-hub/tes-hub.sh) | Runs the hub on the virtual machine. |
 | [`tes-hub/common.sh`](tes-hub/common.sh) | Runs first in every task. Downloads chisel and opens the tunnel. |
+| [`tes-hub/tes-api.sh`](tes-hub/tes-api.sh) | Sends the requests of the launchers to the TES service, with your access token. |
 | [`tes-hub/tes-service.sh`](tes-hub/tes-service.sh) | Runs a service that fits into one container image, from a directory with a `service.conf` and a `pod.sh`. |
 | [`rstudio-tesk/service.conf`](rstudio-tesk/service.conf), [`rstudio-tesk/pod.sh`](rstudio-tesk/pod.sh) | RStudio Server, with the image `rocker/rstudio`. |
 | [`omop-tesk/omop-tesk-fi.sh`](omop-tesk/omop-tesk-fi.sh) | Runs the Atlas stack as three tasks, which reach each other through the hub. |
@@ -81,9 +83,17 @@ passwords (readable only by you), the task IDs and the logs.
 - nginx and a TLS certificate for `<HOST>` on the virtual machine, for
   example from [Let's Encrypt](https://letsencrypt.org/) with
   [Certbot](https://certbot.eff.org/). The hub itself speaks plain HTTP.
-- A TES service whose tasks can make outbound HTTPS connections. The scripts
-  use the TESK of ELIXIR-FI (`https://csc-tesk-noauth.rahtiapp.fi`). To use
-  another service, set `TES_URL`.
+- A TES service whose tasks can make outbound HTTPS connections, and an
+  access token for it if it needs one (see [Get an access
+  token](#get-an-access-token)). The scripts use the TESK of ELIXIR-FI
+  (`https://csc-tesk-noauth.rahtiapp.fi`). To use another service, set
+  `TES_URL`.
+
+!!! note "The default address will change"
+    The TES services of ELIXIR On-Cloud move to access with tokens. The
+    default `TES_URL` will change to the address of the TESK of ELIXIR-FI
+    with tokens once that is published. Until then, set `TES_URL` to the
+    address that you were given.
 
 ## Set up the hub
 
@@ -147,6 +157,46 @@ The long timeouts keep tunnels open while no one uses them. Don't open port
 The output must contain `proxy route OK`. The hub answers requests without
 a tunnel with `Not found`, so `curl https://<HOST>/tes-tunnel/` must return
 exactly this text.
+
+## Get an access token
+
+The TES services of ELIXIR On-Cloud accept only requests with an access
+token of [LS Login](https://www.lifescience-ri.eu/life-science-login/). To
+run tasks, your LS Login account must be a member of the ELIXIR On-Cloud
+compute group `ECP_CLN:EOC-Compute` (members of `ECP_CLN:ADMIN` may run tasks
+too). To join the group, write to
+[cloud-service@elixir-europe.org][elixir-on-cloud-email].
+
+1. Get an access token of your LS Login account from the web interface of
+   the deployment that you use, or as [Using the
+   APIs](../../partners-and-developers/apis.md#2-get-an-access-token)
+   describes. A token lives for about 4 hours.
+2. Set it in the shell in which you run the scripts. With `read -s`, the
+   token is neither shown nor saved in the shell history:
+
+    ```bash
+    read -rsp 'TES token: ' TES_TOKEN && echo && export TES_TOKEN
+    ```
+
+If `TES_TOKEN` is set, the scripts send it with every request to the TES
+service, in the header `Authorization: Bearer`. They pass it to `curl`
+through a pipe, so that it doesn't appear on a command line, and they don't
+write it to files or logs. Without `TES_TOKEN`, they send no token, for TES
+services that don't need one.
+
+Each command that uses the TES service first checks the token, and ends
+with an error if the service refuses it:
+
+| Answer | Meaning | What to do |
+|---|---|---|
+| `401 Unauthorized` | No token, or the token is invalid or has expired. | Get a new token and set `TES_TOKEN` again. |
+| `403 Forbidden` | The token is valid, but your account may not run tasks. | Ask for membership in `ECP_CLN:EOC-Compute`. |
+
+The keep-alive loop keeps the token that it started with, in its
+environment. When the token has expired, the loop writes the error to its
+log and sends no new tasks, but running tasks go on. Get a new token, set
+`TES_TOKEN` and run `up` again: with `TES_TOKEN` set, `up` replaces the
+loop, so that it uses the new token.
 
 ## Start RStudio Server
 
@@ -240,8 +290,8 @@ For example: `./tes-hub/tes-service.sh rstudio-tesk status` or
 `./omop-tesk/omop-tesk-fi.sh logs webapi`. `./tes-hub/tes-hub.sh status`
 shows the hub, the path in nginx and all tunnels.
 
-After a reboot of the virtual machine, start the hub, then run `up` for each
-service. Running tasks reconnect by themselves, and `up` starts the
+After a reboot of the virtual machine, start the hub, set `TES_TOKEN`, then
+run `up` for each service. Running tasks reconnect by themselves, and `up` starts the
 keep-alive loop again.
 
 ## Limits
@@ -268,7 +318,8 @@ To change a default, set the environment variable before you run a script:
 
 | Variable | Default | Used by |
 |---|---|---|
-| `TES_URL` | `https://csc-tesk-noauth.rahtiapp.fi` | all scripts |
+| `TES_URL` | `https://csc-tesk-noauth.rahtiapp.fi` (will change, see [What you need](#what-you-need)) | all scripts |
+| `TES_TOKEN` | none: no token is sent (see [Get an access token](#get-an-access-token)) | all scripts |
 | `HUB_LISTEN_PORT` | `8090` (`setup` saves it) | `tes-hub.sh` |
 | `CHISEL_VERSION` | `1.12.0` | `tes-hub.sh` |
 | `WATCH_INTERVAL` | `60` (seconds) | the keep-alive loops |
@@ -279,6 +330,11 @@ To change a default, set the environment variable before you run a script:
 
 ## Troubleshooting
 
+- **`401 Unauthorized` or `403 Forbidden`:** the TES service refused the
+  token, see [Get an access token](#get-an-access-token). If the keep-alive
+  loop stops replacing a service after a few hours, its token has expired:
+  its log `.state/watch.log` shows the error. Set a new token and run `up`
+  again.
 - **`proxy route not working`:** the hub doesn't run (start it with
   `./tes-hub/tes-hub.sh start`), or the path is missing in nginx. If
   `curl https://<HOST>/tes-tunnel/` returns HTML or a redirect, the request
@@ -330,6 +386,15 @@ nginx:
 
 We did not run the changed scripts on the TESK of ELIXIR-FI, and did not
 test nginx with TLS or JupyterLab.
+
+We tested the access tokens against a small mock of a TES service that
+required tokens, with a stand-in for the hub: without a token, with an
+invalid one and with one outside the compute group, every command ended
+after its first request with the matching error. With a valid token,
+`selftest`, `up`, `status`, `logs`, `print` and `down` worked for both
+launchers, `up` replaced the keep-alive loop, and the loop logged the error
+when the token expired. The token appeared in no command line, file or log.
+We did not test the tokens against a real TES service.
 
 ## Where to go next
 
