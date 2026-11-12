@@ -318,9 +318,12 @@ In short:
    info** ticked. If the values are wrong, correct the service info and
    import again, rather than changing them in the form.
 4. If the registry answers that the API type or its version isn't allowed,
-   ask the [admins][elixir-on-cloud-email] to add it: only they can add
-   types in this deployment. TESK serves the type `org.ga4gh`, `TES`,
-   `1.0.0`, and types are compared as written.
+   check that your service reports the type exactly as registered: types
+   are compared as written, and case variants of registered types aren't
+   added. TESK serves the registered type `org.ga4gh` / `tes`. If your
+   service implements an API, or a version of it, that isn't registered
+   yet, ask the [admins][elixir-on-cloud-email] to add it: only they can
+   add types in this deployment.
 
 If your entry shows `out-of-sync`, see [Out-of-sync
 reasons](using-cloud-registry.md#out-of-sync-reasons).

@@ -35,7 +35,10 @@ At the time of writing, the rules are:
 - `environments`: `prod` and `test` only;
 - `urlSchemes`: `https` only;
 - `serviceTypes`: `controlled`: only admins add API types, so your service's
-  type must be one of the registered types.
+  type must be one of the registered types. The types are a controlled,
+  case-sensitive vocabulary: the admins don't add case variants of
+  registered types (e.g., `TES` next to `tes`), so your service must report
+  the type exactly as registered.
 
 List the registered types with:
 
@@ -70,9 +73,10 @@ their lengths):
 - [ ] `type`: `group`, `artifact` and `version` of one of the [registered
   types](#the-rules-of-this-deployment), e.g., `org.ga4gh`, `tes`, `1.1.0`,
   as registered here at the time of writing.
-  Types are compared as written, so `TES` and `tes` are different types. If
-  yours is missing, ask the [admins][elixir-on-cloud-email] to add it before
-  you import.
+  Types are compared as written, so report the type exactly as registered:
+  case variants such as `TES` aren't added. If your service implements an
+  API, or a version of it, that isn't registered yet, ask the
+  [admins][elixir-on-cloud-email] to add it before you import.
 - [ ] `organization`: the `name` and `url` of your Node, and no other
   fields.
 - [ ] `contactUrl`: where users get support, an HTTP(S) or `mailto:` URL,
@@ -111,8 +115,8 @@ serviceInfo:
 The chart's defaults describe no particular deployment, and its default
 environment, `dev`, isn't allowed here. Keep `auth.serviceInfoPublic` at its
 default, `true`, so that the endpoint stays public with `auth.mode: auth`.
-The chart sets the type `org.ga4gh`, `TES`, `1.0.0`: check that it is among
-the [registered types](#the-rules-of-this-deployment).
+TESK serves the registered type `org.ga4gh` / `tes`, as the TES
+specification requires.
 
 ### proTES, TRS-Filer and other FOCA apps
 
