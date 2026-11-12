@@ -15,9 +15,13 @@ if [[ -n "${TES_TOKEN:-}" ]]; then export -n TES_TOKEN; fi
 tes_curl() {
   local out code
   if [[ -n "${TES_TOKEN:-}" ]]; then
-    out="$(curl -sS -w '\n%{http_code}' -H @<(printf 'Authorization: Bearer %s\n' "$TES_TOKEN") "$@")" || return 1
+    # A token goes over HTTPS only (plain HTTP only to this VM, e.g. for tests).
+    [[ "$TES_URL" == https://* || "$TES_URL" =~ ^http://(127\.0\.0\.1|localhost)(:[0-9]+)?(/|$) ]] \
+      || { echo "ERROR: TES_URL must start with https:// when TES_TOKEN is set" >&2; return 1; }
+    # -q first: ignore ~/.curlrc, which could turn on verbose output with the header.
+    out="$(curl -q -sS -w '\n%{http_code}' -H @<(printf 'Authorization: Bearer %s\n' "$TES_TOKEN") "$@")" || return 1
   else
-    out="$(curl -sS -w '\n%{http_code}' "$@")" || return 1
+    out="$(curl -q -sS -w '\n%{http_code}' "$@")" || return 1
   fi
   code="${out##*$'\n'}"; out="${out%$'\n'*}"
   case "$code" in

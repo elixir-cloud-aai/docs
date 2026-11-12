@@ -179,7 +179,8 @@ too). To join the group, write to
     ```
 
 If `TES_TOKEN` is set, the scripts send it with every request to the TES
-service, in the header `Authorization: Bearer`. They pass it to `curl`
+service, in the header `Authorization: Bearer`, and only over HTTPS: set
+`TES_URL` only to a TES service that you trust with the token. They pass it to `curl`
 through a pipe, so that it doesn't appear on a command line, and they don't
 write it to files or logs. They give it to their keep-alive loop only, not
 to other programs such as the hub. Without `TES_TOKEN`, they send no token,

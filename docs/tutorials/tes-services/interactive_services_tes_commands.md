@@ -99,7 +99,7 @@ token](interactive_services_tes.md#get-an-access-token).
 # paste an LS Login access token (account in ECP_CLN:EOC-Compute); not shown, not in the history
 read -rsp 'TES token: ' TES_TOKEN && echo && export TES_TOKEN
 # check it: lists one task, or curl fails (error 22) with 401 (invalid or expired token) or 403 (not in the compute group)
-printf 'Authorization: Bearer %s\n' "$TES_TOKEN" | curl -fsS -H @- "${TES_URL:-https://csc-tesk-noauth.rahtiapp.fi}/ga4gh/tes/v1/tasks?view=MINIMAL&page_size=1"
+printf 'Authorization: Bearer %s\n' "$TES_TOKEN" | curl -q -fsS -H @- "${TES_URL:-https://csc-tesk-noauth.rahtiapp.fi}/ga4gh/tes/v1/tasks?view=MINIMAL&page_size=1"
 ```
 
 ## Start Atlas with OMOP demo data
@@ -214,7 +214,7 @@ cd ~/eoc_services
 ./tes-hub/tes-service.sh jupyter-tesk down
 
 # list all tasks on the TES service (the token goes through stdin, not the command line)
-printf 'Authorization: Bearer %s\n' "$TES_TOKEN" | curl -fsS -H @- "${TES_URL:-https://csc-tesk-noauth.rahtiapp.fi}/ga4gh/tes/v1/tasks?view=MINIMAL"
+printf 'Authorization: Bearer %s\n' "$TES_TOKEN" | curl -q -fsS -H @- "${TES_URL:-https://csc-tesk-noauth.rahtiapp.fi}/ga4gh/tes/v1/tasks?view=MINIMAL"
 ```
 
 ## After a reboot

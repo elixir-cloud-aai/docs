@@ -26,6 +26,8 @@
 # new token to replace the loop.
 
 set -euo pipefail
+# Keep the access token from the programs that this script runs (see tes-api.sh).
+if [[ -n "${TES_TOKEN:-}" ]]; then export -n TES_TOKEN; fi
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 [[ $# -ge 2 ]] || { sed -n '2,/^set -euo/p' "$0" | sed '$d; s/^# \{0,1\}//'; exit 1; }
@@ -224,7 +226,7 @@ cmd_down() {
 # locks the pods out first, and needs the TES only to cancel.
 case "$CMD" in
   up|submit|logs|cancel|selftest) tes_check || die "cannot use the TES at $TES_URL" ;;
-  status) tes_check || true ;;
+  status) tes_check || TES_REFUSED=1 ;;
 esac
 
 case "$CMD" in
@@ -233,7 +235,7 @@ case "$CMD" in
   restart)  tes_check || die "cannot use the TES at $TES_URL"; cmd_down; cmd_up ;;
   setup)    cmd_setup ;;
   submit)   cmd_submit ;;
-  status)   cmd_status ;;
+  status)   cmd_status; [[ -z "${TES_REFUSED:-}" ]] ;;
   logs)     id="$(need_id)"; tes_curl -m 60 "$TES_API/tasks/$id?view=FULL" | print_logs ;;
   cancel)   cmd_cancel ;;
   watch)    cmd_watch ;;

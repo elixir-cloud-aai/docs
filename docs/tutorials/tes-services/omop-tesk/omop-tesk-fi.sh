@@ -34,6 +34,8 @@
 # three ports above, and the DB holds synthetic demo data only. Don't use real data.
 
 set -euo pipefail
+# Keep the access token from the programs that this script runs (see tes-api.sh).
+if [[ -n "${TES_TOKEN:-}" ]]; then export -n TES_TOKEN; fi
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 STATE_DIR="${STATE_DIR:-$HERE/.state}"
@@ -323,7 +325,7 @@ cmd_watch() {
 # locks the pods out first, and needs the TES only to cancel.
 case "${1:-}" in
   up|submit|logs|cancel|selftest) tes_check || die "cannot use the TES at $TES_URL" ;;
-  status) tes_check || true ;;
+  status) tes_check || TES_REFUSED=1 ;;
 esac
 
 case "${1:-}" in
@@ -332,7 +334,7 @@ case "${1:-}" in
   restart)  tes_check || die "cannot use the TES at $TES_URL"; cmd_down; cmd_up ;;
   setup)    cmd_setup ;;
   submit)   lock; for r in $(roles_arg "${2:-}"); do submit_role "$r"; done; unlock ;;
-  status)   cmd_status ;;
+  status)   cmd_status; [[ -z "${TES_REFUSED:-}" ]] ;;
   logs)     cmd_logs "${2:-}" ;;
   cancel)   for r in $(roles_arg "${2:-}"); do cancel_role "$r"; done ;;
   watch)    cmd_watch ;;
