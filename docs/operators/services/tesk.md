@@ -24,6 +24,9 @@ Registry][elixir-cloud-registry] (see [Onboarding](../onboarding.md)).
   [Requirements](https://tesk.readthedocs.io/en/latest/deployment/#requirements)).
   A `ReadWriteMany` volume is needed only to share files with a workflow
   engine (`transfer`).
+- From chart 0.3.0, set the service info in the chart's values
+  (`serviceInfo`), so that the registry can import and sync it (see
+  [Prepare Your Service Info](../service-info.md#tesk)).
 - For a step-by-step setup, see the [Node onboarding
   tutorial](../node-onboarding-tutorial.md).
 - To use the Node's S3 storage (see [Onboarding](../onboarding.md)), set the

@@ -35,11 +35,12 @@ Clients on the safe side use only services that are both verified and synced.
 
 ## Registering a service
 
-**Import from the service info endpoint: it is the recommended way to
-register a service.** You give the address of the endpoint, check the values
-that the registry reads from it, and register them. You need an [LS
-Login](ls-login.md) account. See [Importing service info][cr-import] for the
-details and the limits.
+**Import from the service info endpoint, and keep sync on: it is the way to
+register a service.** First, [prepare your service info](service-info.md),
+so that the import passes the rules of this deployment. Then give the
+address of the endpoint, check the values that the registry reads from it,
+and register them. You need an [LS Login](ls-login.md) account. See
+[Importing service info][cr-import] for the details and the limits.
 
 **We strongly recommend that you make your service info endpoint public,** as
 it tells people how to get access to your service. The registry can only read
@@ -53,10 +54,18 @@ with the returned values, then `PUT /services/<id>/sync` to turn on sync. They
 need a token of an LS Login client that the registry accepts: write to
 [cloud-service@elixir-europe.org][elixir-on-cloud-email] to have yours added.
 
-The settings of this deployment apply to the service info too: `https`
+The rules of this deployment apply to the service info too: `https`
 addresses, the environments `prod` and `test`, and API types that admins have
-added. To register a TES service of your Node, follow
-[Onboarding](onboarding.md).
+added. [Prepare your service
+info](service-info.md#the-rules-of-this-deployment) shows how to read them
+from the registry.
+
+**Enter the values by hand only as a fallback:** for services whose service
+info can't be set yet (Funnel, Poiesis and TESP API), isn't public, or for a
+quick test with other values. Manual entries have no sync, and can drift. See
+[Manual entry, the fallback](service-info.md#manual-entry-the-fallback).
+
+To register a TES service of your Node, follow [Onboarding](onboarding.md).
 
 ## Verified services
 

@@ -76,7 +76,7 @@ today:
 | Runs on | Kubernetes, OpenShift | Kubernetes 1.29+ | HPC, HTC (e.g., Slurm) |
 | Validates LS Login tokens | yes, with gaps (see [step 3](#3-enable-ls-login-and-ecp_cln-access)) | yes (OIDC issuer and audience) | yes (OIDC issuer and audience) |
 | Access by membership in `ECP_CLN` | by a claim of the user info | no, any valid token ([generic-issues#21][gi-21]) | no, any valid token ([generic-issues#20][gi-20]) |
-| Service info for the registry | set in a file of the chart | fixed by the code, without `environment` | fixed by the code, with an environment that this registry refuses |
+| Service info for the registry | set in the chart's values: import | fixed by the code: manual entry ([JaeAeich/poiesis#112][poiesis-112]) | fixed by the code: manual entry ([calypr/funnel#1493][funnel-1493]) |
 
 **Poiesis and Funnel can't enforce the `ECP_CLN` policy yet:** they accept
 every valid token of the provider, so anyone with an LS Login account who
@@ -101,7 +101,7 @@ work in the checkout, where the files below live:
 ```bash
 git clone https://github.com/elixir-cloud-aai/TESK.git
 cd TESK
-git checkout 65db464017def4cddf8dc8571ec5161186d84517
+git checkout aa7468794b2ae95c4a94a4a10f1f3ef572d90822
 ```
 
 Once chart 0.3.0 is released, install it from its release instead, after
@@ -129,12 +129,27 @@ Set up the storage backend of your Node as described in [Storage
 backends][tesk-storage] (e.g., `storage: s3` and the files in
 `charts/tesk/s3-config/`).
 
-Edit the service info, `charts/tesk/service-info/service-info.yaml`, before
+Set the service info in `my-values.yaml`, under `serviceInfo`, before
 installing: at least `id` (unique, in reverse domain notation), `name`,
 `organization`, `contactUrl` and `environment` (see [Service
-info][tesk-service-info]). The registry reads these values in [step
-5](#5-register-the-service), and this deployment accepts only the
+info][tesk-service-info]). The registry imports these values in [step
+5](#5-register-the-service), and keeps the entry in sync with them, so get
+them right first: follow the checklist of [Prepare Your Service
+Info](service-info.md#checklist). This deployment accepts only the
 environments `prod` and `test`: the chart's default, `dev`, is refused.
+
+```yaml
+serviceInfo:
+  id: org.example.tes
+  name: Example TES
+  description: TES of Example for the members of its research groups
+  organization:
+    name: Example
+    url: https://example.org/
+  contactUrl: mailto:tes@example.org
+  documentationUrl: https://example.org/tes/
+  environment: prod
+```
 
 **Add the `auth` values of [step 3](#tesk) to `my-values.yaml` before you
 install.** With the default, `auth.mode: noauth`, all endpoints are open, so
@@ -184,15 +199,16 @@ Registry](using-cloud-registry.md#registering-a-service)).
 
 With `auth.mode: auth`, TESK requires an access token for every endpoint
 except `GET /service-info`, which stays public by default
-(`auth.serviceInfoPublic`). Its group model doesn't fit LS Login as the
-chart configures it (see the gaps below), so authorise users by a claim of
-the user info instead (see
+(`auth.serviceInfoPublic`). Until the groups of `ECP_CLN` are recorded (see
+the gaps below), authorise users by a claim of the user info (see
 [Authorisation by a claim][tesk-claim]). Add to `my-values.yaml`, with the
 values that the admins give you:
 
 ```yaml
 auth:
   mode: auth
+  # The user info endpoint of LS Login; the default is that of ELIXIR AAI
+  userInfoUri: https://login.aai.lifescience-ri.eu/oidc/userinfo
   claim:
     enabled: true
     name: eduperson_entitlement
@@ -209,17 +225,16 @@ change them later, run its `helm upgrade --install` command again.
 
 !!! warning "Gaps"
     - **User info endpoint:** tesk-api validates tokens at the user info
-      endpoint of the provider, `SECURITY_OAUTH2_RESOURCE_USER_INFO_URI`,
-      whose default is the endpoint of ELIXIR AAI,
-      `https://login.elixir-czech.org/oidc/userinfo` (see [Token
-      validation][tesk-api-token-validation]). The endpoint of LS Login is
-      `https://login.aai.lifescience-ri.eu/oidc/userinfo`. The TESK chart has
-      no value for this setting. Whether tokens of LS Login are accepted
-      with the default has not been verified for this tutorial.
-    - **Group model:** the chart sets the base group (`auth.envBaseGroup`,
-      default `ECP_CLN`) and the subgroup (`auth.envSubgroup`), but not the
-      prefix and suffix that tesk-api expects around group names, whose
-      defaults are those of ELIXIR AAI. Hence the claim above.
+      endpoint of the provider, whose default is the endpoint of ELIXIR
+      AAI, `https://login.elixir-czech.org/oidc/userinfo` (see [Token
+      validation][tesk-api-token-validation]). From chart 0.3.0,
+      `auth.userInfoUri` sets it, as above. Whether tokens of LS Login are
+      accepted with it has not been verified for this tutorial.
+    - **Group model:** from chart 0.3.0, the chart also sets the prefix and
+      suffix that tesk-api expects around group names (`auth.groups`, see
+      [LS Login and other providers][tesk-ls-login]). The names of the
+      groups of `ECP_CLN` aren't recorded yet ([generic-issues#46][gi-46]).
+      Hence the claim above.
     - **Status:** enabling LS Login on the TESK deployments of the ELIXIR
       On-Cloud, and recording a configuration that works, is tracked in
       [generic-issues#35][gi-35] and [generic-issues#50][gi-50]. Check them
@@ -293,29 +308,33 @@ policies of this deployment, and [Using the Cloud Registry
 UI](using-cloud-registry-ui.md) how to log in and register in the front end.
 In short:
 
-1. Log in to the [Cloud Registry][elixir-cloud-registry] with LS Login.
-2. Import the service info of your service, e.g.,
+1. Check your service info against the rules of this deployment, as
+   described in [Check before you
+   import](service-info.md#check-before-you-import).
+2. Log in to the [Cloud Registry][elixir-cloud-registry] with LS Login.
+3. Import the service info of your service, e.g.,
    `https://tes.example.org/ga4gh/tes/v1/service-info`, check the values,
-   and register them.
-3. Turn on sync.
+   and register them, with **Keep this service in sync with its service
+   info** ticked. If the values are wrong, correct the service info and
+   import again, rather than changing them in the form.
 4. If the registry answers that the API type or its version isn't allowed,
    ask the [admins][elixir-on-cloud-email] to add it: only they can add
-   types in this deployment.
+   types in this deployment. TESK serves the type `org.ga4gh`, `TES`,
+   `1.0.0`, and types are compared as written.
 
 If your entry shows `out-of-sync`, see [Out-of-sync
 reasons](using-cloud-registry.md#out-of-sync-reasons).
 
-!!! warning "Gaps"
-    - **Poiesis** serves fixed service info, without an `environment`. The
-      registry accepts it, but the entry has no environment, and gateways
-      that select TES services by environment skip it.
-    - **Funnel** serves fixed service info with the environment
-      `development`, which this deployment doesn't allow. Its service info
-      can't be imported or synced (`invalid service info`), so a Funnel
-      entry can only be registered by hand. Ask the
-      [admins][elixir-on-cloud-email] how to proceed, as entries without
-      readable service info aren't verified here (see [Verified
-      services](using-cloud-registry.md#verified-services)).
+!!! warning "Gap: Poiesis and Funnel"
+    The service info of Poiesis and Funnel can't be set yet
+    ([JaeAeich/poiesis#112][poiesis-112], [calypr/funnel#1493][funnel-1493]):
+    Funnel's has the environment `development`, which this deployment
+    refuses, and Poiesis's describes the project, not your Node. Register
+    them by hand, with sync off, as described in [Manual entry, the
+    fallback](service-info.md#manual-entry-the-fallback). Ask the
+    [admins][elixir-on-cloud-email] how to proceed, as entries without
+    readable service info aren't verified here (see [Verified
+    services](using-cloud-registry.md#verified-services)).
 
 ## 6. Get verified
 
@@ -436,7 +455,8 @@ A data centre that doesn't run tasks can still join:
   chart][trsfiler-deployment], and set its service info, at least `id`,
   `name`, `organization`, `contactUrl` and `environment` (`prod` or
   `test`), in a config overlay: the chart has no value for it yet (see
-  [Service info][trsfiler-service-info]). Then register and verify it as
+  [Service info][trsfiler-service-info] and [Prepare Your Service
+  Info](service-info.md#checklist)). Then register and verify it as
   in [step 5](#5-register-the-service) and [step 6](#6-get-verified); ask the
   [admins][elixir-on-cloud-email] to add the TRS type if it is missing.
 
@@ -446,6 +466,7 @@ cover it.
 
 [cr-docs]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/>
 [cr-verified]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/api/#verified-services>
+[funnel-1493]: <https://github.com/calypr/funnel/issues/1493>
 [funnel-oauth2]: <https://github.com/calypr/funnel/blob/v0.12.3/docs/security/oauth2.md>
 [funnel-slurm]: <https://github.com/calypr/funnel/blob/v0.12.3/docs/compute/slurm.md>
 [gi-20]: <https://github.com/elixir-cloud-aai/generic-issues/issues/20>
@@ -457,6 +478,7 @@ cover it.
 [gi-50]: <https://github.com/elixir-cloud-aai/generic-issues/issues/50>
 [poiesis-auth]: <https://poiesis.jaeaeich.com/docs/deploy/authentication.html>
 [poiesis-chart]: <https://github.com/JaeAeich/poiesis/tree/v0.2.0/deployment/helm/poiesis>
+[poiesis-112]: <https://github.com/JaeAeich/poiesis/issues/112>
 [poiesis-deploy]: <https://poiesis.jaeaeich.com/docs/deploy/deploying-poiesis.html>
 [poiesis-prereq]: <https://poiesis.jaeaeich.com/docs/deploy/prerequisites.html>
 [protes-credentials]: <https://protes.readthedocs.io/en/v0.6.0/access-control/#credentials-of-tes-instances>
@@ -473,6 +495,7 @@ cover it.
 [tesk-deployment]: <https://tesk.readthedocs.io/en/latest/deployment/>
 [tesk-exposing]: <https://tesk.readthedocs.io/en/latest/deployment/#exposing-the-api>
 [tesk-from-release]: <https://tesk.readthedocs.io/en/latest/deployment/#from-a-release>
+[tesk-ls-login]: <https://tesk.readthedocs.io/en/latest/deployment/#ls-login-and-other-providers>
 [tesk-requirements]: <https://tesk.readthedocs.io/en/latest/deployment/#requirements>
 [tesk-service-info]: <https://tesk.readthedocs.io/en/latest/configuration/#service-info>
 [tesk-storage]: <https://tesk.readthedocs.io/en/latest/deployment/#storage-backends>

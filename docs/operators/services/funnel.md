@@ -22,3 +22,8 @@ deploy it, register it in the [Cloud Registry][elixir-cloud-registry] (see
 - Put the config file on the same server. [This file][funnel-config-slurm]
   is a starting point.
 - If everything works, Funnel listens on port `8080`.
+- Funnel's service info can't be set yet
+  ([calypr/funnel#1493](https://github.com/calypr/funnel/issues/1493)), and
+  this deployment refuses its environment, `development`: register it by
+  hand (see [Manual entry, the
+  fallback](../service-info.md#manual-entry-the-fallback)).
