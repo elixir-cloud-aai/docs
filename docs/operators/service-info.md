@@ -75,7 +75,7 @@ their lengths):
   as registered here at the time of writing.
   Types are compared as written, so report the type exactly as registered:
   case variants such as `TES` aren't added. If your service implements an
-  API that has no registered type yet, ask the
+  API, or a version of it, that isn't registered yet, ask the
   [admins][elixir-on-cloud-email] to add it before you import.
 - [ ] `organization`: the `name` and `url` of your Node, and no other
   fields.

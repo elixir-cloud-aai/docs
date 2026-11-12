@@ -321,9 +321,9 @@ In short:
    check that your service reports the type exactly as registered: types
    are compared as written, and case variants of registered types aren't
    added. TESK serves the registered type `org.ga4gh` / `tes`. If your
-   service implements an API that has no registered type yet, ask the
-   [admins][elixir-on-cloud-email] to add it: only they can add types in
-   this deployment.
+   service implements an API, or a version of it, that isn't registered
+   yet, ask the [admins][elixir-on-cloud-email] to add it: only they can
+   add types in this deployment.
 
 If your entry shows `out-of-sync`, see [Out-of-sync
 reasons](using-cloud-registry.md#out-of-sync-reasons).
