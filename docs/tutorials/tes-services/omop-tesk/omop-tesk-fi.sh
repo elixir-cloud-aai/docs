@@ -240,14 +240,15 @@ stop_watch() {
   local pid i; pid="$(cat "$WATCH_PID")"
   kill "$pid" || return 0
   for ((i = 0; i < 1500; i++)); do kill -0 "$pid" 2>/dev/null || break; sleep 0.1; done
+  ! kill -0 "$pid" 2>/dev/null || die "keep-alive loop $pid still running, try again later"
   rm -f "$WATCH_PID"; echo "keep-alive loop stopped"
 }
 
 # down: stop the loop first (it would resubmit), lock the pods out before cancelling, so that
 # an interrupted down never leaves them connected. Cancelling needs the TES.
 cmd_down() {
-  if watching; then stop_watch; fi
   lock
+  if watching; then stop_watch; fi
   lock_out
   local r
   if tes_check; then for r in "${ROLES[@]}"; do cancel_role "$r"; done
@@ -291,7 +292,7 @@ replace_stack() {
 
 cmd_watch() {
   echo $$ > "$WATCH_PID"
-  trap 'rm -f "$WATCH_PID"' EXIT
+  trap '[[ "$(cat "$WATCH_PID" 2>/dev/null)" != "$$" ]] || rm -f "$WATCH_PID"' EXIT
   echo "$(date -Is) keeping OMOP tasks alive on $TES_URL (every ${WATCH_INTERVAL}s)"
   local r id state
   while true; do
@@ -328,7 +329,7 @@ esac
 case "${1:-}" in
   up)       cmd_up ;;
   down)     cmd_down ;;
-  restart)  cmd_down; tes_check || die "cannot use the TES at $TES_URL"; cmd_up ;;
+  restart)  tes_check || die "cannot use the TES at $TES_URL"; cmd_down; cmd_up ;;
   setup)    cmd_setup ;;
   submit)   lock; for r in $(roles_arg "${2:-}"); do submit_role "$r"; done; unlock ;;
   status)   cmd_status ;;

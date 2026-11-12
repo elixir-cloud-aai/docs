@@ -161,7 +161,7 @@ cmd_selftest() {
 
 cmd_watch() {
   echo $$ > "$WATCH_PID"
-  trap 'rm -f "$WATCH_PID"' EXIT
+  trap '[[ "$(cat "$WATCH_PID" 2>/dev/null)" != "$$" ]] || rm -f "$WATCH_PID"' EXIT
   # SIGTERM (stop_watch) ends the loop between two rounds only, never inside lock_out.
   local stop=""; trap 'stop=1' TERM
   echo "$(date -Is) keeping $NAME alive on $TES_URL (every ${WATCH_INTERVAL}s)"
@@ -206,6 +206,7 @@ stop_watch() {
   local pid i; pid="$(cat "$WATCH_PID")"
   kill "$pid" || return 0
   for ((i = 0; i < 1500; i++)); do kill -0 "$pid" 2>/dev/null || break; sleep 0.1; done
+  ! kill -0 "$pid" 2>/dev/null || die "keep-alive loop $pid still running, try again later"
   rm -f "$WATCH_PID"; echo "keep-alive loop stopped"
 }
 
@@ -215,7 +216,8 @@ cmd_down() {
   # so that an interrupted down never leaves the old pod connected.
   lock_out
   # The pods are locked out already; cancelling needs the TES.
-  if tes_check; then cmd_cancel; else echo "WARNING: task $(task_id) not canceled; run: $SELF cancel" >&2; fi
+  if tes_check; then cmd_cancel
+  elif [[ -n "$(task_id)" ]]; then echo "WARNING: task $(task_id) not canceled; run: $SELF cancel" >&2; fi
 }
 
 # Commands that use the TES fail early if it rejects the token (or its absence). down
@@ -228,7 +230,7 @@ esac
 case "$CMD" in
   up)       cmd_up ;;
   down)     cmd_down ;;
-  restart)  cmd_down; tes_check || die "cannot use the TES at $TES_URL"; cmd_up ;;
+  restart)  tes_check || die "cannot use the TES at $TES_URL"; cmd_down; cmd_up ;;
   setup)    cmd_setup ;;
   submit)   cmd_submit ;;
   status)   cmd_status ;;

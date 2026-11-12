@@ -188,7 +188,8 @@ for TES services that don't need one.
 Each command that uses the TES service first checks the token, and ends
 with an error if the service refuses it. Only `down` goes on: it stops the
 keep-alive loop and locks the old tasks out of the hub, then warns that it
-couldn't cancel them. Run `cancel` once you have a new token.
+couldn't cancel them. Run `cancel` once you have a new token, before `up`:
+otherwise `up` waits for the old task, which can't connect any more.
 
 | Answer | Meaning | What to do |
 |---|---|---|
@@ -399,6 +400,7 @@ launchers, `up` replaced the keep-alive loop, and the loop logged the error
 when the token expired. With the expired token, `down` still stopped the
 loop and locked the tasks out. The token appeared in no command line, file,
 log or environment of the hub.
+
 We did not test the tokens against a real TES service.
 
 ## Where to go next
