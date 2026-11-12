@@ -212,7 +212,7 @@ cmd_up() {
   # The loop keeps the token it started with: replace it, so that it gets the current one.
   if watching && [[ -n "${TES_TOKEN:-}" ]]; then lock; stop_watch; unlock; fi
   if ! watching; then
-    setsid -f "$HERE/omop-tesk-fi.sh" watch >> "$STATE_DIR/watch.log" 2>&1 < /dev/null
+    TES_TOKEN="${TES_TOKEN:-}" setsid -f "$HERE/omop-tesk-fi.sh" watch >> "$STATE_DIR/watch.log" 2>&1 < /dev/null
     echo "keep-alive loop started (log: $STATE_DIR/watch.log)"
   fi
   echo "waiting for Atlas, WebAPI and the data source (first start 10-15 minutes; Ctrl-C is safe, the tasks keep running)"
@@ -234,22 +234,24 @@ cmd_up() {
 # a hub restart lock them out. All three roles share the hub user, so this replaces the stack.
 lock_out() { rm -f "$STATE_DIR/config"; HUB_AUTH="" DB_PASSWORD=""; cmd_setup; "$HUB" restart; }
 
-# down: stop the loop first (it would resubmit), lock the pods out before cancelling, so that
-# an interrupted down never leaves them connected.
 # Stops the keep-alive loop and waits until it has ended, so that it can't remove the pid
 # file of a new loop.
 stop_watch() {
   local pid i; pid="$(cat "$WATCH_PID")"
   kill "$pid" || return 0
-  for ((i = 0; i < 50; i++)); do kill -0 "$pid" 2>/dev/null || break; sleep 0.1; done
+  for ((i = 0; i < 1500; i++)); do kill -0 "$pid" 2>/dev/null || break; sleep 0.1; done
   rm -f "$WATCH_PID"; echo "keep-alive loop stopped"
 }
 
+# down: stop the loop first (it would resubmit), lock the pods out before cancelling, so that
+# an interrupted down never leaves them connected. Cancelling needs the TES.
 cmd_down() {
   if watching; then stop_watch; fi
   lock
   lock_out
-  local r; for r in "${ROLES[@]}"; do cancel_role "$r"; done
+  local r
+  if tes_check; then for r in "${ROLES[@]}"; do cancel_role "$r"; done
+  else echo "WARNING: tasks not canceled; run: $0 cancel" >&2; fi
   unlock
 }
 
@@ -316,16 +318,17 @@ cmd_watch() {
   done
 }
 
-# Commands that use the TES fail early if it rejects the token (or its absence).
+# Commands that use the TES fail early if it rejects the token (or its absence). down
+# locks the pods out first, and needs the TES only to cancel.
 case "${1:-}" in
-  up|down|restart|submit|logs|cancel|selftest) tes_check || die "cannot use the TES at $TES_URL" ;;
+  up|submit|logs|cancel|selftest) tes_check || die "cannot use the TES at $TES_URL" ;;
   status) tes_check || true ;;
 esac
 
 case "${1:-}" in
   up)       cmd_up ;;
   down)     cmd_down ;;
-  restart)  cmd_down; cmd_up ;;
+  restart)  cmd_down; tes_check || die "cannot use the TES at $TES_URL"; cmd_up ;;
   setup)    cmd_setup ;;
   submit)   lock; for r in $(roles_arg "${2:-}"); do submit_role "$r"; done; unlock ;;
   status)   cmd_status ;;

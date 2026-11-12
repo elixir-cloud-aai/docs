@@ -17,9 +17,9 @@ explanations.
     [cloud-service@elixir-europe.org][elixir-on-cloud-email].
 
 !!! danger "Use synthetic data only"
-    Whoever may read your tasks on the TES service (on a service without
-    tokens: anyone) can read a task with `?view=FULL`, including the
-    passwords of the hub and of the database that the scripts put into it.
+    Anyone who may read your tasks on the TES service sees, with
+    `?view=FULL`, the passwords of the hub and of the database that the
+    scripts put into them. On a service without tokens, that is everyone.
     RStudio, JupyterLab and Atlas have no login. Don't use real or sensitive
     data with this setup.
 
@@ -74,8 +74,8 @@ passwords (readable only by you), the task IDs and the logs.
 
 ## What you need
 
-- A Linux virtual machine (x86-64 or ARM64) with `bash`, `curl`, `python3`,
-  `ss`, `setsid` and `flock`, that you can reach with SSH. The services run on the TES service, not on
+- A Linux virtual machine (x86-64 or ARM64) with `bash`, `curl` (7.55 or
+  newer), `python3`, `ss`, `setsid` and `flock`, that you can reach with SSH. The services run on the TES service, not on
   the virtual machine.
 - A public host name for the virtual machine (`<HOST>` below), and port 443
   open to the internet. The tasks must reach this port: the TESK of
@@ -86,8 +86,8 @@ passwords (readable only by you), the task IDs and the logs.
 - A TES service whose tasks can make outbound HTTPS connections, and an
   access token for it if it needs one (see [Get an access
   token](#get-an-access-token)). The scripts use the TESK of ELIXIR-FI
-  (`https://csc-tesk-noauth.rahtiapp.fi`). To use another service, set
-  `TES_URL`.
+  without tokens (`https://csc-tesk-noauth.rahtiapp.fi`). To use another
+  service, set `TES_URL`.
 
 !!! note "The default address will change"
     The TES services of ELIXIR On-Cloud move to access with tokens. The
@@ -171,8 +171,8 @@ too). To join the group, write to
    the deployment that you use, or as [Using the
    APIs](../../partners-and-developers/apis.md#2-get-an-access-token)
    describes. A token lives for about 4 hours.
-2. Set it in the shell in which you run the scripts. With `read -s`, the
-   token is neither shown nor saved in the shell history:
+2. Set it in the shell (bash) in which you run the scripts. With
+   `read -s`, the token is neither shown nor saved in the shell history:
 
     ```bash
     read -rsp 'TES token: ' TES_TOKEN && echo && export TES_TOKEN
@@ -181,11 +181,14 @@ too). To join the group, write to
 If `TES_TOKEN` is set, the scripts send it with every request to the TES
 service, in the header `Authorization: Bearer`. They pass it to `curl`
 through a pipe, so that it doesn't appear on a command line, and they don't
-write it to files or logs. Without `TES_TOKEN`, they send no token, for TES
-services that don't need one.
+write it to files or logs. They give it to their keep-alive loop only, not
+to other programs such as the hub. Without `TES_TOKEN`, they send no token,
+for TES services that don't need one.
 
 Each command that uses the TES service first checks the token, and ends
-with an error if the service refuses it:
+with an error if the service refuses it. Only `down` goes on: it stops the
+keep-alive loop and locks the old tasks out of the hub, then warns that it
+couldn't cancel them. Run `cancel` once you have a new token.
 
 | Answer | Meaning | What to do |
 |---|---|---|
@@ -291,8 +294,8 @@ For example: `./tes-hub/tes-service.sh rstudio-tesk status` or
 shows the hub, the path in nginx and all tunnels.
 
 After a reboot of the virtual machine, start the hub, set `TES_TOKEN`, then
-run `up` for each service. Running tasks reconnect by themselves, and `up` starts the
-keep-alive loop again.
+run `up` for each service. Running tasks reconnect by themselves, and `up`
+starts the keep-alive loop again.
 
 ## Limits
 
@@ -393,7 +396,9 @@ invalid one and with one outside the compute group, every command ended
 after its first request with the matching error. With a valid token,
 `selftest`, `up`, `status`, `logs`, `print` and `down` worked for both
 launchers, `up` replaced the keep-alive loop, and the loop logged the error
-when the token expired. The token appeared in no command line, file or log.
+when the token expired. With the expired token, `down` still stopped the
+loop and locked the tasks out. The token appeared in no command line, file,
+log or environment of the hub.
 We did not test the tokens against a real TES service.
 
 ## Where to go next

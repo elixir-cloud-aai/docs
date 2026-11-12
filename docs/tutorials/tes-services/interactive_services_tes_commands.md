@@ -91,10 +91,14 @@ sudo systemctl reload nginx
 
 ## Set the access token
 
+An LS Login access token, of an account in the compute group, lives for
+about 4 hours: see [Get an access
+token](interactive_services_tes.md#get-an-access-token).
+
 ```bash
 # paste an LS Login access token (account in ECP_CLN:EOC-Compute); not shown, not in the history
 read -rsp 'TES token: ' TES_TOKEN && echo && export TES_TOKEN
-# check it: lists one task, or fails with 401 (no or expired token) or 403 (not in the compute group)
+# check it: lists one task, or curl fails (error 22) with 401 (invalid or expired token) or 403 (not in the compute group)
 printf 'Authorization: Bearer %s\n' "$TES_TOKEN" | curl -fsS -H @- "${TES_URL:-https://csc-tesk-noauth.rahtiapp.fi}/ga4gh/tes/v1/tasks?view=MINIMAL&page_size=1"
 ```
 

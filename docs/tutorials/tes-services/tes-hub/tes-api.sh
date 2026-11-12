@@ -6,6 +6,10 @@
 # header reaches curl through a pipe that the builtin printf writes (process
 # substitution), so the token never appears on a command line, in a file or in a log.
 
+# The token stays a shell variable: not exported, so that no child process (such as the
+# hub, which runs for days) gets it. The launchers pass it to their keep-alive loop only.
+if [[ -n "${TES_TOKEN:-}" ]]; then export -n TES_TOKEN; fi
+
 # tes_curl <curl arguments>: prints the body of a 2xx answer. Otherwise prints why to
 # stderr and returns 1.
 tes_curl() {
