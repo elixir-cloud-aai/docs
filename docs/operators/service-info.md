@@ -68,7 +68,8 @@ their lengths):
 - [ ] `name`: a descriptive name, e.g., "Example TES".
 - [ ] `description`: what the service offers, and to whom.
 - [ ] `type`: `group`, `artifact` and `version` of one of the [registered
-  types](#the-rules-of-this-deployment), e.g., `org.ga4gh`, `tes`, `1.1.0`.
+  types](#the-rules-of-this-deployment), e.g., `org.ga4gh`, `tes`, `1.1.0`,
+  as registered here at the time of writing.
   Types are compared as written, so `TES` and `tes` are different types. If
   yours is missing, ask the [admins][elixir-on-cloud-email] to add it before
   you import.
@@ -82,8 +83,9 @@ their lengths):
   service, `test` for a test service. The values are case-sensitive.
 - [ ] `version`: the version of your service's software.
 
-The import needs `id`, `name`, `type`, `organization` and `version`, and
-ignores other fields (e.g., `createdAt` or `storage`).
+The import needs `id`, `name`, `type`, `organization` and `version`. It
+reads and checks all the fields above, `environment` too, and ignores fields
+that aren't on this list (e.g., `createdAt` or `storage`).
 
 ## Setting it per product
 
@@ -174,7 +176,11 @@ Registry](using-cloud-registry.md#registering-a-service).
 
 Once sync is on, keep the service info right: the registry applies it every
 day, and labels the entry `out-of-sync` if it can't (see [Out-of-sync
-reasons](using-cloud-registry.md#out-of-sync-reasons)).
+reasons](using-cloud-registry.md#out-of-sync-reasons)). Keep `id` and the
+API type (`type.group` and `type.artifact`) as they were at the import: if
+either changes, sync stops with `identity mismatch`, and the reasons table
+says how to recover. If you change them between the import and **Create
+Service**, import again.
 
 ## Manual entry, the fallback
 
