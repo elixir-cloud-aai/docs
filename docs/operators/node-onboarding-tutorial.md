@@ -5,9 +5,10 @@
 This tutorial takes a Node from nothing to a TES service that is registered
 in the [Cloud Registry][elixir-cloud-registry], verified by its admins and
 reachable through the gateway of the ELIXIR On-Cloud. It is for the
-operators of compute centres, with a [shorter path](#data-centres) for data
-centres. [Onboarding](onboarding.md) is the short checklist; this page goes
-through the same steps in detail, with the commands of each product.
+operators of compute centres; data centres follow [Tutorial: Onboard a Data
+Centre](data-centre-onboarding-tutorial.md). [Onboarding](onboarding.md) is
+the short checklist; this page goes through the same steps in detail, with
+the commands of each product.
 
 The commands and values on this page come from the docs of each product, at
 the versions in the table below. For anything else, follow the linked
@@ -21,12 +22,6 @@ product docs: they are the reference, and this page doesn't repeat them.
 | [Cloud Registry][cr-docs] | 1.0.0rc2 | Registry of the services |
 | [proTES][protes-docs] | 0.6.0 | Gateway in front of the TES services |
 | [Pubgrade-Sidecar][sidecar-docs] | 0.2.0 | Automatic upgrades (optional) |
-
-!!! info "TESK chart 0.3.0 is not released yet"
-    The tutorial follows the docs of TESK chart 0.3.0, which is about to be
-    released, and links to the latest version of the TESK docs, which
-    describes it. Until the release, install the chart from a checkout of the
-    TESK repository, as shown in [step 2](#2-deploy-a-tes-service).
 
 !!! warning "Under construction"
     The policies for joining the federation are not written down yet: who
@@ -94,21 +89,26 @@ docs and continue with [step 3](#3-enable-ls-login-and-ecp_cln-access):
 ### Install TESK
 
 The [deployment guide of TESK][tesk-deployment] covers the installation;
-this is the short path. Check out the TESK repository at the commit that
-this tutorial was checked against (chart 0.3.0 before its release), and
-work in the checkout, where the files below live:
+this is the short path. Download chart 0.3.0 from its release, check that
+TESK's release workflow built and signed it from the release tag (with the
+[GitHub CLI](https://cli.github.com/) and
+[cosign](https://docs.sigstore.dev/cosign/system_config/installation/), see
+[From a release][tesk-from-release]), and unpack it, as some settings are
+files in the chart directory:
 
 ```bash
-git clone https://github.com/elixir-cloud-aai/TESK.git
-cd TESK
-git checkout aa7468794b2ae95c4a94a4a10f1f3ef572d90822
+set -e  # stop if a check fails (Bash; in Fish, run the commands one by one)
+gh release download v0.3.0 --repo elixir-cloud-aai/TESK --pattern 'tesk-*'
+gh attestation verify tesk-0.3.0.tgz --repo elixir-cloud-aai/TESK \
+    --signer-workflow elixir-cloud-aai/TESK/.github/workflows/release.yml \
+    --source-ref refs/tags/v0.3.0
+cosign verify-blob tesk-0.3.0.tgz --bundle tesk-0.3.0.tgz.sigstore.json \
+    --certificate-identity https://github.com/elixir-cloud-aai/TESK/.github/workflows/release.yml@refs/tags/v0.3.0 \
+    --certificate-oidc-issuer https://token.actions.githubusercontent.com
+tar -xzf tesk-0.3.0.tgz  # unpacks the chart into tesk/
 ```
 
-Once chart 0.3.0 is released, install it from its release instead, after
-checking its attestation and signature, as described in [From a
-release][tesk-from-release].
-
-Write your settings into `my-values.yaml`, in the checkout. For an
+Write your settings into `my-values.yaml`. For an
 Ingress with a certificate of cert-manager (see [Exposing the
 API][tesk-exposing]; on OpenShift, use a Route instead, as described
 there):
@@ -127,7 +127,7 @@ ingress:
 
 Set up the storage backend of your Node as described in [Storage
 backends][tesk-storage] (e.g., `storage: s3` and the files in
-`charts/tesk/s3-config/`).
+`tesk/s3-config/` of the unpacked chart).
 
 Set the service info in `my-values.yaml`, under `serviceInfo`, before
 installing: at least `id` (unique, in reverse domain notation), `name`,
@@ -160,7 +160,7 @@ Install the chart into a namespace of its own. `secrets.yaml` holds
 credentials, e.g., of FTP: leave out `-f secrets.yaml` if you need none.
 
 ```bash
-helm upgrade --install tesk charts/tesk \
+helm upgrade --install tesk ./tesk \
     --namespace tesk --create-namespace \
     -f my-values.yaml -f secrets.yaml
 ```
@@ -273,15 +273,23 @@ their own tasks (see [OAuth2][funnel-oauth2]). Ask the
 Get an access token of your LS Login account, with the scope
 `eduperson_entitlement` (see [Get an access
 token](../partners-and-developers/apis.md#2-get-an-access-token)). Then
-create a task, from a checkout of the TESK repository (see [API][tesk-api]),
-and get its state, with your host name:
+create a task, with the example of TESK's [API][tesk-api] docs, and get its
+state, with your host name:
 
 ```bash
 TES=https://tes.example.org/ga4gh/tes/v1
+cat > hello.json <<'EOF'
+{
+  "name": "Hello World",
+  "executors": [
+    {"image": "alpine", "command": ["echo", "TESK says: Hello World"]}
+  ]
+}
+EOF
 read -rs TOKEN   # paste the token; it is not shown or saved in the history
 printf 'Authorization: Bearer %s\n' "$TOKEN" | curl -X POST "${TES}/tasks" \
     -H 'Content-Type: application/json' -H @- \
-    -d @examples/success/hello.json
+    -d @hello.json
 printf 'Authorization: Bearer %s\n' "$TOKEN" | curl "${TES}/tasks/<id>?view=BASIC" -H @-
 ```
 
@@ -448,24 +456,9 @@ TESK, as described in [Deployment][sidecar-deployment]:
 
 ## Data centres
 
-A data centre that doesn't run tasks can still join:
-
-- **Storage for tasks:** offer an S3 or FTP server that the TES services of
-  the federation use for the inputs and outputs of tasks (see [Deploy
-  storage](onboarding.md#2-deploy-storage)).
-- **Tools and workflows:** [TRS-Filer](services/trsfiler.md) 0.5.0 serves
-  them through the [GA4GH TRS][ga4gh-trs] API. Deploy it with its [Helm
-  chart][trsfiler-deployment], and set its service info, at least `id`,
-  `name`, `organization`, `contactUrl` and `environment` (`prod` or
-  `test`), in a config overlay: the chart has no value for it yet (see
-  [Service info][trsfiler-service-info] and [Prepare Your Service
-  Info](service-info.md#checklist)). Then register and verify it as
-  in [step 5](#5-register-the-service) and [step 6](#6-get-verified); ask the
-  [admins][elixir-on-cloud-email] to add the TRS type if it is missing.
-
-[DRS-Filer](services/drsfiler.md), for data objects through the
-[GA4GH DRS][ga4gh-drs] API, has no release yet, so this tutorial doesn't
-cover it.
+A data centre that doesn't run tasks can still join, with storage for the
+tasks of the federation or with a TRS service for tools and workflows:
+follow [Tutorial: Onboard a Data Centre](data-centre-onboarding-tutorial.md).
 
 [cr-docs]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/>
 [cr-verified]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/api/#verified-services>
@@ -500,8 +493,6 @@ cover it.
 [tesk-from-release]: <https://tesk.readthedocs.io/en/latest/deployment/#from-a-release>
 [tesk-ls-login]: <https://tesk.readthedocs.io/en/latest/deployment/#ls-login-and-other-providers>
 [tesk-requirements]: <https://tesk.readthedocs.io/en/latest/deployment/#requirements>
-[tesk-service-info]: <https://tesk.readthedocs.io/en/latest/configuration/#service-info>
+[tesk-service-info]: <https://tesk.readthedocs.io/en/latest/configuration/#service-info-serviceinfo>
 [tesk-storage]: <https://tesk.readthedocs.io/en/latest/deployment/#storage-backends>
 [tesk-upgrading]: <https://tesk.readthedocs.io/en/latest/upgrading/>
-[trsfiler-deployment]: <https://trs-filer.readthedocs.io/en/v0.5.0/deployment/>
-[trsfiler-service-info]: <https://trs-filer.readthedocs.io/en/v0.5.0/configuration/#service-info>
