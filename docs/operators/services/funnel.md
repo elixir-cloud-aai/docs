@@ -35,8 +35,9 @@ deploy it, register it in the [Cloud Registry][elixir-cloud-registry] (see
 Funnel's `pbs` backend submits each task as a job with `qsub` and cancels it
 with `qdel` (see [PBS/Torque][funnel-pbs] in the Funnel docs). It renders
 the job script from a template, with the variables `TaskId`, `WorkDir`,
-`Cpus`, `RamGb`, `DiskGb` and `Zone` of the task. The worker in the job
-reports the state of its task to the Funnel server.
+`Cpus`, `RamGb`, `DiskGb` and `Zone` of the task, and `Args`, which points
+the worker to a copy of Funnel's config in the work directory. The worker
+in the job reports the state of its task to the Funnel server.
 
 1. Write the job script template, e.g., to `/etc/funnel/pbs-template.txt`.
    The [template of the Funnel docs][funnel-pbs-template] uses the resource
@@ -50,12 +51,26 @@ reports the state of its task to the Funnel server.
     #PBS -e {{.WorkDir}}/funnel-stderr
     #PBS -l select=1:ncpus={{if ne .Cpus 0}}{{.Cpus}}{{else}}1{{end}}{{if ne .RamGb 0.0}}{{printf ":mem=%.0fgb" .RamGb}}{{end}}
 
-    funnel worker run --config /etc/funnel/funnel-config.yml --taskID {{.TaskId}}
+    funnel worker run {{.Args}} --taskID {{.TaskId}}
     ```
 
     Add the queue (`#PBS -q …`) and the account or project options that
-    your cluster requires. OpenPBS has no standard resource for the free
-    disk space of a job, so the template above ignores `DiskGb`.
+    your cluster requires. Mind what the template leaves out or rounds:
+
+    - **Disk:** OpenPBS has no standard resource for the free disk space of
+      a job, so the template ignores `DiskGb`.
+    - **Zone:** it ignores `Zone`, the zone that a task asks for, too. The
+      Funnel docs suggest it as a queue name (e.g., `{{if .Zone}}#PBS -q
+      {{.Zone}}{{end}}`); add that only if your queues should be chosen by
+      the users of your service.
+    - **Memory:** OpenPBS takes whole units, and templates can't round up:
+      `%.0f` rounds `RamGb` to the nearest GB, so a task that asks for
+      1.4 GB gets 1 GB, and one that asks for less than 0.5 GB gets
+      `mem=0gb`. If tasks of your users ask for fractions, set a default
+      memory per job in the queue, or add a margin in the template.
+
+    The `funnel` binary must be on the `PATH` of the jobs on the execution
+    hosts too, e.g., on a shared file system.
 
 2. Point Funnel's config file at it, and keep the reconciler off, as it is
    by default (see the warning below):
@@ -67,8 +82,11 @@ reports the state of its task to the Funnel server.
       DisableReconciler: true
     ```
 
-3. Pass the same config file to the workers, as in the template above, so
-   that they reach the Funnel server and the storage of the Node.
+3. Put Funnel's work directory (`WorkDir` in the config file), which also
+   holds the job's `funnel-stdout` and `funnel-stderr` and the config for
+   the worker, on a file system that the submission host and the execution
+   hosts share: the worker of a task runs on an execution host and needs
+   the task's files there.
 
 !!! warning "Not tested here"
     These steps follow the Funnel docs, Funnel's code and the OpenPBS

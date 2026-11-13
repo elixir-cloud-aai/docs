@@ -93,7 +93,11 @@ of the ELIXIR On-Cloud, the admins check with you, its owner, that:
   users that the policy of the federation allows, e.g., for a TES service,
   members of the LS Login group `ECP_CLN` (see [Enable LS Login and ECP_CLN
   access](node-onboarding-tutorial.md#3-enable-ls-login-and-ecp_cln-access)),
-  and from the gateway.
+  and from the gateway. A service that can't check the group itself meets
+  this only if it accepts nothing but the credentials of the gateway, which
+  checks the group: e.g., Poiesis accepts any valid token of its issuer, as
+  its group check is still missing ([generic-issues#21][gi-21]).
+  Verification doesn't prove that a service enforces the policy itself.
 
 To ask for verification, write to
 [cloud-service@elixir-europe.org][elixir-on-cloud-email] with the address of
@@ -190,4 +194,5 @@ UI](using-cloud-registry-ui.md) adds what applies to this deployment.
 [cr-ui-browsing]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/user-guide/browsing/>
 [cr-ui-user-guide]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/user-guide/>
 [cr-verified]: <https://cloud-registry.readthedocs.io/en/latest/api/#verified-services>
+[gi-21]: <https://github.com/elixir-cloud-aai/generic-issues/issues/21>
 [gi-31]: <https://github.com/elixir-cloud-aai/generic-issues/issues/31>
