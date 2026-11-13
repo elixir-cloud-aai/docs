@@ -92,6 +92,15 @@ lists from the Cloud Registry:
   unreachable, and Krini leaves out services that answer with an error.
   **Refresh**, at the top of the list, checks them again.
 
+!!! warning "Krini sends your token to the WES service that you choose"
+    Krini lists every TES and WES service in the Cloud Registry, whether you
+    can trust it or not, and doesn't show whether a service is verified.
+    Choose only services that you trust: anyone who runs a service that gets
+    your token can act as you until the token expires. Check a service in
+    the [Cloud Registry][elixir-cloud-registry] first: on the safe side, use
+    only services that are both verified and synced (see [Using the Cloud
+    Registry](../operators/using-cloud-registry.md#looking-up-services)).
+
 To see more about a WES service, point at the info icon next to it, which
 lists the workflow types and versions that it supports, or select the icon
 to open its service info: the service, its organisation, its workflow types,
@@ -113,9 +122,8 @@ A TES task runs one or more container images, one after the other. See
     ([krini#41](https://github.com/elixir-cloud-aai/krini/issues/41),
     [krini#44](https://github.com/elixir-cloud-aai/krini/issues/44)). Tasks
     work only on TES services that accept requests without a token. For the
-    others, use the API with your token (see [Using the
-    APIs](../partners-and-developers/apis.md)), or the [command
-    line](cli.md).
+    others, send your requests to the API with your token (see [Using the
+    APIs](../partners-and-developers/apis.md)).
 
 1. Open **Tasks** and select **Create Task**.
 2. Choose a TES service in **Select TES Instance**.
@@ -213,14 +221,22 @@ with your access token:
 
 1. In Krini, select **Copy token to Dashboard** (see [Copy your access
    token](#copy-your-access-token)).
-2. In a terminal, call the service, with the address of the service that you
-   chose in Krini and the run ID:
+2. Look up the API endpoint of the service: select the info icon next to the
+   service in **Select WES Instance**. **API endpoint** shows the address of
+   its service info, e.g.,
+   `https://wes.example.org/ga4gh/wes/v1/service-info`; the API endpoint is
+   that address without `/service-info`.
+3. In a terminal (Bash or Zsh), read the token, then call the service with
+   the endpoint and the run ID:
 
     ```bash
-    export TOKEN='<the token that you copied>'
-    curl -H "Authorization: Bearer $TOKEN" \
-      "https://<WES service>/ga4gh/wes/v1/runs/<run ID>"
+    read -rs TOKEN   # paste the token and press Enter; it isn't shown or saved in the history
+    printf 'Authorization: Bearer %s\n' "$TOKEN" |
+      curl -H @- "<API endpoint>/runs/<run ID>"
     ```
+
+    `curl -H @-` reads the header from its input, so the token doesn't
+    appear in the list of running processes either.
 
 The answer has the state of the run, its request, the logs of the run and
 of its tasks, and, under `outputs`, its outputs. Where the outputs are
@@ -228,8 +244,8 @@ depends on the service, e.g., in a bucket of its object storage.
 
 ## Copy your access token
 
-To use the services outside Krini, e.g., with `curl` or the [command
-line](cli.md), select **Copy token to Dashboard** in the menu at the bottom
+To use the services outside Krini, e.g., with `curl` (see [Using the
+APIs](../partners-and-developers/apis.md)), select **Copy token to Dashboard** in the menu at the bottom
 of the sidebar. Krini copies your LS Login access token to the clipboard.
 
 !!! warning "Keep your token to yourself"
