@@ -69,6 +69,11 @@ service copies the text file into the container before the command starts.
 
 **Check:** the list below shows the tasks of the service, or none.
 
+!!! warning "Don't choose TEST SERVER"
+    The **TEST SERVER** entry in the list of TES services doesn't work yet
+    ([krini#67](https://github.com/elixir-cloud-aai/krini/issues/67)).
+    Choose the service that you got access to.
+
 ### 4. Create the task
 
 1. Select **Create Task**.
@@ -112,11 +117,13 @@ The numbers change if the file changes. If the state is `EXECUTOR_ERROR` or
 `SYSTEM_ERROR`, read the logs and see
 [Troubleshooting](krini.md#troubleshooting).
 
-!!! info "Results in files"
+!!! warning "No result files from tasks yet"
     This task writes its result to the standard output only. Tasks that
-    write result files need **Outputs**, which Krini doesn't pass on to the
-    service yet (see [Run a task](krini.md#run-a-task)). Part 2 gets a result
-    file through WES instead.
+    write result files need **Outputs**, which the task form of Krini
+    doesn't pass on to the service yet
+    ([cloud-components#574](https://github.com/elixir-cloud-aai/cloud-components/issues/574);
+    see [Run a task](krini.md#run-a-task)). Part 2 gets a result file
+    through WES instead.
 
 ## Part 2: Run a workflow
 
@@ -170,8 +177,13 @@ workflow in a language that it runs, and use that in the next step.
 
 ### 9. Read the result
 
-Krini doesn't show the details and outputs of a run yet. Read them from the
-WES service, with your access token, as [Read the details and outputs of a
+!!! warning "No run details in Krini yet"
+    **View Details** doesn't open anything in Krini yet
+    ([krini#66](https://github.com/elixir-cloud-aai/krini/issues/66)), so
+    this step needs a terminal.
+
+Read the details and outputs of the run from the WES service, with your
+access token, as [Read the details and outputs of a
 run](krini.md#read-the-details-and-outputs-of-a-run) describes: copy your
 token in Krini, look up the API endpoint of the service, and call it with
 `curl` and your run ID.

@@ -16,12 +16,11 @@ tool, which explains all commands and options; this page doesn't repeat it.
 The commands are for Bash or Zsh on Linux or macOS.
 
 !!! warning "What the CLI can't do yet"
-    - **No login command:** the CLI sends a token that you give it, but it
-      can't get one from LS Login itself; step 5 shows how to get one. A
-      login with the OIDC device flow is planned
-      ([ga4gh-sdk#90](https://github.com/ga4gh/ga4gh-sdk/issues/90)).
     - **No ready-made binaries:** you build the CLI from its source code
       ([ga4gh-sdk#91](https://github.com/ga4gh/ga4gh-sdk/issues/91)).
+
+The CLI doesn't log in itself: it sends an LS Login access token that you
+put into a variable. Step 5 shows how to get one.
 
 !!! warning "Synthetic or public data only"
     The deployment is a sandbox for demos and tests. The demo file is public;
@@ -138,9 +137,9 @@ then looks like this, with the addresses of your services instead of
 
 ## 5. Log in
 
-The CLI can't log in itself yet ([ga4gh-sdk#90](https://github.com/ga4gh/ga4gh-sdk/issues/90)).
-Get an LS Login access token in one of these ways, and ask the operators of
-your services which of them they accept:
+The CLI sends a token that you put into a variable; it doesn't get one
+itself. Get an LS Login access token in one of these ways, and ask the
+operators of your services which of them they accept:
 
 - **With your own LS Login client,** as [Get an access
   token](../partners-and-developers/apis.md#2-get-an-access-token)
