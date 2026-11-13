@@ -5,6 +5,8 @@ At the end, your cluster is available through the [GA4GH Task Execution
 Service][ga4gh-tes] (TES) API, and others can find it in the [Cloud
 Registry][elixir-cloud-registry]. For the same steps in detail, with the
 commands of each product, follow the [tutorial](node-onboarding-tutorial.md).
+Data centres that offer storage, tools or workflows but don't run tasks
+follow [Tutorial: Onboard a Data Centre](data-centre-onboarding-tutorial.md).
 
 You need:
 
