@@ -36,7 +36,7 @@ You need:
 - **An LS Login account.** See the [LS Login and registration
   guide](https://www.lifescience-ri.eu/ls-login-and-registration-guide/).
 - **Access to a TES service,** for part 1, and **to a WES service that runs
-  CWL,** for part 2, and the information which LS Login tokens they accept.
+  CWL `v1.0`,** for part 2, and the information which LS Login tokens they accept.
 
 The deployment doesn't publish the addresses of all its services for
 researchers yet. To ask for services that you can use, write to
@@ -106,15 +106,23 @@ ga4gh-cli registry list --type wes
 with their `URL`s. If a service isn't listed, use the address that its
 operators gave you.
 
-Before you send a token to a service, check in the [front end of the Cloud
-Registry][elixir-cloud-registry] that it is verified: the CLI doesn't show
-this.
+!!! warning "Send your token only to services that you trust"
+    The CLI sends your token to every service that you configure with it,
+    and anyone who runs that service can act as you until the token
+    expires. The CLI doesn't show whether a service is verified. Use only
+    the services that you got access to, check that their addresses match
+    the ones that their operators gave you, and check them in the [front
+    end of the Cloud Registry][elixir-cloud-registry]: on the safe side, use
+    only services that are both verified and synced (see [Using the Cloud
+    Registry](../operators/using-cloud-registry.md#looking-up-services)). A
+    label in the registry doesn't replace your own check.
 
 Then add a `TES` and a `WES` section to `~/.ga4gh-cli/config.json` in a text
-editor. `base_path` is the root of the API of the service, e.g., ending in
-`/ga4gh/tes/v1` for proTES (see [Configure](cli.md#configure)). Your file
-then looks like this, with the addresses of your services instead of
-`<TES HOST>` and `<WES HOST>`:
+editor. `base_path` is the root of the API of the service (see
+[Configure](cli.md#configure)): copy the `URL` from the list as it is, and
+add the path of the API only if the `URL` ends before it, e.g.,
+`/ga4gh/tes/v1` for proTES. Your file then looks like this, with these API
+roots instead of `<TES API ROOT>` and `<WES API ROOT>`:
 
 ```json
 {
@@ -122,15 +130,18 @@ then looks like this, with the addresses of your services instead of
     "base_path": "https://elixir-on.cloud/ga4gh/registry/v1"
   },
   "TES": {
-    "base_path": "https://<TES HOST>/ga4gh/tes/v1",
+    "base_path": "<TES API ROOT>",
     "oauth_access_token_env": "LS_LOGIN_TOKEN"
   },
   "WES": {
-    "base_path": "https://<WES HOST>/ga4gh/wes/v1",
+    "base_path": "<WES API ROOT>",
     "oauth_access_token_env": "LS_LOGIN_TOKEN"
   }
 }
 ```
+
+For example, a proTES at `tes.example.org` has the API root
+`https://tes.example.org/ga4gh/tes/v1`.
 
 `oauth_access_token_env` tells the CLI to send the token in the variable
 `LS_LOGIN_TOKEN`. Leave it out for a service that doesn't need a token.
@@ -173,6 +184,17 @@ A TES task runs a command in a container. Here, the command is `wc`, and the
 service copies the text file into the container before the command starts.
 
 ### 6. Create the task
+
+Create an empty folder for the demo files, so that they don't overwrite
+files of yours, and work in it until the end of the tutorial:
+
+```bash
+mkdir ga4gh-cli-tutorial
+cd ga4gh-cli-tutorial
+```
+
+`mkdir` stops with `File exists` if the folder is already there: then
+choose another name.
 
 Write the task into a file and send it (see [Create a
 task](cli.md#create-a-task)):
@@ -240,8 +262,9 @@ output in the logs; then the result is `null`.
 A WES service runs a whole workflow. Here, the workflow is
 [`count-words.cwl`](tutorial-files/count-words.cwl), which does the same as
 the task, and writes the result to the file `counts.txt`. Check with the
-operators of your WES service that it runs CWL `v1.0`; if it runs other
-languages only, ask them for an example workflow instead.
+operators of your WES service that it runs CWL `v1.0`. If no WES service
+that you can use runs it, stop after part 1 and ask the operators for
+access to one that does: the steps below work only with CWL `v1.0`.
 
 ### 9. Start the workflow
 
@@ -289,12 +312,17 @@ of the workflow engine.
 
 ## 12. Clean up
 
-Remove the token from the terminal, and the demo files from your folder:
+Remove the token from the terminal, and the demo files and their folder:
 
 ```bash
 unset LS_LOGIN_TOKEN
 rm count-words-task.json count-words.json
+cd ..
+rmdir ga4gh-cli-tutorial
 ```
+
+`rmdir` removes only an empty folder, so it keeps any other file that you
+saved there.
 
 The configuration file holds no token, so you can keep it for next time.
 

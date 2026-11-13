@@ -34,7 +34,7 @@ You need:
 - **Access to a TES service that accepts requests without a token,** for
   part 1. Krini doesn't send your token to TES services yet (see [Run a
   task](krini.md#run-a-task)).
-- **Access to a WES service that runs CWL,** for part 2.
+- **Access to a WES service that runs CWL `v1.0`,** for part 2.
 
 Krini shows the services of the Cloud Registry, but doesn't give you access
 to them. To ask for services that you can use, write to
@@ -140,8 +140,9 @@ the task, and writes the result to the file `counts.txt`.
 3. Point at the info icon next to the service and check that it supports
    the workflow type `CWL` in the version `v1.0`.
 
-If no service that you can use runs CWL, ask its operator for an example
-workflow in a language that it runs, and use that in the next step.
+If no WES service that you can use runs CWL `v1.0`, stop after part 1 and
+ask the operators for access to one that does: the steps below work only
+with CWL `v1.0`.
 
 ### 7. Start the workflow
 
