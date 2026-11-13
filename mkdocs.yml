@@ -114,6 +114,7 @@ nav:
     - "User Stories": "partners-and-developers/user-stories.md"
   - Researchers:
     - "researchers/index.md"
+    - "Use Krini": "researchers/krini.md"
     - "Use the Command Line": "researchers/cli.md"
     - "Run Workflows Across Nodes": "researchers/federated-workflows.md"
     - "SPE with WESkit": "researchers/spe-with-weskit.md"
