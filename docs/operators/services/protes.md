@@ -21,5 +21,9 @@ that a new Node is used once it is registered and verified.
 - [Plugins](https://protes.readthedocs.io/en/latest/plugins/)
 
 !!! warning "Under construction"
-    The address of the ELIXIR On-Cloud's proTES, its plugins and the
-    registry that it reads are not documented yet.
+    The address of the ELIXIR On-Cloud's proTES, its plugins and whether it
+    reads its TES services from the Cloud Registry are not documented yet.
+    Its configuration (client, TES services and how it authenticates at
+    them) is tracked in [generic-issues#31][gi-31].
+
+[gi-31]: <https://github.com/elixir-cloud-aai/generic-issues/issues/31>
