@@ -6,8 +6,9 @@ This tutorial takes a Node from nothing to a TES service that is registered
 in the [Cloud Registry][elixir-cloud-registry], verified by its admins and
 reachable through the gateway of the ELIXIR On-Cloud. It is for the
 operators of compute centres; data centres follow [Tutorial: Onboard a Data
-Centre](data-centre-onboarding-tutorial.md). [Onboarding](onboarding.md) is the short checklist; this page goes
-through the same steps in detail, with the commands of each product.
+Centre](data-centre-onboarding-tutorial.md). [Onboarding](onboarding.md) is
+the short checklist; this page goes through the same steps in detail, with
+the commands of each product.
 
 The commands and values on this page come from the docs of each product, at
 the versions in the table below. For anything else, follow the linked
