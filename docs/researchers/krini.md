@@ -11,14 +11,11 @@ Krini has no user guide of its own; its
 [deployment guide](https://github.com/elixir-cloud-aai/krini/blob/staging/docs/deployment.md)
 are for developers and operators.
 
-!!! warning "Which Krini this page describes"
-    Krini is being rewritten. This page describes the new version, on the
-    branch `staging` of the [Krini repository][krini-repo] (commit
+!!! note "The new Krini"
+    This page describes the new Krini (branch `staging` of the [Krini
+    repository][krini-repo], commit
     [`c81a259`](https://github.com/elixir-cloud-aai/krini/commit/c81a259)).
-    The instance at <https://krini.rahtiapp.fi/> still runs the previous
-    version, which looks different, until the new version is released
-    there. Parts of the new version are still in progress, so details can
-    change; see [What's coming](#whats-coming).
+    Parts of it are still in progress; see [What's coming](#whats-coming).
 
 ## What works now
 
@@ -58,7 +55,9 @@ switches between light and dark mode. The button at the top left of the
 page hides and shows the sidebar.
 
 The start page, **Dashboard**, has no content yet; open **Tasks** or
-**Workflows** instead.
+**Workflows** instead. The **TEST SERVER** entry in the list of TES services
+and the info icon in the top bar don't work yet
+([krini#67](https://github.com/elixir-cloud-aai/krini/issues/67)).
 
 ## Log in
 
@@ -146,9 +145,10 @@ A TES task runs one or more container images, one after the other. See
 !!! warning "Outputs aren't sent yet"
     The task form of Krini doesn't pass the **Outputs** that you enter on to
     the TES service, so the service doesn't copy any result files out of the
-    container. To keep results for now, write them to a place that the
-    container can reach, e.g., from the command, or create the task through
-    the API.
+    container
+    ([cloud-components#574](https://github.com/elixir-cloud-aai/cloud-components/issues/574)).
+    To keep results for now, write them to a place that the container can
+    reach, e.g., from the command, or create the task through the API.
 
 ## Follow your tasks
 
@@ -215,8 +215,8 @@ what they mean).
 
 ### Read the details and outputs of a run
 
-The button **View Details** doesn't open anything in this version of Krini
-yet. To read the log and the outputs of a run, ask the WES service directly
+The button **View Details** doesn't open anything in Krini yet
+([krini#66](https://github.com/elixir-cloud-aai/krini/issues/66)). To read the log and the outputs of a run, ask the WES service directly
 with your access token:
 
 1. In Krini, select **Copy token to Dashboard** (see [Copy your access
@@ -286,6 +286,9 @@ These are planned in the [Krini repository][krini-repo], not available yet:
   ([krini#48](https://github.com/elixir-cloud-aai/krini/issues/48)), and
   which gateway plugins to use
   ([krini#49](https://github.com/elixir-cloud-aai/krini/issues/49)).
+- The details, log and outputs of a workflow run in Krini
+  ([krini#66](https://github.com/elixir-cloud-aai/krini/issues/66)), and task outputs from the task form
+  ([cloud-components#574](https://github.com/elixir-cloud-aai/cloud-components/issues/574)).
 - A prefilled demo task and workflow
   ([krini#57](https://github.com/elixir-cloud-aai/krini/issues/57)).
 
