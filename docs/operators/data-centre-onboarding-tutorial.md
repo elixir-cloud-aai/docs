@@ -42,11 +42,14 @@ hosting provider.
 You need:
 
 - **A cluster.** A Kubernetes or OpenShift cluster, a namespace of your
-  own for TRS-Filer, e.g., `trs`, and the right to create Deployments,
-  Services, ConfigMaps, Secrets, Jobs, Roles and RoleBindings in it (the
-  chart's configuration Job gets a Role in the namespace, see [Security
+  own for TRS-Filer, e.g., `trs`, and the right to create the chart's
+  objects in it: Deployments, Services, ConfigMaps, Secrets,
+  PersistentVolumeClaims, Jobs, ServiceAccounts, Roles, RoleBindings,
+  NetworkPolicies, and Ingresses or OpenShift Routes (the chart's
+  configuration Job gets a Role in the namespace, see [Security
   notes][trsfiler-security-notes]).
-- **Tools:** `kubectl`, [Helm](https://helm.sh/) 3, and, to check the
+- **Tools:** `kubectl`, [Helm](https://helm.sh/) 3, `openssl` (for the
+  passwords below), `curl`, and, to check the
   chart before you install it, the [GitHub CLI](https://cli.github.com/) and
   [cosign](https://docs.sigstore.dev/cosign/system_config/installation/) 3
   or later.
@@ -184,17 +187,24 @@ control][trsfiler-access-control]). Tokens for writes are planned
   Route][trsfiler-ingress] has examples for ingress-nginx and the
   OpenShift router; with other controllers or the Gateway API, use their
   means.
-- If your cluster enforces NetworkPolicies, let only the Ingress controller
-  or router connect to the app (`trs_filer.networkPolicy`), and trust
-  forwarded headers only from them (`trs_filer.forwardedAllowIps`; see
-  [Network policies][trsfiler-network-policies] and [Forwarded
-  headers][trsfiler-forwarded-headers]).
+- Pods in the cluster that reach the app's Service directly bypass the
+  restriction. On a cluster shared with workloads that you don't trust,
+  let only the Ingress controller or router connect to the app
+  (`trs_filer.networkPolicy`, which needs a network plugin that enforces
+  NetworkPolicies), and trust forwarded headers only from them
+  (`trs_filer.forwardedAllowIps`; see [Network
+  policies][trsfiler-network-policies] and [Forwarded
+  headers][trsfiler-forwarded-headers]). If your cluster can't enforce
+  NetworkPolicies, run TRS-Filer only where no untrusted workload can reach
+  it.
+
+The install below exposes the API only once the restriction is in the
+values, and checks it before you register the service.
 
 ### Install TRS-Filer
 
-Write your values into `my-values.yaml`. For an Ingress with a certificate
-of cert-manager (on OpenShift, set `trs_filer.ingress.enabled: false` to
-get a Route instead, see [Ingress and Route][trsfiler-ingress]):
+Write your values into `my-values.yaml`. Install first without exposing the
+API, so that it isn't public before the restriction of writes is in place:
 
 ```yaml
 host_name: trs.example.org
@@ -203,42 +213,64 @@ mongodb:
     existingSecret: trs-filer-mongodb-credentials
 trs_filer:
   ingress:
+    enabled: false
+  route:
+    enabled: false
+```
+
+Install the unpacked chart into the namespace, and check it from your
+machine:
+
+```bash
+helm upgrade --install trs-filer ./trs-filer -n trs -f my-values.yaml
+helm list -n trs
+kubectl get pods -n trs
+kubectl port-forward -n trs service/trs-filer 8080:8080 &
+sleep 2
+curl http://localhost:8080/ga4gh/trs/v2/service-info
+kill %1  # stop the port forward
+```
+
+The pods of TRS-Filer and MongoDB should be running, and the service info
+should show your values, with the type `org.ga4gh` / `trs`.
+
+### Expose the API
+
+Add the Ingress, with your restriction of writes, to `my-values.yaml`, e.g.,
+with a certificate of cert-manager:
+
+```yaml
+trs_filer:
+  ingress:
+    enabled: true
     className: nginx
     https:
       enabled: true
       issuer: letsencrypt-prod
-    # The restriction of writes of your Ingress controller, e.g., the
-    # annotations of the example in "Ingress and Route"
+    # Required: the restriction of writes for your Ingress controller,
+    # e.g., the annotations of the example in "Ingress and Route"
     annotations: {}
 ```
 
-Install the unpacked chart into the namespace:
+On OpenShift, keep the Ingress disabled and enable the Route instead
+(`trs_filer.route.enabled: true`), with the restriction in
+`trs_filer.route.annotations` (see [Ingress and Route][trsfiler-ingress]).
+If a proxy in front of the cluster restricts writes, configure it first.
+Then upgrade the release, and check from an address that isn't trusted
+that the service info is public and writes are refused:
 
 ```bash
 helm upgrade --install trs-filer ./trs-filer -n trs -f my-values.yaml
-```
-
-### Check the installation
-
-```bash
-helm list -n trs
-kubectl get pods -n trs
 curl https://trs.example.org/ga4gh/trs/v2/service-info
-```
-
-The pods of TRS-Filer and MongoDB should be running, and the service info
-should show your values, with the type `org.ga4gh` / `trs`. Then check that
-writes are refused from an address that isn't trusted:
-
-```bash
-curl -X POST https://trs.example.org/ga4gh/trs/v2/tools \
+curl -s -o /dev/null -w '%{http_code}\n' -X POST \
+    https://trs.example.org/ga4gh/trs/v2/tools \
     -H 'Content-Type: application/json' -d '{}'
 ```
 
-This request must fail with `403 Forbidden` (or the status that your
-Ingress controller or proxy returns for refused requests). If it answers
-with `400 Bad Request` or `200 OK` instead, it reached TRS-Filer: fix the
-restriction before you go on.
+The second request must print `403` (or the status that your Ingress
+controller or proxy returns for refused requests). If it prints `400` or
+`200`, the request reached TRS-Filer: disable the Ingress or Route again
+and fix the restriction before you go on.
 
 ## 4. Register the service
 
