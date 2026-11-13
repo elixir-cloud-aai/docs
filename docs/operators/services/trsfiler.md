@@ -13,6 +13,8 @@ to offer tools and workflows through the TRS API.
 
 - [TRS-Filer docs](https://trs-filer.readthedocs.io/)
 - [Deployment (Helm chart)](https://trs-filer.readthedocs.io/en/latest/deployment/)
+- [Tutorial: Onboard a Data Centre](../data-centre-onboarding-tutorial.md):
+  deploy, register and verify TRS-Filer as a data centre of the federation
 
 !!! warning "Under construction"
     The address of the ELIXIR On-Cloud's TRS-Filer and its contents are not
