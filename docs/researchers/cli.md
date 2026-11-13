@@ -12,10 +12,6 @@ what it does today and what is planned. For the full reference, see the
 [SDK's own docs](#where-to-go-next).
 
 !!! warning "What the CLI can't do yet"
-    - **No login command:** the CLI sends a token that you give it, but it
-      can't get one from LS Login itself. Get the token as [Log in with LS
-      Login](#log-in-with-ls-login) describes. A login command is planned
-      (see [What's coming](#whats-coming)).
     - **No ready-made binaries:** you build the CLI from its source code.
 
 ## What works now
@@ -164,10 +160,11 @@ WES, accept an LS Login access token. The CLI sends the token with every
 request to a service whose section names it, including the first request that
 checks the service (`service-info`).
 
-1. **Get an access token.** The CLI can't log in itself yet. Get a token as
-   [Using the APIs](../partners-and-developers/apis.md#2-get-an-access-token)
+1. **Get an access token** as [Using the
+   APIs](../partners-and-developers/apis.md#2-get-an-access-token)
    describes, and ask the operators of the service which LS Login clients it
-   accepts.
+   accepts. The CLI doesn't log in itself: it sends the token that you give
+   it.
 2. **Put the token into a variable** in the terminal where you use the CLI.
    The token isn't shown and isn't saved in the history of the shell:
 
@@ -184,11 +181,22 @@ checks the service (`service-info`).
 Access tokens expire after a while. When a service answers `401
 Unauthorized`, get a new token and repeat step 2.
 
+Every program that you start from this terminal while the variable is set can
+read the token. Start only the CLI and programs you trust there, and remove the
+token when you're done, or close the terminal:
+
+```bash
+unset LS_LOGIN_TOKEN
+```
+
 !!! danger "Keep the token out of the configuration file"
     The section can also hold the token itself (`oauth_access_token`), but
     then the file keeps it on disk. Use `oauth_access_token_env` instead.
     Send tokens only over `https`: if `base_path` of a remote service starts
-    with `http:`, the CLI warns, but still sends the token.
+    with `http:`, the CLI warns, but still sends the token, which anyone on
+    the network path can then read and use. Never name the variable in a
+    section whose `base_path` starts with `http:`, unless it points at your
+    own computer (`localhost`).
 
 If the variable isn't set, the CLI stops before it sends a request, for
 example with `Environment variable 'LS_LOGIN_TOKEN' is not set; it is named by
@@ -381,8 +389,11 @@ An error from `tes create` doesn't always mean that there is no task: if the
 service accepted the task but its answer got lost, for example in a timeout,
 the task runs anyway. The CLI sends a task only once, and its error says so
 when the task may have been accepted. Before you send it again, check with
-`ga4gh-cli tes list -n "<name of the task>"` whether it exists, so that it
-doesn't run twice.
+`ga4gh-cli tes list -n "<name of the task>"` whether it exists. A task that
+the service has just accepted may take a moment to show up in the list, so
+an empty list right after the error doesn't prove that there is no task:
+wait a minute and check again. Every task you send again that the service
+had accepted after all runs twice.
 
 ## Run workflows with WES
 
@@ -431,7 +442,9 @@ ga4gh-cli wes run main.cwl --type CWL --type_version v1.2 \
 
 As with `tes create`, the CLI checks the input before it contacts the service
 and sends a run only once; its error says so when the run may have started
-anyway. Check with `wes list` before you start it again.
+anyway. Check with `wes list` before you start it again, and, as with tasks,
+check again after a minute if the run isn't listed yet: a run you start again
+that had started after all runs twice.
 
 ### Follow a run
 
@@ -566,7 +579,6 @@ they arrive; this page will be updated when they do.
 
 | Feature | Status |
 |---|---|
-| Log in with LS Login from the CLI (OIDC device flow), without getting a token yourself | Planned: [ga4gh-sdk#90](https://github.com/ga4gh/ga4gh-sdk/issues/90). |
 | Ready-made binaries, without Rust | Planned: [ga4gh-sdk#91](https://github.com/ga4gh/ga4gh-sdk/issues/91). |
 | A container image of the CLI | Planned: [ga4gh-sdk#189](https://github.com/ga4gh/ga4gh-sdk/issues/189). |
 | Download the logs and output files of TES tasks | Planned: [ga4gh-sdk#188](https://github.com/ga4gh/ga4gh-sdk/issues/188). |
