@@ -17,26 +17,33 @@ specification. Checked in November 2026.
 | Product | API | Implemented version | Current version | Docs |
 | --- | --- | --- | --- | --- |
 | [proTES](https://github.com/elixir-cloud-aai/proTES) | [TES][ga4gh-tes], for tasks | [1.1.0](https://github.com/elixir-cloud-aai/proTES/blob/dev/pro_tes/api/20221114.117cd92.task_execution_service.openapi.yaml) | [1.1.0](https://github.com/ga4gh/task-execution-schemas/releases/tag/v1.1) | [proTES](https://protes.readthedocs.io/en/latest/) |
-| [TESK][tesk] | [TES][ga4gh-tes], for tasks | [1.0.0](https://github.com/ga4gh/task-execution-schemas/blob/cafac9c47fddfa512e844c96ee4bcb2fb63d90c6/openapi/task_execution_service.openapi.yaml) (submodule of [tesk-api](https://github.com/elixir-cloud-aai/tesk-api)) | [1.1.0](https://github.com/ga4gh/task-execution-schemas/releases/tag/v1.1) | [TESK](https://tesk.readthedocs.io/en/latest/) |
+| [TESK][tesk] | [TES][ga4gh-tes], for tasks | [1.0.0](https://github.com/ga4gh/task-execution-schemas/blob/cafac9c47fddfa512e844c96ee4bcb2fb63d90c6/openapi/task_execution_service.openapi.yaml) | [1.1.0](https://github.com/ga4gh/task-execution-schemas/releases/tag/v1.1) | [TESK](https://tesk.readthedocs.io/en/latest/) |
 | [Funnel][funnel] | [TES][ga4gh-tes], for tasks | not stated: [a commit after 1.1.0](https://github.com/ga4gh/task-execution-schemas/blob/28a83a622e7d84fd4b8d438a6b2e99b0db2e5d5b/openapi/task_execution_service.openapi.yaml) | [1.1.0](https://github.com/ga4gh/task-execution-schemas/releases/tag/v1.1) | [Funnel][funnel] |
 | [Poiesis](https://github.com/JaeAeich/poiesis) | [TES][ga4gh-tes], for tasks | not stated: [a commit after 1.1.0](https://github.com/JaeAeich/poiesis/blob/dev/poiesis/api/tes/spec/c4c17c9.openapi.yaml) | [1.1.0](https://github.com/ga4gh/task-execution-schemas/releases/tag/v1.1) | [Poiesis](../operators/services/poiesis.md) |
 | [proWES](https://github.com/elixir-cloud-aai/proWES) | [WES][ga4gh-wes], for workflows | [1.0.1](https://github.com/elixir-cloud-aai/proWES/blob/dev/pro_wes/api/20201124.tag_1_0_1.workflow_execution_service.openapi.yaml) | [1.1.0](https://github.com/ga4gh/workflow-execution-service-schemas/releases/tag/1.1.0) | see the README |
+| [Conquest](https://github.com/anuragxxd/conquest) | [WES][ga4gh-wes], for workflows | [1.1](https://github.com/anuragxxd/conquest/blob/master/README.md) (README; no specification file) | [1.1.0](https://github.com/ga4gh/workflow-execution-service-schemas/releases/tag/1.1.0) | see the README |
+| [WESkit](https://gitlab.com/one-touch-pipeline/weskit/api) | [WES][ga4gh-wes], for workflows | [1.1.0](https://gitlab.com/one-touch-pipeline/weskit/api/-/blob/master/weskit/api/workflow_execution_service_1.1.0.yaml) | [1.1.0](https://github.com/ga4gh/workflow-execution-service-schemas/releases/tag/1.1.0) | [WESkit](https://gitlab.com/one-touch-pipeline/weskit/documentation) |
 | [CWL-WES](https://github.com/elixir-cloud-aai/cwl-WES) | [WES][ga4gh-wes], for workflows | [1.0.0](https://github.com/elixir-cloud-aai/cwl-WES/blob/dev/cwl_wes/api/20181010.be85140.workflow_execution_service.swagger.yaml) | [1.1.0](https://github.com/ga4gh/workflow-execution-service-schemas/releases/tag/1.1.0) | see the README |
 | [DRS-Filer](https://github.com/elixir-cloud-aai/drs-filer) | [DRS][ga4gh-drs], for data | [1.1.0](https://github.com/elixir-cloud-aai/drs-filer/blob/dev/drs_filer/api/20200622.383121d.data_repository_service.swagger.yaml) | [1.5.0](https://github.com/ga4gh/data-repository-service-schemas/releases/tag/drs-1.5.0) | see the README |
-| [TRS-Filer](https://github.com/elixir-cloud-aai/trs-filer) | [TRS][ga4gh-trs], for tools and workflows | [2.0.2](https://github.com/elixir-cloud-aai/trs-filer/blob/dev/trs_filer/api/20250902.4854e2f.openapi.yaml) | [2.0.2](https://github.com/ga4gh/tool-registry-service-schemas/releases/tag/2.0.2) | [TRS-Filer](https://trs-filer.readthedocs.io/en/latest/) |
+| [TRS-Filer](https://github.com/elixir-cloud-aai/trs-filer) | [TRS][ga4gh-trs], for tools and workflows | [2.1.0](https://github.com/elixir-cloud-aai/trs-filer/blob/dev/trs_filer/api/20250902.4854e2f.openapi.yaml) | [2.0.2](https://github.com/ga4gh/tool-registry-service-schemas/releases/tag/2.0.2) | [TRS-Filer](https://trs-filer.readthedocs.io/en/latest/) |
 | [Cloud Registry](https://github.com/elixir-cloud-aai/cloud-registry) | [Service Registry][ga4gh-service-registry], for finding services | [1.0.0](https://github.com/elixir-cloud-aai/cloud-registry/blob/dev/cloud_registry/api/20201108.e0358db.openapi.yaml) | [1.0.0](https://github.com/ga4gh-discovery/ga4gh-service-registry/releases/tag/1.0.0) | [Cloud Registry](https://cloud-registry.readthedocs.io/en/latest/) |
 
 Notes on the table:
 
-- **TRS-Filer:** its specification file states `2.1.0`, but it is the
-  specification of the TRS release 2.0.2 (commit `4854e2f`); TRS 2.1.0 is
-  not released.
+- **TRS-Filer:** the specification file of the TRS release 2.0.2 (commit
+  `4854e2f`) states the version `2.1.0`, and there is no release 2.1.0 (see
+  [ga4gh/tool-registry-service-schemas#295](https://github.com/ga4gh/tool-registry-service-schemas/issues/295)).
+  The table takes the specification file as the source of truth and lists
+  `2.1.0`.
 - **Funnel and Poiesis:** neither states a TES release. Both build on a
   commit of the TES repository after the release 1.1.0 (Funnel, now in the
   `calypr` organisation: `28a83a6`, as a Git submodule; Poiesis: `c4c17c9`),
   whose specification file states `1.1.0`.
-- **TESK:** the TES API is implemented by tesk-api, which includes the TES
-  specification as a Git submodule.
+- **TESK:** the TES API is implemented by
+  [tesk-api](https://github.com/elixir-cloud-aai/tesk-api), which includes
+  the TES specification as a Git submodule.
+- **Conquest:** its README states WES 1.1 (and TES 1.1 for its internal
+  task backend); the repository has no specification file.
 
 Check the product's docs for the current state. Some products deviate from
 the specification in details: the docs of the product list the deviations
