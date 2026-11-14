@@ -22,6 +22,8 @@
 # survive a VM reboot: run start again.
 
 set -euo pipefail
+# The hub runs for days and needs no access token of the TES: don't pass one on to it.
+unset TES_TOKEN
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 STATE_DIR="${HUB_STATE_DIR:-$HERE/.state}"

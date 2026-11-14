@@ -20,8 +20,14 @@
 #   selftest   short task without tunnel (pod.sh sees SELFTEST=1); fails unless SELFTEST_OK
 #   print      the TES request JSON
 #   setup | submit | cancel | watch    single steps, used by up/down
+#
+# TES_TOKEN: if set, every request to the TES carries it as a bearer token (see
+# tes-api.sh). The keep-alive loop keeps the token it started with: run up again with a
+# new token to replace the loop.
 
 set -euo pipefail
+# Keep the access token from the programs that this script runs (see tes-api.sh).
+if [[ -n "${TES_TOKEN:-}" ]]; then export -n TES_TOKEN; fi
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 [[ $# -ge 2 ]] || { sed -n '2,/^set -euo/p' "$0" | sed '$d; s/^# \{0,1\}//'; exit 1; }
@@ -37,7 +43,8 @@ source "$DIR/service.conf"
 CONF_KEYS="$(sed -n 's/^[[:space:]]*\([A-Za-z_][A-Za-z0-9_]*\)=.*/\1/p' "$DIR/service.conf")"
 
 # ---- configuration -----------------------------------------------------------------------
-TES_URL="${TES_URL:-https://csc-tesk-noauth.rahtiapp.fi}"           # TESK @ ELIXIR-FI
+# TESK @ ELIXIR-FI. To be updated: the address of the instance with token access.
+TES_URL="${TES_URL:-https://csc-tesk-noauth.rahtiapp.fi}"
 TES_API="${TES_URL%/}/ga4gh/tes/v1"
 HUB="${HUB:-$HERE/tes-hub.sh}"                                      # shared tunnel hub
 : "${NAME:?NAME missing in service.conf}" "${IMAGE:?IMAGE missing in service.conf}" "${PORT:?PORT missing in service.conf}"
@@ -51,12 +58,14 @@ WATCH_INTERVAL="${WATCH_INTERVAL:-60}"
 # ------------------------------------------------------------------------------------------
 
 die() { echo "ERROR: $*" >&2; exit 1; }
+# shellcheck source=SCRIPTDIR/tes-api.sh
+source "$HERE/tes-api.sh"
 json_get() { python3 -c 'import json,sys; d=json.load(sys.stdin); print(eval(sys.argv[1], {"d": d}))' "$1"; }
 ID_FILE="$STATE_DIR/task"
 WATCH_PID="$STATE_DIR/watch.pid"
 task_id() { [[ -s "$ID_FILE" ]] && cat "$ID_FILE" || true; }
 need_id() { [[ -s "$ID_FILE" ]] || die "not submitted"; cat "$ID_FILE"; }
-task_state() { curl -fsS -m 30 "$TES_API/tasks/$1?view=MINIMAL" | json_get 'd["state"]'; }
+task_state() { tes_curl -m 30 "$TES_API/tasks/$1?view=MINIMAL" | json_get 'd["state"]'; }
 current_state() { local id; id="$(task_id)"; [[ -n "$id" ]] && { task_state "$id" 2>/dev/null || echo UNREACHABLE; } || echo NONE; }
 is_done() { [[ "$1" =~ ^(NONE|COMPLETE|EXECUTOR_ERROR|SYSTEM_ERROR|CANCELED|PREEMPTED)$ ]]; }
 tunnel_up() { [[ "$(ss -tln 2>/dev/null)" == *"127.0.0.1:$HUB_PORT "* ]]; }
@@ -76,7 +85,7 @@ build_task() {
   local HUB_URL CHISEL_URL HUB_FINGERPRINT; eval "$("$HUB" env)"
   # service.conf values (minus the launcher's own keys) become the pod's environment.
   for k in $CONF_KEYS PORT HUB_PORT; do
-    [[ $k =~ ^(NAME|IMAGE|POD_SHELL|RAM_GB|CPU_CORES|TES_URL)$ ]] || printf '%s\0%s\0' "$k" "${!k}"
+    [[ $k =~ ^(NAME|IMAGE|POD_SHELL|RAM_GB|CPU_CORES|TES_URL|TES_TOKEN)$ ]] || printf '%s\0%s\0' "$k" "${!k}"
   done > "$STATE_DIR/pod.env"
   export HUB_AUTH HUB_URL CHISEL_URL HUB_FINGERPRINT NAME IMAGE POD_SHELL RAM_GB CPU_CORES
   SELFTEST="${selftest:+1}" ENV_FILE="$STATE_DIR/pod.env" \
@@ -100,7 +109,7 @@ PY
 }
 
 post_task() {
-  build_task "$@" | curl -fsS --connect-timeout 10 -m 60 -X POST -H 'Content-Type: application/json' \
+  build_task "$@" | tes_curl --connect-timeout 10 -m 60 -X POST -H 'Content-Type: application/json' \
     --data-binary @- "$TES_API/tasks" | json_get 'd["id"]'
 }
 
@@ -131,7 +140,7 @@ cmd_submit() {
 
 cmd_cancel() {
   local id; id="$(task_id)"
-  [[ -n "$id" ]] && curl -fsS -m 30 -X POST "$TES_API/tasks/$id:cancel" >/dev/null && echo "canceled $id" || true
+  [[ -n "$id" ]] && tes_curl -m 30 -X POST "$TES_API/tasks/$id:cancel" >/dev/null && echo "canceled $id" || true
 }
 
 cmd_status() {
@@ -148,16 +157,20 @@ cmd_selftest() {
     is_done "$(task_state "$id" 2>/dev/null || echo UNKNOWN)" && break
     sleep 10
   done
-  out="$(curl -fsS -m 60 "$TES_API/tasks/$id?view=FULL" | print_logs)"; echo "$out"
+  out="$(tes_curl -m 60 "$TES_API/tasks/$id?view=FULL" | print_logs)"; echo "$out"
   [[ "$out" == "state: COMPLETE"* && "$out" == *SELFTEST_OK* ]] || die "selftest failed"
 }
 
 cmd_watch() {
   echo $$ > "$WATCH_PID"
-  trap 'rm -f "$WATCH_PID"' EXIT
+  trap '[[ "$(cat "$WATCH_PID" 2>/dev/null)" != "$$" ]] || rm -f "$WATCH_PID"' EXIT
+  # SIGTERM (stop_watch) ends the loop between two rounds only, never inside lock_out.
+  local stop=""; trap 'stop=1' TERM
   echo "$(date -Is) keeping $NAME alive on $TES_URL (every ${WATCH_INTERVAL}s)"
   local state
   while true; do
+    # A rejected or expired token: log why (tes_check), don't resubmit.
+    if ! tes_check; then sleep "$WATCH_INTERVAL" & wait $! || true; [[ -z "$stop" ]] || exit 0; continue; fi
     state="$(current_state)"
     if is_done "$state"; then
       echo "$(date -Is) task $(task_id) is $state, resubmitting"
@@ -165,7 +178,9 @@ cmd_watch() {
       if tunnel_up; then echo "$(date -Is) port $HUB_PORT still taken, locking the old pod out"; lock_out || true; fi
       (cmd_submit) || true
     fi
-    sleep "$WATCH_INTERVAL"
+    [[ -z "$stop" ]] || exit 0
+    sleep "$WATCH_INTERVAL" & wait $! || true
+    [[ -z "$stop" ]] || exit 0
   done
 }
 
@@ -173,8 +188,10 @@ cmd_up() {
   [[ -n "$HUB_AUTH" ]] || cmd_setup
   local state i; state="$(current_state)"
   if is_done "$state"; then cmd_submit; else echo "task $(task_id) is $state, not resubmitting"; fi
+  # The loop keeps the token it started with: replace it, so that it gets the current one.
+  if watching && [[ -n "${TES_TOKEN:-}" ]]; then stop_watch; fi
   if ! watching; then
-    setsid -f "$HERE/tes-service.sh" "$DIR" watch >> "$STATE_DIR/watch.log" 2>&1 < /dev/null
+    TES_TOKEN="${TES_TOKEN:-}" setsid -f "$HERE/tes-service.sh" "$DIR" watch >> "$STATE_DIR/watch.log" 2>&1 < /dev/null
     echo "keep-alive loop started (log: $STATE_DIR/watch.log)"
   fi
   echo "waiting for the tunnel (usually 1-3 minutes; Ctrl-C is safe, the task keeps running)"
@@ -185,22 +202,41 @@ cmd_up() {
   echo "and open http://localhost:$HUB_PORT"
 }
 
+# Stops the keep-alive loop and waits until it has ended (it finishes a round it has
+# begun), so that it can't remove the pid file of a new loop.
+stop_watch() {
+  local pid i; pid="$(cat "$WATCH_PID")"
+  kill "$pid" || return 0
+  for ((i = 0; i < 1500; i++)); do kill -0 "$pid" 2>/dev/null || break; sleep 0.1; done
+  ! kill -0 "$pid" 2>/dev/null || die "keep-alive loop $pid still running, try again later"
+  rm -f "$WATCH_PID"; echo "keep-alive loop stopped"
+}
+
 cmd_down() {
-  if watching; then kill "$(cat "$WATCH_PID")" && rm -f "$WATCH_PID" && echo "keep-alive loop stopped"; fi
+  if watching; then stop_watch; fi
   # Cancel marks the task CANCELED but the pod keeps running: lock it out of the hub first,
   # so that an interrupted down never leaves the old pod connected.
   lock_out
-  cmd_cancel
+  # The pods are locked out already; cancelling needs the TES.
+  if tes_check; then cmd_cancel
+  elif [[ -n "$(task_id)" ]]; then echo "WARNING: task $(task_id) not canceled; run: $SELF cancel" >&2; fi
 }
+
+# Commands that use the TES fail early if it rejects the token (or its absence). down
+# locks the pods out first, and needs the TES only to cancel.
+case "$CMD" in
+  up|submit|logs|cancel|selftest) tes_check || die "cannot use the TES at $TES_URL" ;;
+  status) tes_check || TES_REFUSED=1 ;;
+esac
 
 case "$CMD" in
   up)       cmd_up ;;
   down)     cmd_down ;;
-  restart)  cmd_down; cmd_up ;;
+  restart)  tes_check || die "cannot use the TES at $TES_URL"; cmd_down; cmd_up ;;
   setup)    cmd_setup ;;
   submit)   cmd_submit ;;
-  status)   cmd_status ;;
-  logs)     id="$(need_id)"; curl -fsS -m 60 "$TES_API/tasks/$id?view=FULL" | print_logs ;;
+  status)   cmd_status; [[ -z "${TES_REFUSED:-}" ]] ;;
+  logs)     id="$(need_id)"; tes_curl -m 60 "$TES_API/tasks/$id?view=FULL" | print_logs ;;
   cancel)   cmd_cancel ;;
   watch)    cmd_watch ;;
   selftest) cmd_selftest ;;

@@ -25,11 +25,17 @@
 #   ./omop-tesk-fi.sh selftest db|atlas  # short task without tunnel; fails unless SELFTEST_OK
 #   ./omop-tesk-fi.sh print <role>       # print the TES request JSON
 #
-# SECURITY: csc-tesk-noauth is unauthenticated. Anyone can read a task with ?view=FULL,
-# including the hub credentials and DB password in it. The hub only lets those credentials
-# open the three ports above, and the DB holds synthetic demo data only. Don't use real data.
+# TES_TOKEN: if set, every request to the TES carries it as a bearer token (see
+# ../tes-hub/tes-api.sh). The keep-alive loop keeps the token it started with: run up
+# again with a new token to replace the loop.
+#
+# SECURITY: whoever can read a task with ?view=FULL (on a TES without tokens: anyone) sees
+# the hub credentials and DB password in it. The hub only lets those credentials open the
+# three ports above, and the DB holds synthetic demo data only. Don't use real data.
 
 set -euo pipefail
+# Keep the access token from the programs that this script runs (see tes-api.sh).
+if [[ -n "${TES_TOKEN:-}" ]]; then export -n TES_TOKEN; fi
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 STATE_DIR="${STATE_DIR:-$HERE/.state}"
@@ -38,7 +44,8 @@ mkdir -p "$STATE_DIR"; chmod 700 "$STATE_DIR"
 [[ -f "$STATE_DIR/config" ]] && source "$STATE_DIR/config"
 
 # ---- configuration -----------------------------------------------------------------------
-TES_URL="${TES_URL:-https://csc-tesk-noauth.rahtiapp.fi}"           # TESK @ ELIXIR-FI
+# TESK @ ELIXIR-FI. To be updated: the address of the instance with token access.
+TES_URL="${TES_URL:-https://csc-tesk-noauth.rahtiapp.fi}"
 TES_API="${TES_URL%/}/ga4gh/tes/v1"
 HUB="${HUB:-$HERE/../tes-hub/tes-hub.sh}"                           # shared tunnel hub
 HUB_ATLAS_PORT="${HUB_ATLAS_PORT:-8080}"                            # -> http://localhost:8080
@@ -65,10 +72,12 @@ ROLES=(db webapi atlas)
 die() { echo "ERROR: $*" >&2; exit 1; }
 need() { command -v "$1" >/dev/null || die "'$1' is required"; }
 need curl; need python3
+# shellcheck source=SCRIPTDIR/../tes-hub/tes-api.sh
+source "$(dirname "$HUB")/tes-api.sh"
 json_get() { python3 -c 'import json,sys; d=json.load(sys.stdin); print(eval(sys.argv[1], {"d": d}))' "$1"; }
 id_file() { echo "$STATE_DIR/task_$1"; }
 task_id() { [[ -s "$(id_file "$1")" ]] && cat "$(id_file "$1")" || true; }
-task_state() { curl -fsS -m 30 "$TES_API/tasks/$1?view=MINIMAL" | json_get 'd["state"]'; }
+task_state() { tes_curl -m 30 "$TES_API/tasks/$1?view=MINIMAL" | json_get 'd["state"]'; }
 WATCH_PID="$STATE_DIR/watch.pid"
 # The pid must still be this stack's loop: after a reboot, another process may have it.
 watching() {
@@ -138,7 +147,7 @@ PY
 submit_role() {
   local role="$1" resp id
   [[ "$("$HUB" status)" == *"hub running"* ]] || die "hub not running (run: setsid -f $HUB start)"
-  resp="$(build_task "$role" | curl -fsS --connect-timeout 10 -m 60 -X POST -H 'Content-Type: application/json' \
+  resp="$(build_task "$role" | tes_curl --connect-timeout 10 -m 60 -X POST -H 'Content-Type: application/json' \
     --data-binary @- "$TES_API/tasks")" || die "submitting $role to $TES_API failed"
   id="$(json_get 'd["id"]' <<<"$resp")"
   echo "$id" > "$(id_file "$role")"
@@ -147,7 +156,7 @@ submit_role() {
 
 cancel_role() {
   local id; id="$(task_id "$1")"
-  [[ -n "$id" ]] && curl -fsS -m 30 -X POST "$TES_API/tasks/$id:cancel" >/dev/null && echo "$1: canceled $id" || true
+  [[ -n "$id" ]] && tes_curl -m 30 -X POST "$TES_API/tasks/$id:cancel" >/dev/null && echo "$1: canceled $id" || true
 }
 
 roles_arg() { if [[ -z "${1:-}" || "$1" == all ]]; then echo "${ROLES[@]}"; else check_role "$1"; echo "$1"; fi; }
@@ -202,8 +211,10 @@ cmd_up() {
     else submit_role "$r"; fi
   done
   unlock
+  # The loop keeps the token it started with: replace it, so that it gets the current one.
+  if watching && [[ -n "${TES_TOKEN:-}" ]]; then lock; stop_watch; unlock; fi
   if ! watching; then
-    setsid -f "$HERE/omop-tesk-fi.sh" watch >> "$STATE_DIR/watch.log" 2>&1 < /dev/null
+    TES_TOKEN="${TES_TOKEN:-}" setsid -f "$HERE/omop-tesk-fi.sh" watch >> "$STATE_DIR/watch.log" 2>&1 < /dev/null
     echo "keep-alive loop started (log: $STATE_DIR/watch.log)"
   fi
   echo "waiting for Atlas, WebAPI and the data source (first start 10-15 minutes; Ctrl-C is safe, the tasks keep running)"
@@ -225,19 +236,31 @@ cmd_up() {
 # a hub restart lock them out. All three roles share the hub user, so this replaces the stack.
 lock_out() { rm -f "$STATE_DIR/config"; HUB_AUTH="" DB_PASSWORD=""; cmd_setup; "$HUB" restart; }
 
+# Stops the keep-alive loop and waits until it has ended, so that it can't remove the pid
+# file of a new loop.
+stop_watch() {
+  local pid i; pid="$(cat "$WATCH_PID")"
+  kill "$pid" || return 0
+  for ((i = 0; i < 1500; i++)); do kill -0 "$pid" 2>/dev/null || break; sleep 0.1; done
+  ! kill -0 "$pid" 2>/dev/null || die "keep-alive loop $pid still running, try again later"
+  rm -f "$WATCH_PID"; echo "keep-alive loop stopped"
+}
+
 # down: stop the loop first (it would resubmit), lock the pods out before cancelling, so that
-# an interrupted down never leaves them connected.
+# an interrupted down never leaves them connected. Cancelling needs the TES.
 cmd_down() {
-  if watching; then kill "$(cat "$WATCH_PID")" && rm -f "$WATCH_PID" && echo "keep-alive loop stopped"; fi
   lock
+  if watching; then stop_watch; fi
   lock_out
-  local r; for r in "${ROLES[@]}"; do cancel_role "$r"; done
+  local r
+  if tes_check; then for r in "${ROLES[@]}"; do cancel_role "$r"; done
+  else echo "WARNING: tasks not canceled; run: $0 cancel" >&2; fi
   unlock
 }
 
 cmd_logs() {
   local id; check_role "${1:-}"; id="$(task_id "$1")"; [[ -n "$id" ]] || die "$1 not submitted"
-  curl -fsS -m 60 "$TES_API/tasks/$id?view=FULL" | json_get \
+  tes_curl -m 60 "$TES_API/tasks/$id?view=FULL" | json_get \
     '"state: " + d["state"] + "\n" + "\n".join((l.get("stdout") or "") + (l.get("stderr") or "") for t in d.get("logs",[]) for l in t.get("logs",[]))'
 }
 
@@ -245,7 +268,7 @@ cmd_selftest() {
   local role="${1:-}" resp id state i out
   [[ "$role" == db || "$role" == atlas ]] || die "usage: $0 selftest db|atlas"
   [[ -n "$HUB_AUTH" && -n "$DB_PASSWORD" ]] || cmd_setup
-  resp="$(build_task "$role" selftest | curl -fsS --connect-timeout 10 -m 60 -X POST \
+  resp="$(build_task "$role" selftest | tes_curl --connect-timeout 10 -m 60 -X POST \
     -H 'Content-Type: application/json' --data-binary @- "$TES_API/tasks")" || die "submitting to $TES_API failed"
   id="$(json_get 'd["id"]' <<<"$resp")"; echo "selftest $role: $id"
   for ((i = 0; i < 90; i++)); do
@@ -253,7 +276,7 @@ cmd_selftest() {
     case "$state" in COMPLETE|EXECUTOR_ERROR|SYSTEM_ERROR|CANCELED) break ;; esac
     sleep 10
   done
-  out="$(curl -fsS -m 60 "$TES_API/tasks/$id?view=FULL" | json_get \
+  out="$(tes_curl -m 60 "$TES_API/tasks/$id?view=FULL" | json_get \
     '"state: " + d["state"] + "\n" + "\n".join((l.get("stdout") or "") + (l.get("stderr") or "") for t in d.get("logs",[]) for l in t.get("logs",[]))')"
   echo "$out"
   [[ "$out" == "state: COMPLETE"* && "$out" == *SELFTEST_OK* ]] || die "selftest $role failed"
@@ -271,10 +294,12 @@ replace_stack() {
 
 cmd_watch() {
   echo $$ > "$WATCH_PID"
-  trap 'rm -f "$WATCH_PID"' EXIT
+  trap '[[ "$(cat "$WATCH_PID" 2>/dev/null)" != "$$" ]] || rm -f "$WATCH_PID"' EXIT
   echo "$(date -Is) keeping OMOP tasks alive on $TES_URL (every ${WATCH_INTERVAL}s)"
   local r id state
   while true; do
+    # A rejected or expired token: log why (tes_check), don't resubmit.
+    if ! tes_check; then sleep "$WATCH_INTERVAL"; continue; fi
     lock
     for r in "${ROLES[@]}"; do
       id="$(task_id "$r")"; state=NONE
@@ -296,13 +321,20 @@ cmd_watch() {
   done
 }
 
+# Commands that use the TES fail early if it rejects the token (or its absence). down
+# locks the pods out first, and needs the TES only to cancel.
+case "${1:-}" in
+  up|submit|logs|cancel|selftest) tes_check || die "cannot use the TES at $TES_URL" ;;
+  status) tes_check || TES_REFUSED=1 ;;
+esac
+
 case "${1:-}" in
   up)       cmd_up ;;
   down)     cmd_down ;;
-  restart)  cmd_down; cmd_up ;;
+  restart)  tes_check || die "cannot use the TES at $TES_URL"; cmd_down; cmd_up ;;
   setup)    cmd_setup ;;
   submit)   lock; for r in $(roles_arg "${2:-}"); do submit_role "$r"; done; unlock ;;
-  status)   cmd_status ;;
+  status)   cmd_status; [[ -z "${TES_REFUSED:-}" ]] ;;
   logs)     cmd_logs "${2:-}" ;;
   cancel)   for r in $(roles_arg "${2:-}"); do cancel_role "$r"; done ;;
   watch)    cmd_watch ;;

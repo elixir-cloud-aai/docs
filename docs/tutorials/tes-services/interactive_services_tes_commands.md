@@ -18,6 +18,10 @@ mkdir -p ~/eoc_services/{tes-hub,omop-tesk/pod,rstudio-tesk} && cd ~/eoc_service
 cat > tes-hub/tes-hub.sh <<'__TES_SERVICES_EOF__'
 --8<-- "docs/tutorials/tes-services/tes-hub/tes-hub.sh"
 __TES_SERVICES_EOF__
+# requests to the TES service, with the access token in TES_TOKEN
+cat > tes-hub/tes-api.sh <<'__TES_SERVICES_EOF__'
+--8<-- "docs/tutorials/tes-services/tes-hub/tes-api.sh"
+__TES_SERVICES_EOF__
 # code sent into every task: downloads chisel, opens the tunnel
 cat > tes-hub/common.sh <<'__TES_SERVICES_EOF__'
 --8<-- "docs/tutorials/tes-services/tes-hub/common.sh"
@@ -83,6 +87,19 @@ location /tes-tunnel/ {
 ```bash
 # on the proxy (194.94.4.89): apply the location block
 sudo systemctl reload nginx
+```
+
+## Set the access token
+
+An LS Login access token, of an account in the compute group, lives for
+about 4 hours: see [Get an access
+token](interactive_services_tes.md#get-an-access-token).
+
+```bash
+# paste an LS Login access token (account in ECP_CLN:EOC-Compute); not shown, not in the history
+read -rsp 'TES token: ' TES_TOKEN && echo && export TES_TOKEN
+# check it: lists one task, or curl fails (error 22) with 401 (invalid or expired token) or 403 (not in the compute group)
+printf 'Authorization: Bearer %s\n' "$TES_TOKEN" | curl -q -fsS -H @- "${TES_URL:-https://csc-tesk-noauth.rahtiapp.fi}/ga4gh/tes/v1/tasks?view=MINIMAL&page_size=1"
 ```
 
 ## Start Atlas with OMOP demo data
@@ -185,14 +202,19 @@ cd ~/eoc_services
 # RStudio: show the TES request
 ./tes-hub/tes-service.sh rstudio-tesk print
 
+# token expired (after about 4 hours, 401 in .state/watch.log): set a new token as in
+# "Set the access token", then run up again, which gives the keep-alive loop the new token
+./omop-tesk/omop-tesk-fi.sh up
+./tes-hub/tes-service.sh rstudio-tesk up
+
 # JupyterLab: status / logs / restart / down
 ./tes-hub/tes-service.sh jupyter-tesk status
 ./tes-hub/tes-service.sh jupyter-tesk logs
 ./tes-hub/tes-service.sh jupyter-tesk restart
 ./tes-hub/tes-service.sh jupyter-tesk down
 
-# list all tasks on TESK @ ELIXIR-FI
-curl -fsS "https://csc-tesk-noauth.rahtiapp.fi/ga4gh/tes/v1/tasks?view=MINIMAL"
+# list all tasks on the TES service (the token goes through stdin, not the command line)
+printf 'Authorization: Bearer %s\n' "$TES_TOKEN" | curl -q -fsS -H @- "${TES_URL:-https://csc-tesk-noauth.rahtiapp.fi}/ga4gh/tes/v1/tasks?view=MINIMAL"
 ```
 
 ## After a reboot
@@ -200,7 +222,7 @@ curl -fsS "https://csc-tesk-noauth.rahtiapp.fi/ga4gh/tes/v1/tasks?view=MINIMAL"
 ```bash
 # start the hub again; running tasks reconnect within ~30 seconds
 ./tes-hub/tes-hub.sh start
-# restart the keep-alive loops of the single-container services
+# restart the keep-alive loops of the single-container services (set the access token first)
 ./tes-hub/tes-service.sh rstudio-tesk up
 ./tes-hub/tes-service.sh jupyter-tesk up
 ```
@@ -208,8 +230,9 @@ curl -fsS "https://csc-tesk-noauth.rahtiapp.fi/ga4gh/tes/v1/tasks?view=MINIMAL"
 ## Settings
 
 ```bash
-# TES instance: TESK @ ELIXIR-FI (default)
+# TES instance: TESK @ ELIXIR-FI (default; will change to the address with tokens)
 export TES_URL=https://csc-tesk-noauth.rahtiapp.fi
+# access token: see "Set the access token" (never as TES_TOKEN=... on the command line)
 # hub port and chisel version (defaults)
 export HUB_LISTEN_PORT=8090 CHISEL_VERSION=1.12.0
 # Atlas stack images (defaults)
