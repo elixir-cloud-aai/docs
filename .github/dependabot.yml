@@ -1,5 +1,7 @@
 version: 2
-# Every entry targets `main`, the default branch (`target-branch`)
+# No entry sets `target-branch`: pull requests go to the default branch
+# (`main`) anyway, and while `target-branch` is set, GitHub doesn't apply
+# the entry's options (`labels`, `ignore`, ...) to security updates
 updates:
   # Dependencies in `pyproject.toml` (the `docs` and `tests` extras)
   - package-ecosystem: pip
@@ -7,7 +9,6 @@ updates:
     labels: ["type: dependencies"]
     schedule:
       interval: monthly
-    target-branch: main
     versioning-strategy: increase-if-necessary
     groups:
       # Dependencies of the documentation, in pull requests of their own
@@ -24,7 +25,6 @@ updates:
     labels: ["type: dependencies"]
     schedule:
       interval: monthly
-    target-branch: main
     groups:
       github-actions:
         patterns: ["*"]
