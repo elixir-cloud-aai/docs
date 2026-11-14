@@ -76,8 +76,44 @@ of the service.** It says nothing about the service as it is now.
 here,** as drift can't be avoided.
 
 Admins verify services; you can't verify your own. Changing the URL or the API
-type of a service removes its verification. See [Verified
-services][cr-verified].
+type of a service removes its verification: ask again after such a change. See
+[Verified services][cr-verified].
+
+### What the admins check
+
+The registry leaves the checks to each deployment. Before they verify an entry
+of the ELIXIR On-Cloud, the admins check with you, its owner, that:
+
+- **They know you:** you run the service, or act for those who do.
+- **The values are right:** the URL, the API type and the organization of the
+  entry are those of your service, and the URL starts with `https`.
+- **The service is live:** it answers at its URL, and its service info is
+  public, with sync on (see above).
+- **The service isn't open to anyone:** it accepts requests only from the
+  users that the policy of the federation allows, e.g., for a TES service,
+  members of the LS Login group `ECP_CLN` (see [Enable LS Login and ECP_CLN
+  access](node-onboarding-tutorial.md#3-enable-ls-login-and-ecp_cln-access)),
+  and from the gateway. A service that can't check the group itself meets
+  this only if it accepts nothing but the credentials of the gateway, which
+  checks the group: e.g., Poiesis accepts any valid token of its issuer, as
+  its group check is still missing ([generic-issues#21][gi-21]).
+  Verification doesn't prove that a service enforces the policy itself.
+
+To ask for verification, write to
+[cloud-service@elixir-europe.org][elixir-on-cloud-email] with the address of
+your entry.
+
+### Who uses the verified entries
+
+- **proTES**, the gateway, when it discovers its TES services in a Cloud
+  Registry: it uses verified entries only (see [Get added behind the
+  gateway](node-onboarding-tutorial.md#7-get-added-behind-the-gateway)).
+  Whether the ELIXIR On-Cloud's proTES discovers its TES services this way,
+  or lists them in its configuration, is tracked in
+  [generic-issues#31][gi-31].
+- **Users**, who check the label before they trust a service. Krini and the
+  CLI don't show it: they list verified and unverified services alike (see
+  [Krini](../researchers/krini.md) and the [CLI](../researchers/cli.md)).
 
 ## Labels
 
@@ -158,3 +194,5 @@ UI](using-cloud-registry-ui.md) adds what applies to this deployment.
 [cr-ui-browsing]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/user-guide/browsing/>
 [cr-ui-user-guide]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/user-guide/>
 [cr-verified]: <https://cloud-registry.readthedocs.io/en/latest/api/#verified-services>
+[gi-21]: <https://github.com/elixir-cloud-aai/generic-issues/issues/21>
+[gi-31]: <https://github.com/elixir-cloud-aai/generic-issues/issues/31>

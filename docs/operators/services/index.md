@@ -14,7 +14,7 @@ Every Node runs one of these in front of its cluster (see
 |---|---|---|
 | [TESK](tesk.md) | [GA4GH TES][ga4gh-tes] | Kubernetes, OpenShift |
 | [Poiesis](poiesis.md) | [GA4GH TES][ga4gh-tes] | Kubernetes |
-| [Funnel](funnel.md) | [GA4GH TES][ga4gh-tes] | HPC or HTC (Slurm) |
+| [Funnel](funnel.md) | [GA4GH TES][ga4gh-tes] | HPC or HTC (Slurm, OpenPBS) |
 
 ## Other services
 
