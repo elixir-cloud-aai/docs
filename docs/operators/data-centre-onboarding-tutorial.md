@@ -299,9 +299,7 @@ address of your entry, and ask for its verification, as described in [step
 6 of the Node tutorial](node-onboarding-tutorial.md#6-get-verified).
 
 The admins check a TRS entry as any other entry, see [What the admins
-check](using-cloud-registry.md#what-the-admins-check). For TRS-Filer, the
-service isn't open to anyone if writes are restricted as in [step
-3](#3-deploy-trs-filer); reads are public.
+check](using-cloud-registry.md#what-the-admins-check).
 
 ## 6. Add tools and workflows
 
