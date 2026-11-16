@@ -94,10 +94,9 @@ docs](https://cloud-registry.readthedocs.io/en/latest/api/).
 For the policies of the registry and what its labels mean, see [Using the
 Cloud Registry](using-cloud-registry.md).
 
-!!! warning "Under construction"
-    The checks for the verification of a TES service are not written down
-    yet. It is also not documented which services of the ELIXIR On-Cloud
-    use the verified entries.
+For what the admins check before they verify an entry, and who uses the
+verified entries, see [What the admins
+check](using-cloud-registry.md#what-the-admins-check).
 
 ## 4. Next steps
 

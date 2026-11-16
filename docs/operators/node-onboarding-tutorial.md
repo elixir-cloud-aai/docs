@@ -359,9 +359,8 @@ Verification is kept when sync updates the entry, but changing the URL or
 the API type removes it. See [Verified
 services](using-cloud-registry.md#verified-services) for what it means.
 
-!!! warning "Under construction"
-    The checks for the verification of a TES service are not written down
-    yet.
+For what the admins check before they verify your entry, see [What the
+admins check](using-cloud-registry.md#what-the-admins-check).
 
 ## 7. Get added behind the gateway
 
