@@ -25,8 +25,9 @@ product docs: they are the reference, and this page doesn't repeat them.
 
 !!! warning "Under construction"
     The policies for joining the federation are not written down yet: who
-    can join, what a Node has to provide, and what the admins check before
-    they verify a service. Write to
+    can join and what a Node has to provide. What the admins check before
+    they verify a service is in [What the admins
+    check](using-cloud-registry.md#what-the-admins-check). Write to
     [cloud-service@elixir-europe.org][elixir-on-cloud-email] before you
     start. The steps below have not yet been tested by an operator who
     didn't write them: please report what doesn't work.
@@ -359,9 +360,8 @@ Verification is kept when sync updates the entry, but changing the URL or
 the API type removes it. See [Verified
 services](using-cloud-registry.md#verified-services) for what it means.
 
-!!! warning "Under construction"
-    The checks for the verification of a TES service are not written down
-    yet.
+For what the admins check before they verify your entry, see [What the
+admins check](using-cloud-registry.md#what-the-admins-check).
 
 ## 7. Get added behind the gateway
 

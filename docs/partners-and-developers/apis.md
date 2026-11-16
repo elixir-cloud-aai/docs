@@ -101,8 +101,8 @@ tickets or chats.
   [proTES](https://protes.readthedocs.io/en/latest/api/) (TES) and
   [TRS-Filer](https://trs-filer.readthedocs.io/en/latest/api/) (TRS).
   [proWES](https://github.com/elixir-cloud-aai/proWES) (WES) and
-  [DRS-Filer](https://github.com/elixir-cloud-aai/drs-filer) (DRS) have no
-  separate docs yet: see their READMEs.
+  [DRS-Filer](https://github.com/elixir-cloud-aai/drs-filer) (DRS) are
+  archived and unmaintained: their READMEs are kept for reference.
 - The access rules of the products: [Cloud
   Registry](https://cloud-registry.readthedocs.io/en/latest/access-control/),
   [proTES](https://protes.readthedocs.io/en/latest/access-control/) and
