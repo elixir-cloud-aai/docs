@@ -25,8 +25,9 @@ product docs: they are the reference, and this page doesn't repeat them.
 
 !!! warning "Under construction"
     The policies for joining the federation are not written down yet: who
-    can join, what a Node has to provide, and what the admins check before
-    they verify a service. Write to
+    can join and what a Node has to provide. What the admins check before
+    they verify a service is in [What the admins
+    check](using-cloud-registry.md#what-the-admins-check). Write to
     [cloud-service@elixir-europe.org][elixir-on-cloud-email] before you
     start. The steps below have not yet been tested by an operator who
     didn't write them: please report what doesn't work.
