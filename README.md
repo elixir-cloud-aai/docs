@@ -50,11 +50,12 @@ Set `GITHUB_TOKEN` to any token first to avoid GitHub's rate limits.
 The same workflow checks the GA4GH service URLs in the docs (URLs with
 `/ga4gh/<api>/v<n>`) and opens an issue "Service URLs in the docs" if a
 service is not in the [Cloud Registry](#services-from-the-cloud-registry)
-or does not answer `GET <url>/service-info`. All three checks of the
-workflow (links, services and archived repositories, below) run every
-Monday and can be started by hand (`gh workflow run links.yml`); they
-run only in the `elixir-cloud-aai` organization, not in forks, and are
-not required checks of pull requests. While a problem persists, each run
+or does not answer `GET <url>/service-info`. All four checks of the
+workflow (links, services, archived repositories and [last verified
+dates](#last-verified-dates), below) run every Monday and can be started
+by hand (`gh workflow run links.yml`); they run only in the
+`elixir-cloud-aai` organization, not in forks, and are not required
+checks of pull requests. While a problem persists, each run
 comments on the open issue. To run the service check locally:
 
 ```sh
@@ -188,6 +189,18 @@ last_verified: 2026-11-17
   `main` when it merges: update its branch first, and check what changed.
 - Anything else than an unquoted date or `null` fails the build (hook
   [`hooks/last_verified.py`](hooks/last_verified.py)).
+- Every Monday, the [`Links` workflow](.github/workflows/links.yml) lists
+  the pages whose date is older than 6 months or still `null` in an issue
+  "Docs pages to verify", and comments on it while pages are due. Verify
+  them, or remove the key from pages that no longer hold operational
+  facts. To list them locally (`--months N` sets another maximum age,
+  `--help` lists all options; exit codes as for the checks above, 1 also
+  for a malformed date):
+
+  ```sh
+  python scripts/check_verified.py
+  ```
+
 - The partial is a copy of Material's: when you upgrade Material, compare
   it with the new release's `partials/content.html`.
 
