@@ -1,3 +1,7 @@
+---
+last_verified: 2026-11-17
+---
+
 # Funnel
 
 [Funnel](https://github.com/calypr/funnel) is a [GA4GH TES][ga4gh-tes]
@@ -8,7 +12,9 @@ PBS.
 
 Funnel is the TES service for Nodes with an HPC or HTC cluster. After you
 deploy it, register it in the [Cloud Registry][elixir-cloud-registry] (see
-[Onboarding](../onboarding.md)).
+[Onboarding](../onboarding.md)). End every upgrade or change of it by
+updating its entry, which has no sync (see [After a deployment or an
+upgrade](../using-cloud-registry.md#after-a-deployment-or-an-upgrade)).
 
 ## Docs
 

@@ -1,3 +1,7 @@
+---
+last_verified: 2026-11-17
+---
+
 # TESK
 
 [TESK](https://github.com/elixir-cloud-aai/TESK) is a [GA4GH TES][ga4gh-tes]
@@ -7,12 +11,15 @@ service for Kubernetes. It runs each task as a Kubernetes Job.
 
 TESK is the TES service for Nodes with a Kubernetes or OpenShift cluster.
 After you deploy it, register it in the [Cloud
-Registry][elixir-cloud-registry] (see [Onboarding](../onboarding.md)).
+Registry][elixir-cloud-registry] (see [Onboarding](../onboarding.md)). End
+every upgrade or change of it by checking that sync updated its entry (see
+[After a deployment or an
+upgrade](../using-cloud-registry.md#after-a-deployment-or-an-upgrade)).
 
 ## Docs
 
 - [TESK docs](https://tesk.readthedocs.io/)
-- [Helm chart and its values](https://github.com/elixir-cloud-aai/TESK/tree/master/charts/tesk)
+- [Helm chart and its values](https://github.com/elixir-cloud-aai/TESK/tree/dev/charts/tesk)
 
 ## Notes for the deployment
 
@@ -30,4 +37,6 @@ Registry][elixir-cloud-registry] (see [Onboarding](../onboarding.md)).
 - For a step-by-step setup, see the [Node onboarding
   tutorial](../node-onboarding-tutorial.md).
 - To use the Node's S3 storage (see [Onboarding](../onboarding.md)), set the
-  chart's `storage` value to `s3` and follow the chart's README.
+  chart's `storage` value to `s3` and follow
+  [S3](https://tesk.readthedocs.io/en/latest/deployment/#s3) in the TESK
+  docs.

@@ -1,3 +1,7 @@
+---
+last_verified: null
+---
+
 # Tutorial: Onboard a Node
 
 ## Synopsis
@@ -453,7 +457,27 @@ TESK, as described in [Deployment][sidecar-deployment]:
     The central Pubgrade service of the ELIXIR On-Cloud isn't deployed yet
     ([generic-issues#32][gi-32]), so nothing notifies the sidecar so far.
     Until then, upgrade TESK by hand, following the [upgrade
-    notes][tesk-upgrading].
+    notes][tesk-upgrading], and end with [step
+    9](#9-keep-the-registry-entry-up-to-date).
+
+## 9. Keep the registry entry up to date
+
+End every upgrade, move or change of your TES service, by hand or by
+Pubgrade-Sidecar, with this step: **update the service's Cloud Registry
+entry, or check that sync did.** Others find your service through its
+entry, so it must follow your service:
+
+- With sync on (TESK): check that the entry shows the new version, labelled
+  `synced`. To sync at once, rather than waiting for the next sync, use
+  `PUT /services/<id>/sync` of the registry.
+- Without sync (Poiesis and Funnel, registered by hand): edit the entry
+  so that it matches the service again.
+- After a new URL or API type: ask the
+  [admins][elixir-on-cloud-email] to verify the entry again.
+
+See [After a deployment or an
+upgrade](using-cloud-registry.md#after-a-deployment-or-an-upgrade) for
+the details.
 
 ## Data centres
 

@@ -1,3 +1,7 @@
+---
+last_verified: null
+---
+
 # Using the Cloud Registry
 
 ## Synopsis
@@ -183,6 +187,27 @@ its reason changes. See [Notifications][cr-notifications].
 The [user guide of the UI][cr-ui-user-guide] covers registering, editing and
 sharing services step by step; [Using the Cloud Registry
 UI](using-cloud-registry-ui.md) adds what applies to this deployment.
+
+### After a deployment or an upgrade
+
+The registry is the source of truth for the services of the deployment, and
+these docs list services from it. It stays right only if every change of a
+service reaches its entry. **End every deployment, upgrade or move of a
+service with this step: update its entry, or check that sync did.**
+
+- **With sync on:** once the new version answers, sync the entry at once
+  (`PUT /services/<id>/sync`) or wait for the next sync. Then check that
+  the entry shows the new values, e.g., the version, with the label
+  `synced`. If it shows `out-of-sync`, see [Out-of-sync
+  reasons](#out-of-sync-reasons).
+- **Without sync** (a manual entry, e.g., of Funnel or Poiesis): edit the
+  entry by hand, so that it matches the service again.
+- **A new URL or API type:** with sync on, the URL can't change (see
+  [Labels](#labels)), and a new API type needs a new entry. Either change
+  removes the verification: ask the
+  [admins][elixir-on-cloud-email] to verify the entry again.
+- **A service that you take down:** delete its entry, or tell the
+  [admins][elixir-on-cloud-email].
 
 [cr-access-control]: <https://cloud-registry.readthedocs.io/en/latest/access-control/>
 [cr-admin-mode]: <https://cloud-registry.readthedocs.io/en/latest/access-control/#admin-mode>

@@ -1,3 +1,7 @@
+---
+last_verified: null
+---
+
 # Poiesis
 
 [Poiesis](https://github.com/JaeAeich/poiesis) is a [GA4GH TES][ga4gh-tes]
@@ -7,7 +11,10 @@ service for Kubernetes. It runs each task in its own pod.
 
 Poiesis is a TES service for Nodes with a Kubernetes cluster, next to
 [TESK](tesk.md). After you deploy it, register it in the [Cloud
-Registry][elixir-cloud-registry] (see [Onboarding](../onboarding.md)).
+Registry][elixir-cloud-registry] (see [Onboarding](../onboarding.md)). End
+every upgrade or change of it by updating its entry, which has no sync (see
+[After a deployment or an
+upgrade](../using-cloud-registry.md#after-a-deployment-or-an-upgrade)).
 
 ## Docs
 

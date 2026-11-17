@@ -93,6 +93,30 @@ The hook refuses `DOCS_REGISTRY_OFFLINE=1` in CI and on Read the Docs
 (where `CI` or `READTHEDOCS` is set), so published builds always show
 the services.
 
+### Last verified dates
+
+Pages with operational facts that can't be generated, such as onboarding
+steps, access procedures, addresses, versions and contacts, say when
+someone last checked those facts against their sources. Their front matter
+holds the date, which the page shows at its end (see
+[`overrides/partials/content.html`](overrides/partials/content.html)):
+
+```markdown
+---
+last_verified: 2026-11-17
+---
+```
+
+- Set the date (`YYYY-MM-DD`) only after you have checked every operational
+  fact of the page against its source: the Cloud Registry, the repository
+  and docs of the product, or the live service. Fix what is wrong in the
+  same pull request.
+- `last_verified: null` marks a page with operational facts that nobody has
+  verified yet; the page says "Facts not verified yet".
+- Give new pages with operational facts the key too, with `null` until you
+  have verified them.
+- Editing a page doesn't change its date: only verifying it does.
+
 ## Contributing
 
 Contributions are welcome! See the organisation's [contributing

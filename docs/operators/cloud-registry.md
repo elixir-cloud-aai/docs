@@ -1,3 +1,7 @@
+---
+last_verified: null
+---
+
 # Cloud Registry
 
 ## Synopsis
@@ -1754,6 +1758,14 @@ version](#ui-version) and the UI's [Updating a
 deployment][cr-ui-updating]). Pre-releases can need the front end to be
 upgraded with the registry even within a minor version, as 1.0.0-rc2 needed
 1.0.0rc2: follow the release notes of both.
+
+Finally, check the registry's own entry among its services, as for any
+other service (see [After a deployment or an
+upgrade](using-cloud-registry.md#after-a-deployment-or-an-upgrade)): while
+the registry is listed (see [Listing the registry
+itself](#listing-the-registry-itself)), the app brings the entry up to date
+when it starts, so it must show the new version. An entry of the registry
+that was registered like other services instead has to be edited by hand.
 
 Rolling back from 1.0.0rc2 to an earlier version needs the database of that
 version, as it was (see [Upgrading from 1.0.0rc1](#upgrading-from-100rc1)).
