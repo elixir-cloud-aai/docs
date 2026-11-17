@@ -180,7 +180,9 @@ jobs:
         with:
           python-version: "3.13"
       # Exit code 2 for pages due, 1 if the check could not run (e.g. a
-      # malformed date), which fails the run without an issue
+      # malformed date), which fails the run without an issue. Pages due
+      # don't fail the run: they are a reminder, not a fault, and many stay
+      # due for weeks, which would hide the failures of the other checks
       - name: Check verified dates
         id: check
         run: |
@@ -200,6 +202,3 @@ jobs:
             verified in the last 6 months, or not yet at all
           report: verified-check/out.md
           labels: "type: docs,priority: medium,workload: hours,status: triage"
-      - name: Fail on pages
-        if: steps.check.outputs.exit_code == '2'
-        run: exit 1

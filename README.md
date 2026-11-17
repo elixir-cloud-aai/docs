@@ -191,9 +191,11 @@ last_verified: 2026-11-17
   [`hooks/last_verified.py`](hooks/last_verified.py)).
 - Every Monday, the [`Links` workflow](.github/workflows/links.yml) lists
   the pages whose date is older than 6 months or still `null` in an issue
-  "Docs pages to verify", and comments on it while pages are due. Verify
-  them, or remove the key from pages that no longer hold operational
-  facts. To list them locally (`--months N` sets another maximum age,
+  "Docs pages to verify", and comments on it while pages are due; unlike
+  the other checks, due pages don't fail the run. Verify them, or remove
+  the key from pages that no longer hold operational facts. Close the
+  issue once no page is due; the next run that finds one opens a new
+  issue. To list them locally (`--months N` sets another maximum age,
   `--help` lists all options; exit codes as for the checks above, 1 also
   for a malformed date):
 
