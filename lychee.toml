@@ -2,10 +2,6 @@
 # Links between pages are checked by `mkdocs build --strict`; lychee checks
 # the external ones
 
-# Cache results for a day, so reruns don't hammer the same hosts
-cache = true
-max_cache_age = "1d"
-
 max_retries = 3
 retry_wait_time = 5
 timeout = 30

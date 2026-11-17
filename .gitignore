@@ -23,5 +23,4 @@ htmlcov/
 .DS_Store
 
 # Link check (lychee)
-.lycheecache
 lychee/
