@@ -584,8 +584,8 @@ updated when it moves to a newer commit or a release.
 
 | Feature | Status |
 |---|---|
-| Ready-made binaries, without Rust | Built by the release workflow on the default branch ([ga4gh-sdk#91](https://github.com/ga4gh/ga4gh-sdk/issues/91)); none published yet, as the SDK has no release yet. |
-| A container image of the CLI | Built by the release workflow on the default branch ([ga4gh-sdk#189](https://github.com/ga4gh/ga4gh-sdk/issues/189)); none published yet, as the SDK has no release yet. |
+| Ready-made binaries, without Rust | The release workflow on the default branch builds them for each version tag (`v*`) ([ga4gh-sdk#91](https://github.com/ga4gh/ga4gh-sdk/issues/91)); none published yet, as the SDK has no release yet. |
+| A container image of the CLI | The release workflow on the default branch builds it for each version tag (`v*`) ([ga4gh-sdk#189](https://github.com/ga4gh/ga4gh-sdk/issues/189)); none published yet, as the SDK has no release yet. |
 | Download the logs and output files of TES tasks | On the default branch since 2026-11-15 ([ga4gh-sdk#188](https://github.com/ga4gh/ga4gh-sdk/issues/188)). |
 | Log in with the OpenID Connect device flow, which LS Login offers | On the default branch since 2026-11-15 ([ga4gh-sdk#248](https://github.com/ga4gh/ga4gh-sdk/pull/248)); see the SDK's [authentication guide](https://github.com/ga4gh/ga4gh-sdk/blob/main/docs/authentication.md). |
 

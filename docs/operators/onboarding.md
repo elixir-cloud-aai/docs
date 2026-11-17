@@ -37,7 +37,7 @@ Choose the TES service that fits your cluster:
 |---|---|
 | Kubernetes or OpenShift | [TESK](services/tesk.md) |
 | Kubernetes | [Poiesis](services/poiesis.md) |
-| HPC or HTC (Slurm, OpenPBS) | [Funnel](services/funnel.md) |
+| HPC or HTC (Slurm, OpenPBS) | [Funnel](services/funnel.md); its OpenPBS steps haven't been tested yet (see [Funnel with OpenPBS](services/funnel.md#funnel-with-openpbs)) |
 
 Follow the product docs that each page links to. When it works,
 `GET /ga4gh/tes/v1/tasks` on your TES service returns a list of tasks.
