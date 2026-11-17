@@ -22,5 +22,6 @@ htmlcov/
 .codespell*
 .DS_Store
 
-# Link check (lychee)
+# Reports of the link and service checks
 lychee/
+/service-check/

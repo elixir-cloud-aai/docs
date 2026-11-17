@@ -1,0 +1,23 @@
+# Configuration of the weekly service check (`scripts/check_services.py`,
+# job `services` of `.github/workflows/links.yml`). The check collects the
+# GA4GH service URLs (`.../ga4gh/<api>/v<n>`) named in the docs and reports
+# those that are not in the Cloud Registry or don't answer
+# `GET <url>/service-info`. Placeholders and local hosts (`example.org`,
+# `<HOST>`, `localhost`, `.local`, `.internal`, in-cluster names, loopback
+# and private addresses) are always skipped
+
+# Public third-party services, which are not ours to register. They are
+# skipped entirely (subdomains included)
+skip_hosts = [
+  "dockstore.org",
+  "workflowhub.eu",
+]
+
+# Our services that the docs still name but that are not in the registry
+# yet, each with the reason. They must still answer `service-info`. The
+# check reports an entry once its service is registered or no page names it
+# any more, so that this list only shrinks
+[unregistered]
+"https://csc-tesk-noauth.rahtiapp.fi/ga4gh/tes/v1" = "no-auth TESK, removed from the tutorial by #157"
+"https://protes.rahtiapp.fi/ga4gh/tes/v1" = "not registered yet; pages point to the registry after #157"
+"https://trs-filer.rahtiapp.fi/ga4gh/trs/v2" = "not registered yet; pages point to the registry after #157"

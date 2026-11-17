@@ -75,7 +75,7 @@ jobs:
       - name: Build documentation
         run: mkdocs build --strict
 
-  # Tests of `scripts/check_names.py` and `hooks/registry.py` with 100%
+  # Tests of the scripts in `scripts/` and the hooks in `hooks/` with 100%
   # coverage
   test:
     name: Test
