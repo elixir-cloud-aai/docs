@@ -35,7 +35,7 @@ As of November 2026:
 
 | What | Value |
 |---|---|
-| Address | <https://protes.rahtiapp.fi/>, TES API at `/ga4gh/tes/v1` |
+| Address | TES API at `https://protes.rahtiapp.fi/ga4gh/tes/v1` (the host itself has no page) |
 | Version | proTES 0.6.0 |
 | Access | LS Login access tokens of members of the group `ECP_CLN:EOC-Compute`, issued to a client that it accepts, such as Krini's (see [Researchers](../../researchers/index.md#before-you-start)) |
 | TES services | the TESK of the Finnish Node, listed in its configuration |
