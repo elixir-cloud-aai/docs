@@ -11,9 +11,7 @@ the decrypted files.
 !!! warning "Needs proTES 0.3.0 or earlier"
     The Crypt4GH middleware is a proof of concept. proTES 0.4.0 does not
     run middlewares any more: it refuses `custom.middlewares` at startup and
-    uses plugins instead, and no port of the middleware exists in its repository or in
-    [foca-plugins](https://foca-plugins.readthedocs.io/en/latest/) (see the
-    [upgrade
+    uses plugins instead (see the [upgrade
     steps](https://protes.readthedocs.io/en/latest/upgrading/#plugins)). The
     steps below therefore need [proTES
     0.3.0](https://protes.readthedocs.io/en/v0.3.0/). The README of the
@@ -21,11 +19,16 @@ the decrypted files.
     environments: it needs secret keys to be sent and stores decrypted files
     on disk.
 
-!!! warning "Under construction"
-    Not documented: how to install the middleware into proTES 0.3.0 (the
-    repository describes only its development setup), a version of the
-    middleware for current proTES, and which versions the steps were tested
-    with. The configuration in step 4 is from the original tutorial and was
+!!! note "Being ported to current proTES"
+    The middleware is being ported to a plugin for current proTES:
+    [`tes.data.crypt4gh`](https://github.com/elixir-cloud-aai/foca-plugins/tree/dev/plugins/tes/data/crypt4gh)
+    in [foca-plugins](https://foca-plugins.readthedocs.io/en/latest/) (see
+    [foca-plugins#65](https://github.com/elixir-cloud-aai/foca-plugins/issues/65)).
+    Its first release, 0.1.0, is prepared but not published yet. Once it is
+    published, this page will target current proTES. Until then, the steps
+    below use proTES 0.3.0. How to install the middleware into proTES 0.3.0
+    is not documented (its repository describes only its development setup),
+    and the configuration in step 4 is from the original tutorial and was
     not run again for this page.
 
 !!! danger "The task commands see the decrypted data"
@@ -151,7 +154,7 @@ Deploy [proTES 0.3.0](https://protes.readthedocs.io/en/v0.3.0/) on the third
 machine, with the Funnel server as its TES service, and install the
 [Crypt4GH
 middleware](https://github.com/elixir-cloud-aai/protes-middleware-crypt4gh)
-(see "Under construction" above). Then enable the middleware in the
+(see "Being ported to current proTES" above). Then enable the middleware in the
 `custom` section of `pro_tes/config.yaml`:
 
 ```yaml
