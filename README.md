@@ -36,6 +36,17 @@ pytest
 
 To preview the site while you edit, run `mkdocs serve`.
 
+The strict build checks the links between pages. External links are checked
+weekly by the [`Links` workflow](.github/workflows/links.yml), which opens an
+issue "Dead links in the docs" when it finds any. To run the same check
+locally, install [lychee](https://lychee.cli.rs/) and run:
+
+```sh
+lychee --config lychee.toml "docs/**/*.md" "includes/*.md" README.md
+```
+
+Set `GITHUB_TOKEN` to any token first to avoid GitHub's rate limits.
+
 ### Services from the Cloud Registry
 
 Tables of the deployed services are not written by hand: the hook
@@ -58,7 +69,8 @@ e.g.:
 
 A marker may be indented, e.g. inside an admonition or a tab; the table
 gets the same indentation. Markers in fenced code blocks are left alone,
-so pages can show the syntax.
+so pages can show the syntax there (not in indented code blocks, where
+markers are replaced).
 
 The table lists name, organization, type and API version, service version,
 environment, URL and docs link of each matching service. The registry is
@@ -78,17 +90,6 @@ DOCS_REGISTRY_OFFLINE=1 mkdocs serve
 ```
 
 Never set `DOCS_REGISTRY_OFFLINE` in CI or in `.readthedocs.yaml`.
-
-The strict build checks the links between pages. External links are checked
-weekly by the [`Links` workflow](.github/workflows/links.yml), which opens an
-issue "Dead links in the docs" when it finds any. To run the same check
-locally, install [lychee](https://lychee.cli.rs/) and run:
-
-```sh
-lychee --config lychee.toml "docs/**/*.md" "includes/*.md" README.md
-```
-
-Set `GITHUB_TOKEN` to any token first to avoid GitHub's rate limits.
 
 ## Contributing
 

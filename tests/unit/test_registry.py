@@ -149,7 +149,7 @@ def test_marker_renders_table(
     )
     result = registry.on_page_markdown(markdown, page(), NO_CONFIG, NO_FILES)
     assert "registry:services" not in result
-    assert result.startswith("Before\n\n| Service |")
+    assert result.startswith("Before\n\n\n| Service |")
     assert result.endswith("\nAfter\n")
     assert result.count("BIH Funnel") == 2
     assert result.count("JAN DIGITRUST temporary TESK lab") == 1
@@ -166,7 +166,7 @@ def test_marker_renders_table(
 def test_markers_in_code_blocks_are_examples(monkeypatch: pytest.MonkeyPatch) -> None:
     """Leaves markers in fenced code blocks alone."""
     monkeypatch.setenv(registry.OFFLINE_VARIABLE, "1")
-    markdown = (
+    examples = (
         "````markdown\n"
         "```\n"
         "<!-- registry:services -->\n"
@@ -175,13 +175,50 @@ def test_markers_in_code_blocks_are_examples(monkeypatch: pytest.MonkeyPatch) ->
         "~~~\n"
         "<!-- registry:services unknown=1 -->\n"
         "~~~\n"
-        "<!-- registry:services -->\n"
     )
-    lines = registry.on_page_markdown(
-        markdown, page(), NO_CONFIG, NO_FILES
-    ).splitlines()
-    assert lines[:8] == markdown.splitlines()[:8]
-    assert lines[8].startswith("!!! warning")
+    result = registry.on_page_markdown(
+        f"{examples}<!-- registry:services -->\n", page(), NO_CONFIG, NO_FILES
+    )
+    assert result == f"{examples}\n{registry.offline_notice()}\n"
+
+
+def test_inline_code_is_no_fence(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Doesn't take inline code at the start of a line for a fence."""
+    monkeypatch.setenv(registry.OFFLINE_VARIABLE, "1")
+    result = registry.on_page_markdown(
+        "```x``` is code.\n\n<!-- registry:services -->\n", page(), NO_CONFIG, NO_FILES
+    )
+    assert "!!! warning" in result
+
+
+def test_unclosed_fence_hiding_marker_fails(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Fails the build if a code block that is never closed hides a marker."""
+    monkeypatch.setenv(registry.OFFLINE_VARIABLE, "1")
+    with pytest.raises(PluginError, match="never closed hides 1 registry marker"):
+        registry.on_page_markdown(
+            "```\nCode\n\n<!-- registry:services -->\n", page(), NO_CONFIG, NO_FILES
+        )
+
+
+def test_unclosed_fence_after_marker_is_fine(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Accepts a code block that is never closed if it hides no marker."""
+    monkeypatch.setenv(registry.OFFLINE_VARIABLE, "1")
+    result = registry.on_page_markdown(
+        "~~~\n<!-- registry:services -->\n~~~\n<!-- registry:services -->\n```\nx\n",
+        page(),
+        NO_CONFIG,
+        NO_FILES,
+    )
+    assert result.endswith("```\nx\n")
+
+
+def test_marker_without_blank_lines(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Separates the table from text right above and below the marker."""
+    monkeypatch.setenv(registry.OFFLINE_VARIABLE, "1")
+    result = registry.on_page_markdown(
+        "Intro\n<!-- registry:services -->\nOutro\n", page(), NO_CONFIG, NO_FILES
+    )
+    assert result == f"Intro\n\n{registry.offline_notice()}\nOutro\n"
 
 
 def test_marker_keeps_indentation(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -190,7 +227,7 @@ def test_marker_keeps_indentation(monkeypatch: pytest.MonkeyPatch) -> None:
     markdown = '!!! note "Services"\n\n    <!-- registry:services -->\n\nAfter\n'
     result = registry.on_page_markdown(markdown, page(), NO_CONFIG, NO_FILES)
     expected = registry.indent(registry.offline_notice(), "    ")
-    assert result == f'!!! note "Services"\n\n{expected}\n\nAfter\n'
+    assert result == f'!!! note "Services"\n\n\n{expected}\n\n\nAfter\n'
     assert expected.startswith('    !!! warning "Services not loaded"\n\n        This')
 
 
@@ -204,7 +241,7 @@ def test_marker_offline_renders_warning(
         result = registry.on_page_markdown(
             "<!-- registry:services -->\n", page(), NO_CONFIG, NO_FILES
         )
-    assert result.startswith('!!! warning "Services not loaded"')
+    assert result.startswith('\n!!! warning "Services not loaded"')
     assert requests == []
     assert "not rendered" in caplog.text
 

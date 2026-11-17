@@ -115,24 +115,17 @@ def on_page_markdown(
     if not MARKER.search(markdown):
         return markdown
     where = page.file.src_uri
-    lines = []
+    lines: list[str] = []
     fence: str | None = None
+    skipped = 0  # markers in the fenced code block that is open
     for line in markdown.split("\n"):
-        fence_match = FENCE.match(line)
-        if fence is not None:
-            # Inside a fenced code block until a closing fence of the same
-            # kind and at least the same length
-            if (
-                fence_match
-                and fence_match.group("fence")[0] == fence[0]
-                and len(fence_match.group("fence")) >= len(fence)
-                and not fence_match.group("info").strip()
-            ):
-                fence = None
-            lines.append(line)
-            continue
-        if fence_match:
-            fence = fence_match.group("fence")
+        fence = next_fence(fence, line)
+        if fence is not None or FENCE.match(line):
+            # A fence line or a line inside a fenced code block
+            if fence is None:
+                skipped = 0
+            elif MARKER.match(line):
+                skipped += 1
             lines.append(line)
             continue
         marker = MARKER.match(line)
@@ -145,8 +138,40 @@ def on_page_markdown(
             text = offline_notice()
         else:
             text = render_table(filter_services(get_services(), options))
-        lines.append(indent(text, marker.group("indent")))
+        # Blank lines, so that the table is a block of its own
+        lines.extend(["", indent(text, marker.group("indent")), ""])
+    if fence is not None and skipped:
+        raise PluginError(
+            f"registry hook: {where}: a code block that is never closed hides "
+            f"{skipped} registry marker(s)"
+        )
     return "\n".join(lines)
+
+
+def next_fence(fence: str | None, line: str) -> str | None:
+    """Tracks fenced code blocks, line by line.
+
+    Args:
+        fence: The opening fence of the code block that the previous line
+            was in, or None outside code blocks.
+        line: The current line.
+
+    Returns:
+        The opening fence of the code block that the current line is in or
+        opens, or None if it is outside code blocks or closes one.
+    """
+    match = FENCE.match(line)
+    if match is None:
+        return fence
+    marks, info = match.group("fence"), match.group("info")
+    if fence is None:
+        # Like CommonMark, an info string of a backtick fence has no
+        # backticks; otherwise the line is inline code
+        return None if marks[0] == "`" and "`" in info else marks
+    # Closed by a fence of the same kind, at least as long, without info
+    if marks[0] == fence[0] and len(marks) >= len(fence) and not info.strip():
+        return None
+    return fence
 
 
 def indent(text: str, prefix: str) -> str:
@@ -409,7 +434,7 @@ def link(text: str, url: str | None) -> str:
     if not url or not SAFE_URL.match(url):
         return escape(text)
     # Encodes what would end the link or the table cell: spaces, `<>`, `()`,
-    # `|`, quotes and backslashes
+    # `|`, double quotes and backslashes
     target = urllib.parse.quote(url, safe=":/?#@!$&'*+,;=%~-._")
     return f"[{escape(text)}]({target})"
 
