@@ -555,6 +555,20 @@ def check(
     return findings, checked
 
 
+def code(text: str) -> str:
+    """Renders text as inline code that it can't break out of.
+
+    The reports end up in issues, and file names may hold any character.
+
+    Args:
+        text: The text, e.g. a file name.
+
+    Returns:
+        The text in backticks, with backticks and line breaks replaced.
+    """
+    return "`" + re.sub(r"[`\r\n]", "'", text) + "`"
+
+
 def report(findings: list[Finding], checked: int) -> str:
     """Renders the findings as Markdown.
 
@@ -577,7 +591,7 @@ def report(findings: list[Finding], checked: int) -> str:
     ]
     for finding in findings:
         lines.append(f"- `{finding.url}`: {finding.problem}")
-        lines += [f"  - `{location}`" for location in finding.locations]
+        lines += [f"  - {code(location)}" for location in finding.locations]
     return "\n".join(lines) + "\n"
 
 

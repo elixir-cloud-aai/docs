@@ -22,7 +22,7 @@ Without paths, the script checks the Markdown, YAML, JSON and shell files
 of `README.md`, `mkdocs.yml`, `docs` and `includes`. JSON has no comments,
 so links there can't be marked: remove or replace them. Set `GITHUB_TOKEN`
 to raise GitHub's rate limit (any token works; the repositories are
-public). The report, in Markdown, goes to standard output and, with
+public); it is sent to the default API URL only. The report, in Markdown, goes to standard output and, with
 `--output`, to a file.
 
 Exit status: 0 if no unmarked link points to an archived repository, 2 if
@@ -40,7 +40,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
-from check_services import CheckError, fetch_json, find_files
+from check_services import CheckError, code, fetch_json, find_files
 
 ORG = "elixir-cloud-aai"
 API_URL = "https://api.github.com"
@@ -50,6 +50,8 @@ PER_PAGE = 100
 MAX_PAGES = 50
 
 REPO_LINK = re.compile(
+    # The host starts at a boundary (not e.g. `notgithub.com`)
+    r"(?<![\w.-])(?:www\.)?"
     rf"(?:github\.com[/:]|raw\.githubusercontent\.com/){re.escape(ORG)}/"
     # A dot ends the name only if no name character follows (end of sentence)
     r"(?P<repo>[A-Za-z0-9_.-]+?)(?:\.git)?(?![A-Za-z0-9_-]|\.[A-Za-z0-9_-])",
@@ -104,7 +106,11 @@ def archived_repos(api_url: str, token: str | None) -> set[str]:
         if not isinstance(repos, list):
             raise CheckError("GitHub API: expected a list of repositories")
         for repo in repos:
-            if not isinstance(repo, dict) or not isinstance(repo.get("name"), str):
+            if (
+                not isinstance(repo, dict)
+                or not isinstance(repo.get("name"), str)
+                or not isinstance(repo.get("archived"), bool)
+            ):
                 raise CheckError("GitHub API: malformed repository")
             if repo.get("archived") is True:
                 names.add(repo["name"].lower())
@@ -158,7 +164,7 @@ def report(mentions: list[Mention], archived: set[str]) -> str:
         ),
         "",
     ]
-    lines += [f"- `{m.location}`: `{ORG}/{m.repo}`" for m in mentions]
+    lines += [f"- {code(m.location)}: `{ORG}/{m.repo}`" for m in mentions]
     return "\n".join(lines) + "\n"
 
 
@@ -193,9 +199,10 @@ def main(args: list[str]) -> int:
     options = parse_args(args)
     try:
         files = find_files(options.paths or DEFAULT_PATHS, SUFFIXES)
-        archived = archived_repos(
-            options.api_url.rstrip("/"), os.environ.get("GITHUB_TOKEN")
-        )
+        api_url = options.api_url.rstrip("/")
+        # The token goes to GitHub's own API only, never to another --api-url
+        token = os.environ.get("GITHUB_TOKEN") if api_url == API_URL else None
+        archived = archived_repos(api_url, token)
     except CheckError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1

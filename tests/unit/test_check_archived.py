@@ -135,6 +135,8 @@ def test_archived_repos_sends_token(api: str) -> None:
         ({"message": "x"}, "expected a list"),
         (["x"], "malformed repository"),
         ([{"archived": True}], "malformed repository"),
+        ([{"name": "x"}], "malformed repository"),
+        ([{"name": "x", "archived": "yes"}], "malformed repository"),
     ],
 )
 def test_archived_repos_malformed(api: str, body: Any, message: str) -> None:
@@ -174,6 +176,9 @@ def test_archived_repos_too_many_pages(
         ("https://github.com/elixir-cloud-aai/older", []),
         ("https://github.com/elixir-cloud-aai/new", []),
         ("https://github.com/other/old", []),
+        ("https://notgithub.com/elixir-cloud-aai/old", []),
+        ("https://evil.github.com.example/elixir-cloud-aai/old", []),
+        ("https://www.github.com/elixir-cloud-aai/old", ["old"]),
         ("https://github.com/elixir-cloud-aai/old.github.io", []),
         ("https://github.com/elixir-cloud-aai/old.github.io.", []),
         ("Clone https://github.com/elixir-cloud-aai/old.git.", ["old"]),
@@ -267,6 +272,24 @@ def test_main_with_mentions(
     out = capsys.readouterr().out
     assert "`docs/old.md:1`" in out
     assert output.read_text(encoding="utf-8") == out
+
+
+def test_main_token_only_for_github(
+    site: Path, api: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Sends `GITHUB_TOKEN` to GitHub's API only, not to another API URL."""
+    monkeypatch.setenv("GITHUB_TOKEN", "t0k")
+    assert check_archived.main(["--api-url", api]) == 0
+    assert "Authorization" not in Api.headers_seen[0]
+    calls: list[str | None] = []
+
+    def archived_repos(api_url: str, token: str | None) -> set[str]:
+        calls.append(token)
+        return set()
+
+    monkeypatch.setattr(check_archived, "archived_repos", archived_repos)
+    assert check_archived.main([]) == 0
+    assert calls == ["t0k"]
 
 
 def test_main_missing_path(

@@ -388,14 +388,16 @@ def test_fetch_json_headers(server: str) -> None:
     assert "Authorization" not in first
     assert second["Accept"] == "text/plain"
     assert second["Authorization"] == "Bearer t"
+    assert second["User-Agent"] == "elixir-on-cloud-docs-checks"
 
 
 def test_fetch_json_secret_headers_not_redirected(
     server: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Doesn't send secret headers to the target of a redirect."""
+    """Doesn't send secret headers to the target of a redirect on another host."""
     monkeypatch.setattr(check_services, "placeholder", lambda host: False)
-    Server.redirects = {"/x": f"{server}/y"}
+    other = server.replace("127.0.0.1", "localhost")
+    Server.redirects = {"/x": f"{other}/y"}
     Server.routes = {"/y": (200, [])}
     check_services.fetch_json(f"{server}/x", None, {"Authorization": "Bearer t"})
     assert Server.headers_seen[0]["Authorization"] == "Bearer t"
@@ -638,6 +640,11 @@ def test_check_order() -> None:
         "https://b.org/ga4gh/tes/v1",
         gone,
     ]
+
+
+def test_code() -> None:
+    """Keeps file names from breaking out of inline code."""
+    assert check_services.code("a`[x](y)`\nb.md") == "`a'[x](y)''b.md`"
 
 
 def test_report_without_findings() -> None:
