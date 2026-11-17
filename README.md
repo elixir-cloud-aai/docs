@@ -114,7 +114,8 @@ last_verified: 2026-11-17
 - `last_verified: null` marks a page with operational facts that nobody has
   verified yet; the page says "Facts not verified yet".
 - Which pages carry the key: the operator pages (`docs/operators/`), the
-  researchers' start page and guides, the API guide
+  researchers' start page and guides, the tutorial on interactive services
+  (`tutorials/tes-services/`), the API guide
   (`partners-and-developers/apis.md`), the demos index and About. Give new
   pages with operational facts the key too, with `null` until you have
   verified them. This is a convention: the build doesn't require the key.

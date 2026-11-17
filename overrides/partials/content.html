@@ -3,8 +3,9 @@
   `last_verified` in their front matter show when their operational facts
   were last verified against their sources (a date), or that they haven't
   been yet (`null`); see "Last verified dates" in `README.md`. Compare it
-  with the partial of each new Material release. The class `last-verified`
-  is a hook for styles and tests
+  with the partial of each new Material release (`pyproject.toml` requires
+  9.8.1 or later). The class `last-verified` has no styles of its own; the
+  tests find the note by it
 -#}
 {% include "partials/tags.html" %}
 {% include "partials/actions.html" %}
