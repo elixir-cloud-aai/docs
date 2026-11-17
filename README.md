@@ -188,7 +188,10 @@ last_verified: 2026-11-17
   docs. A pull request that sets a date verifies the page as it is on
   `main` when it merges: update its branch first, and check what changed.
 - Anything else than an unquoted date or `null` fails the build (hook
-  [`hooks/last_verified.py`](hooks/last_verified.py)).
+  [`hooks/last_verified.py`](hooks/last_verified.py)). Write the key
+  unquoted, once, at the top level of the front matter, with its value
+  on the same line, as above: the weekly check below can't read other
+  forms and fails on them.
 - Every Monday, the [`Links` workflow](.github/workflows/links.yml) lists
   the pages whose date is older than 6 months or still `null` in an issue
   "Docs pages to verify", and comments on it while pages are due; unlike

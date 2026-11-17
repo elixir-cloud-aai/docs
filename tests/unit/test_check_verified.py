@@ -66,6 +66,7 @@ def test_months_before(
         ("---\nlast_verified:\n---\n", None),
         ("---\nlast_verified:   # not yet\n---\n", None),
         ("---\nlast_verified : null\n...\n", None),
+        ("---\nlast_verified:\n  # not yet\n\ntitle: X\n---\n", None),
     ],
 )
 def test_read_page(tmp_path: Path, text: str, expected: datetime.date | None) -> None:
@@ -104,6 +105,7 @@ def test_read_page_byte_order_mark(tmp_path: Path) -> None:
         ('"last_verified": 2020-01-01\n', "without quotes"),
         ("'last_verified': null\n", "without quotes"),
         ("last_verified:\n  2020-01-01\n", "on its line"),
+        ("last_verified:\n\n# x\n  2020-01-01\n", "on its line"),
     ],
 )
 def test_read_page_unsupported_key(tmp_path: Path, text: str, message: str) -> None:

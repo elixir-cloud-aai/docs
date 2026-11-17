@@ -12,7 +12,9 @@ the standard library only: the key must be at the top level of the front
 matter, unquoted and set once, and its value a date, `null`, `~` or
 empty, on the same line and optionally followed by a comment. The build
 (`hooks/last_verified.py`) rejects other values; this script rejects
-them too, and the other forms of the key.
+them too, and a quoted or repeated key or a value on a later line. Rarer
+YAML forms, such as explicit (`? last_verified`) or flow-style keys,
+aren't recognized.
 
 Usage:
     python scripts/check_verified.py [--months N] [--today YYYY-MM-DD]
@@ -52,9 +54,10 @@ KEY = re.compile(
     r"^last_verified[ \t]*:(?P<value>[^\n#]*?)[ \t]*(?:#[^\n]*)?$", re.MULTILINE
 )
 # Forms of the key that YAML reads but this script doesn't: a quoted key, and
-# a value on the next, indented line
+# a value on a later, indented line
 OTHER_KEY = re.compile(r"""^["']last_verified["'][ \t]*:""", re.MULTILINE)
-NEXT_LINE = re.compile(r"\n[ \t]+\S")
+# (after blank and comment lines)
+NEXT_LINE = re.compile(r"(?:\n[ \t]*(?:#[^\n]*)?)*\n[ \t]+[^\s#]")
 NULLS = {"", "null", "Null", "NULL", "~"}
 DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 

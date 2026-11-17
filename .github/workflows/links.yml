@@ -179,10 +179,11 @@ jobs:
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.13"
-      # Exit code 2 for pages due, 1 if the check could not run (e.g. a
-      # malformed date), which fails the run without an issue. Pages due
-      # don't fail the run: they are a reminder, not a fault, and many stay
-      # due for weeks, which would hide the failures of the other checks
+      # Exit code 2 (pages due) opens or comments on the issue and passes:
+      # pages due are a reminder, not a fault, and many stay due for weeks,
+      # which would hide the failures of the other checks. Exit code 1 (the
+      # check could not run, e.g. a malformed date) fails the run without
+      # an issue
       - name: Check verified dates
         id: check
         run: |
