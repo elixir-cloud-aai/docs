@@ -3,30 +3,53 @@
 This page shows how researchers can analyse Crypt4GH-encrypted sensitive
 data without opening the decrypted files themselves. A data holder encrypts
 the data with [Crypt4GH](https://crypt4gh.readthedocs.io/). The researcher
-sends a [GA4GH TES][ga4gh-tes] task to [proTES](https://protes.readthedocs.io/en/v0.3.0/).
+sends a [GA4GH TES][ga4gh-tes] task to [proTES](https://github.com/elixir-cloud-aai/proTES).
 A middleware of proTES adds a step that decrypts the files inside a
 container of the [Funnel][funnel] TES service, and the task command runs on
 the decrypted files.
 
-!!! warning "Needs proTES 0.3.0 or earlier"
-    The Crypt4GH middleware is a proof of concept. proTES 0.4.0 does not
-    run middlewares any more: it refuses `custom.middlewares` at startup and
-    uses plugins instead, and no port of the middleware exists in its repository or in
-    [foca-plugins](https://foca-plugins.readthedocs.io/en/latest/) (see the
-    [upgrade
-    steps](https://protes.readthedocs.io/en/latest/upgrading/#plugins)). The
-    steps below therefore need [proTES
-    0.3.0](https://protes.readthedocs.io/en/v0.3.0/). The README of the
-    middleware also warns that you must not use it in untrusted
+!!! warning "Needs an unreleased proTES branch"
+    The Crypt4GH middleware is a proof of concept, and no release of proTES
+    runs it:
+
+    - proTES 0.4.0 and later don't run middlewares any more: they refuse
+      `custom.middlewares` at startup and use plugins instead (see the
+      [upgrade
+      steps](https://protes.readthedocs.io/en/latest/upgrading/#plugins)).
+    - proTES 0.3.0 and earlier load only middlewares that derive from its
+      class `AbstractMiddleware`. The released middleware (version 0.0.1 on
+      the default branch of
+      [protes-middleware-crypt4gh](https://github.com/elixir-cloud-aai/protes-middleware-crypt4gh),
+      last changed in 2024) doesn't, so proTES refuses it at startup. The
+      fix ([protes-middleware-crypt4gh#33](https://github.com/elixir-cloud-aai/protes-middleware-crypt4gh/pull/33))
+      was never merged, and the repository is archived.
+
+    The steps below therefore use the branch on which the authors of this
+    tutorial ran it: `adjust_middleware` of proTES, which adds the
+    middleware to proTES itself (see [step 4](#4-set-up-protes)). The README
+    of the middleware also warns that you must not use it in untrusted
     environments: it needs secret keys to be sent and stores decrypted files
     on disk.
 
-!!! warning "Under construction"
-    Not documented: how to install the middleware into proTES 0.3.0 (the
-    repository describes only its development setup), a version of the
-    middleware for current proTES, and which versions the steps were tested
-    with. The configuration in step 4 is from the original tutorial and was
-    not run again for this page.
+!!! note "Being ported to current proTES"
+    The middleware is being ported to a plugin for current proTES:
+    [`tes.data.crypt4gh`](https://github.com/elixir-cloud-aai/foca-plugins/tree/dev/plugins/tes/data/crypt4gh)
+    in [foca-plugins](https://foca-plugins.readthedocs.io/en/latest/) (see
+    [foca-plugins#65](https://github.com/elixir-cloud-aai/foca-plugins/issues/65)).
+    Its first release, 0.1.0, is prepared but not published yet. Once it is
+    published, this page will target a released proTES.
+
+!!! note "Tested versions"
+    The original tutorial (December 2025, updated July 2026) records no
+    released versions. Its authors used:
+
+    | Product | Version |
+    |---|---|
+    | proTES, with the middleware | branch [`adjust_middleware`](https://github.com/elixir-cloud-aai/proTES/tree/adjust_middleware), commit [`0d7efdf`](https://github.com/elixir-cloud-aai/proTES/commit/0d7efdf) (April 2026): not merged, in no release |
+    | Middleware, as a separate package | branch `update_middleware` of protes-middleware-crypt4gh ([#33](https://github.com/elixir-cloud-aai/protes-middleware-crypt4gh/pull/33), not merged) |
+    | Funnel | built from the default branch of its repository, at a commit that wasn't recorded |
+
+    The steps were not run again for this page.
 
 !!! danger "The task commands see the decrypted data"
     The commands of a task run on the decrypted files. A command that
@@ -147,12 +170,11 @@ processes run, and that the server answers at `http://<server-ip>:8000`.
 
 ### 4. Set up proTES
 
-Deploy [proTES 0.3.0](https://protes.readthedocs.io/en/v0.3.0/) on the third
-machine, with the Funnel server as its TES service, and install the
-[Crypt4GH
-middleware](https://github.com/elixir-cloud-aai/protes-middleware-crypt4gh)
-(see "Under construction" above). Then enable the middleware in the
-`custom` section of `pro_tes/config.yaml`:
+On the third machine, deploy proTES from the branch `adjust_middleware`
+(see "Needs an unreleased proTES branch" above). The branch contains the
+middleware as `pro_tes/plugins/middlewares/crypt4gh_decrypt.py`, so there
+is nothing else to install, and its `pro_tes/config.yaml` already enables
+it:
 
 ```yaml
 custom:
@@ -160,6 +182,31 @@ custom:
     - - "pro_tes.plugins.middlewares.crypt4gh_decrypt.CryptMiddleware"
       - "pro_tes.plugins.middlewares.task_distribution.random.TaskDistributionRandom"
 ```
+
+The random middleware is the fallback for tasks without Crypt4GH inputs.
+
+1. Clone proTES and check out the branch:
+
+    ```bash
+    git clone --branch adjust_middleware https://github.com/elixir-cloud-aai/proTES.git
+    cd proTES
+    ```
+
+2. In `pro_tes/config.yaml`, set `custom.tes.service_list` to the address
+   of your Funnel server, e.g., `http://<server-ip>:8000`. The branch has an
+   address of the authors' network there.
+3. Build and start proTES with its Docker Compose file, as the README of
+   the branch describes:
+
+    ```bash
+    docker compose up -d --build
+    ```
+
+    The README names the older command `docker-compose`; both work with
+    the file.
+
+proTES then serves its TES API on port 8080 of the machine (see
+`docker-compose.yaml`).
 
 ## Run the tasks
 

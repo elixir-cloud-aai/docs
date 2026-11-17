@@ -8,9 +8,10 @@ all of them together through the [proTES](https://protes.readthedocs.io/en/lates
 gateway, which forwards each task to one of the TES services.
 
 The demonstrator runs with the current products: its CI runs it end to end
-against proTES 0.6.0 and two Funnel instances. There is no public deployment
-with a guaranteed uptime: try it on your computer first, then run it on your
-own services, or write to [cloud-service@elixir-europe.org][elixir-on-cloud-email].
+against proTES 0.6.0 and two Funnel instances. Try it on your computer
+first, then run it through the deployment's proTES or on your own services.
+The services of the deployment have no guaranteed uptime; if one doesn't
+answer, write to [cloud-service@elixir-europe.org][elixir-on-cloud-email].
 See [Demos](../demos/index.md) for the state of all demos.
 
 !!! note "Cited version"
@@ -43,12 +44,13 @@ only.
 You need:
 
 - Git, and Conda or Mamba (the README lists all requirements);
-- the addresses of one or more TES services (see [Start
-  Here](index.md#before-you-start)), and the credentials of the Funnel
-  services among them;
-- the address of a proTES gateway in front of these services, and an access
-  token for it (see [Using the
-  APIs](../partners-and-developers/apis.md#2-get-an-access-token));
+- the address of a proTES gateway, and an access token for it: e.g., the
+  deployment's proTES at `https://protes.rahtiapp.fi`, with an LS Login
+  access token from Krini (see [Which TES services you can
+  use](index.md#which-tes-services-you-can-use));
+- the addresses of the TES services that the notebook runs the workflow on
+  one by one, and their credentials: the TES services behind your gateway,
+  or others that you may use;
 - an S3 bucket that the TES services can write to, and its credentials. The
   workflow writes its results there.
 
@@ -68,5 +70,3 @@ data](https://protes.readthedocs.io/en/latest/plugins/#routing-by-distance-to-th
 Snakemake, Nextflow and `cwl-tes` can send the tasks of any workflow to a TES
 service. See [Run workflows through
 TES](../partners-and-developers/ga4gh-standards.md#run-workflows-through-tes).
-The CWL demonstrator that this one was adapted from is
-[retired](../demos/index.md#retired-demos).
