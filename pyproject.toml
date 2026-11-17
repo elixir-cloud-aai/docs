@@ -21,12 +21,12 @@ requires-python = ">=3.11"
 # releases still fail it)
 docs = [
     "mkdocs>=1.6.1,<2",
-    "mkdocs-material>=9.7.7,<10",
+    "mkdocs-material>=9.8.1,<10",
     "pymdown-extensions>=12.3,<14",
 ]
 
-# Tests of `scripts/check_names.py` and `hooks/registry.py` (the hook's tests
-# need the `docs` dependencies too)
+# Tests of `scripts/check_names.py` and the hooks in `hooks/` (the hooks'
+# tests need the `docs` dependencies too)
 tests = [
     "pytest>=8,<10",
     "pytest-cov>=6,<8",
@@ -39,4 +39,4 @@ packages = []
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["scripts", "hooks"]
-addopts = "--cov=check_names --cov=registry --cov-branch --cov-report=term-missing --cov-fail-under=100"
+addopts = "--cov=check_names --cov=registry --cov=last_verified --cov-branch --cov-report=term-missing --cov-fail-under=100"

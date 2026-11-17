@@ -1,0 +1,33 @@
+{#-
+  Copy of the partial of Material for MkDocs 9.8.1, extended: pages with
+  `last_verified` in their front matter show when their operational facts
+  were last verified against their sources (a date), or that they haven't
+  been yet (`null`); see "Last verified dates" in `README.md`. Compare it
+  with the partial of each new Material release (`pyproject.toml` requires
+  9.8.1 or later). The class `last-verified` has no styles of its own; the
+  tests find the note by it
+-#}
+{% include "partials/tags.html" %}
+{% include "partials/actions.html" %}
+{% if "<h1" not in page.content %}
+  <h1>{{ page.title | d(config.site_name, true)}}</h1>
+{% endif %}
+{{ page.content }}
+{% if page.meta and "last_verified" in page.meta %}
+  <aside class="md-source-file last-verified">
+    <span class="md-source-file__fact">
+      <span class="md-icon" title="Operational facts verified against their sources">
+        {% include ".icons/material/calendar-check-outline.svg" %}
+      </span>
+      {% if page.meta.last_verified %}
+        Facts last verified on
+        <time datetime="{{ page.meta.last_verified }}">{{ page.meta.last_verified }}</time>
+      {% else %}
+        Facts not verified yet
+      {% endif %}
+    </span>
+  </aside>
+{% endif %}
+{% include "partials/source-file.html" %}
+{% include "partials/feedback.html" %}
+{% include "partials/comments.html" %}

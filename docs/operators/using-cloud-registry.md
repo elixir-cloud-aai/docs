@@ -1,3 +1,7 @@
+---
+last_verified: null
+---
+
 # Using the Cloud Registry
 
 ## Synopsis
@@ -183,6 +187,33 @@ its reason changes. See [Notifications][cr-notifications].
 The [user guide of the UI][cr-ui-user-guide] covers registering, editing and
 sharing services step by step; [Using the Cloud Registry
 UI](using-cloud-registry-ui.md) adds what applies to this deployment.
+
+### After a deployment or an upgrade
+
+The registry is the source of truth for the services of the deployment, and
+these docs list services from it. It stays right only if every change of a
+service reaches its entry. **End every deployment, upgrade or move of a
+service with this step: update its entry, or check that sync did.**
+
+- **With sync on:** once the new version answers, sync the entry at once
+  (`PUT /services/<id>/sync`) or wait for the next sync. Then check that
+  the entry shows the new values, e.g., the version, with the label
+  `synced`. If it shows `out-of-sync`, see [Out-of-sync
+  reasons](#out-of-sync-reasons).
+- **Without sync** (a manual entry, e.g., of Funnel or Poiesis): edit the
+  entry by hand, so that it matches the service again.
+- **A new version of the API** (`type.version`): sync applies it to the
+  same entry, after an admin has approved it if it is new (see [Out-of-sync
+  reasons](#out-of-sync-reasons)). Ask for a new version in time.
+- **A new URL or another API** (`type.group` or `type.artifact`): with sync
+  on, the URL can't change: turn sync off first, or import the service
+  anew (see [Labels](#labels)). Another API needs a new entry. Either
+  change removes the verification: ask the
+  [admins][elixir-on-cloud-email] to verify the entry again. If you
+  registered a new entry, delete the old one, so that it isn't listed next
+  to its replacement.
+- **A service that you take down:** delete its entry, or tell the
+  [admins][elixir-on-cloud-email].
 
 [cr-access-control]: <https://cloud-registry.readthedocs.io/en/latest/access-control/>
 [cr-admin-mode]: <https://cloud-registry.readthedocs.io/en/latest/access-control/#admin-mode>

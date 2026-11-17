@@ -1,3 +1,7 @@
+---
+last_verified: null
+---
+
 # Onboarding
 
 Follow these steps to connect your Node to the ELIXIR On-Cloud federation.
@@ -104,7 +108,16 @@ For what the admins check before they verify an entry, and who uses the
 verified entries, see [What the admins
 check](using-cloud-registry.md#what-the-admins-check).
 
-## 4. Next steps
+## 4. Keep the registry entry up to date
 
-- Deploy more [services](services/index.md).
+Each time you upgrade, move or change your TES service, end with this step:
+**update the service's Cloud Registry entry, or check that sync did** (see
+[After a deployment or an
+upgrade](using-cloud-registry.md#after-a-deployment-or-an-upgrade)). Others
+find your service through its entry, so it must follow your service.
+
+## 5. Next steps
+
+- Deploy more [services](services/index.md), and end each deployment with
+  the same step.
 - Connect your own services to [LS Login](ls-login.md).

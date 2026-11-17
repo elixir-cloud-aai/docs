@@ -1,3 +1,7 @@
+---
+last_verified: null
+---
+
 # proTES
 
 [proTES](https://github.com/elixir-cloud-aai/proTES) is a gateway for
@@ -12,7 +16,10 @@ to proTES, and proTES distributes them to the Nodes. It can read
 the verified TES services of a [Cloud Registry][elixir-cloud-registry], so
 that a new Node is used once it is registered and verified; the ELIXIR
 On-Cloud's proTES lists its TES services in its configuration instead
-(see below).
+(see below). Register a proTES that you deploy in the Cloud Registry like
+any other TES service, and end every upgrade or change of it by updating
+its entry, or checking that sync did (see [After a deployment or an
+upgrade](../using-cloud-registry.md#after-a-deployment-or-an-upgrade)).
 
 ## Docs
 

@@ -1,3 +1,7 @@
+---
+last_verified: null
+---
+
 # Architects & Operators: Start Here
 
 This section is primarily for architects, who decide whether to adopt GA4GH

@@ -1,3 +1,7 @@
+---
+last_verified: null
+---
+
 # TRS-Filer
 
 [TRS-Filer](https://github.com/elixir-cloud-aai/trs-filer) is a lightweight
@@ -7,7 +11,11 @@ workflows.
 ## Role in the deployment
 
 TRS-Filer is the TRS implementation of the ELIXIR On-Cloud project. Use it
-to offer tools and workflows through the TRS API.
+to offer tools and workflows through the TRS API. After you deploy it,
+register it in the [Cloud Registry][elixir-cloud-registry], and end every
+upgrade or change of it by checking that sync updated its entry (see [After
+a deployment or an
+upgrade](../using-cloud-registry.md#after-a-deployment-or-an-upgrade)).
 
 ## Docs
 
