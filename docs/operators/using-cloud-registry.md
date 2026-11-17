@@ -202,9 +202,13 @@ service with this step: update its entry, or check that sync did.**
   reasons](#out-of-sync-reasons).
 - **Without sync** (a manual entry, e.g., of Funnel or Poiesis): edit the
   entry by hand, so that it matches the service again.
-- **A new URL or API type:** with sync on, the URL can't change (see
-  [Labels](#labels)), and a new API type needs a new entry. Either change
-  removes the verification: ask the
+- **A new version of the API** (`type.version`): sync applies it to the
+  same entry, after an admin has approved it if it is new (see [Out-of-sync
+  reasons](#out-of-sync-reasons)). Ask for a new version in time.
+- **A new URL or another API** (`type.group` or `type.artifact`): with sync
+  on, the URL can't change: turn sync off first, or import the service
+  anew (see [Labels](#labels)). Another API needs a new entry. Either
+  change removes the verification: ask the
   [admins][elixir-on-cloud-email] to verify the entry again. If you
   registered a new entry, delete the old one, so that it isn't listed next
   to its replacement.

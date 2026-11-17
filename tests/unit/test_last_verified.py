@@ -56,3 +56,22 @@ def test_refuses_malformed_values(value: object) -> None:
     """Fails the build for anything but a date or `null`, naming the page."""
     with pytest.raises(PluginError, match="operators/page.md"):
         on_page_markdown("# Page\n", page=make_page({"last_verified": value}))
+
+
+def test_refuses_unreadable_front_matter() -> None:
+    """Fails the build if MkDocs dropped front matter that sets the key."""
+    markdown = "---\nlast_verified: 2026-13-01\n---\n\n# Page\n"
+    with pytest.raises(PluginError, match="can't be read"):
+        on_page_markdown(markdown, page=make_page({}))
+
+
+@pytest.mark.parametrize(
+    "markdown",
+    [
+        "---\ntitle: x: y\n---\n\n# Page\n",
+        "# Page\n\nlast_verified: 2026-13-01\n",
+    ],
+)
+def test_ignores_other_unread_text(markdown: str) -> None:
+    """Leaves pages alone whose unread front matter or text has no key."""
+    assert on_page_markdown(markdown, page=make_page({})) == markdown

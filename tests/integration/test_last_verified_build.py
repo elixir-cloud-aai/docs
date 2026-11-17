@@ -100,8 +100,22 @@ def test_leaves_other_pages_alone(site: Path) -> None:
     assert "last-verified" not in html
 
 
-@pytest.mark.parametrize("value", ["'2026-11-17'", "17.11.2026", "never"])
-def test_fails_on_malformed_date(tmp_path: Path, value: str) -> None:
-    """Fails the build for a value that isn't a date or `null`."""
+@pytest.mark.parametrize(
+    "value",
+    [
+        "'2026-11-17'",
+        "17.11.2026",
+        "never",
+        "2026-13-01",
+        "2026-11-17T10:00:00Z",
+        "2026-11-17 10:00",
+        "2026-1-5",
+    ],
+)
+def test_fails_on_malformed_date(
+    tmp_path: Path, value: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Fails the build for a value that isn't a date or `null`, as YAML reads it."""
     with pytest.raises(Abort):
         build_site(tmp_path, {"bad.md": f"---\nlast_verified: {value}\n---\n\n# Bad\n"})
+    assert "last_verified hook: bad.md" in caplog.text

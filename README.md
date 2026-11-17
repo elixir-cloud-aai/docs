@@ -113,14 +113,19 @@ last_verified: 2026-11-17
   same pull request.
 - `last_verified: null` marks a page with operational facts that nobody has
   verified yet; the page says "Facts not verified yet".
-- Give new pages with operational facts the key too, with `null` until you
-  have verified them.
+- Which pages carry the key: the operator pages (`docs/operators/`), the
+  researchers' start page and guides, the API guide
+  (`partners-and-developers/apis.md`), the demos index and About. Give new
+  pages with operational facts the key too, with `null` until you have
+  verified them. This is a convention: the build doesn't require the key.
 - Editing a page doesn't change its date, but check every operational fact
   that you add or change against its source, as for any change of the
   docs. A pull request that sets a date verifies the page as it is on
   `main` when it merges: update its branch first, and check what changed.
 - Anything else than an unquoted date or `null` fails the build (hook
   [`hooks/last_verified.py`](hooks/last_verified.py)).
+- The partial is a copy of Material's: when you upgrade Material, compare
+  it with the new release's `partials/content.html`.
 
 ## Contributing
 
