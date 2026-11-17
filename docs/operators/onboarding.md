@@ -16,7 +16,12 @@ You need:
 
 A compute Node runs at least one TES or WES service that requires LS Login
 access tokens, and registers it in the Cloud Registry (see [Who can
-join](index.md#who-can-join)). These steps cover a TES service. Write to
+join](index.md#who-can-join)). These steps cover a TES service. For a WES
+service, e.g., [WESkit](https://gitlab.com/one-touch-pipeline/weskit/documentation),
+deploy it with the docs of its product and connect it to LS Login, then
+register it as in [step 3](#3-register-your-tes-service), with a WES type;
+the ELIXIR On-Cloud has no WES gateway yet ([proWES](services/prowes.md)
+is being revived). Write to
 [cloud-service@elixir-europe.org][elixir-on-cloud-email] before you start:
 the admins answer your questions and verify your entry.
 
