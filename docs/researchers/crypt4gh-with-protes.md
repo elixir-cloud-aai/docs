@@ -83,7 +83,7 @@ without the data holder.
   only the proTES gateway and the worker may reach these ports. If other
   machines can reach them, enable authentication in Funnel (see `Server.BasicAuth`
   in its [default
-  config](https://github.com/calypr/funnel/blob/develop/config/default-config.yaml)).
+  config](https://github.com/calypr/funnel/blob/develop/internal/config/examples/default-config.yaml)).
 
 ## Set up
 
