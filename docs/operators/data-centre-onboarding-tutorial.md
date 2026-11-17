@@ -16,7 +16,7 @@ What a data centre can offer today, and what is planned:
 |---|---|---|
 | Storage for the inputs and outputs of tasks | an S3 or FTP server, e.g., [MinIO][minio] or [vsftpd][vsftpd] | available: see [step 2](#2-offer-storage-for-tasks) |
 | Tools and workflows, through the TRS API | [TRS-Filer](services/trsfiler.md) 0.5.0 | available, without authentication of writes: see [step 3](#3-deploy-trs-filer) |
-| Data objects, through the [DRS API][ga4gh-drs] | [DRS-Filer](services/drsfiler.md) | archived: unmaintained, not covered here |
+| Data objects, through the [DRS API][ga4gh-drs] | [DRS-Filer](services/drsfiler.md) | being revived: not covered here yet |
 
 The commands and values on this page come from the docs of each product,
 at the versions in the table below. For anything else, follow the linked
@@ -29,9 +29,10 @@ hosting provider.
 | [TRS-Filer][trsfiler-docs] (Helm chart) | 0.5.0 | TRS service, with a MongoDB database |
 | [Cloud Registry][cr-docs] | 1.0.0rc2 | Registry of the services |
 
-!!! warning "Under construction"
-    The policies for joining the federation are not written down yet: who
-    can join and what a data centre has to provide. What the admins check
+!!! warning "Requirements will follow"
+    Data nodes may join the federation, but their requirements are not
+    written down yet (see [Who can join](index.md#who-can-join)). What the
+    admins check
     before they verify a service is in [What the admins
     check](using-cloud-registry.md#what-the-admins-check). Write to
     [cloud-service@elixir-europe.org][elixir-on-cloud-email] before you
@@ -83,7 +84,7 @@ their outputs to, S3 or FTP servers. To offer storage:
 3. The operators of those TES services configure them with your server and
    credentials, e.g., the `storage` value of the [TESK chart][tesk-storage].
 
-!!! warning "Under construction"
+!!! note "Storage servers and the registry"
     Storage servers aren't registered in the Cloud Registry: there is no
     GA4GH API type for them yet. Which storage servers the TES services of
     the federation use is agreed with the admins.
