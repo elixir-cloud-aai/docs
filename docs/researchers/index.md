@@ -35,9 +35,8 @@ ELIXIR Nodes, and keep sensitive data under the control of its owner.
 ## Which TES services you can use
 
 Send your tasks to the TES gateway of the deployment,
-[proTES](../operators/services/protes.md), at
-<https://protes.rahtiapp.fi/> (TES API at
-`https://protes.rahtiapp.fi/ga4gh/tes/v1`), with an LS Login access token.
+[proTES](../operators/services/protes.md), at its TES API
+`https://protes.rahtiapp.fi/ga4gh/tes/v1`, with an LS Login access token.
 proTES forwards each task to one of the TES services of the Nodes. Get the
 token from [Krini](krini.md#copy-your-access-token): proTES accepts tokens
 that LS Login issued to Krini.
