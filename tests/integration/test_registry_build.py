@@ -175,6 +175,8 @@ def test_build_offline_renders_warning(
 ) -> None:
     """Builds strictly without a registry in offline mode."""
     monkeypatch.setenv("DOCS_REGISTRY_OFFLINE", "1")
+    monkeypatch.delenv("CI", raising=False)
+    monkeypatch.delenv("READTHEDOCS", raising=False)
     html = run_build(make_site(tmp_path, "http://127.0.0.1:9/unreachable"))
     assert "admonition warning" in html
     assert "<table>" not in html

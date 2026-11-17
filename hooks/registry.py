@@ -56,6 +56,9 @@ MARKER = re.compile(
 # Opening or closing line of a fenced code block, where markers are examples
 FENCE = re.compile(r"^[ \t]*(?P<fence>`{3,}|~{3,})(?P<info>.*)$")
 MAX_BYTES = 5 * 1024 * 1024
+CHUNK_BYTES = 64 * 1024
+# Set by GitHub Actions and Read the Docs, where offline builds are refused
+PUBLISHING_VARIABLES = ("CI", "READTHEDOCS")
 OPTION = re.compile(r"(?P<key>[\w-]+)=(?P<value>[^\s=]+)")
 SAFE_URL = re.compile(r"^https?://[^\s]+$", re.IGNORECASE)
 
@@ -194,8 +197,20 @@ def offline() -> bool:
 
     Returns:
         True if `DOCS_REGISTRY_OFFLINE` is set to `1`.
+
+    Raises:
+        PluginError: If it is set in CI or on Read the Docs, whose builds
+            must show the services.
     """
-    return os.environ.get(OFFLINE_VARIABLE, "").strip() == "1"
+    if os.environ.get(OFFLINE_VARIABLE, "").strip() != "1":
+        return False
+    for variable in PUBLISHING_VARIABLES:
+        if os.environ.get(variable, "").strip().lower() in {"1", "true"}:
+            raise PluginError(
+                f"registry hook: {OFFLINE_VARIABLE}=1 is for local builds only, "
+                f"not with {variable}={os.environ[variable]}"
+            )
+    return True
 
 
 def offline_notice() -> str:
@@ -273,13 +288,15 @@ def fetch(url: str) -> Any:
         PluginError: If the fetch fails, the response is larger than
             `MAX_BYTES` or it is not JSON.
     """
-    request = urllib.request.Request(url, headers={"Accept": "application/json"})
     attempt = 0
     while True:
         attempt += 1
         try:
+            request = urllib.request.Request(
+                url, headers={"Accept": "application/json"}
+            )
             with urllib.request.urlopen(request, timeout=TIMEOUT) as response:
-                body = response.read(MAX_BYTES + 1)
+                body = read(response, time.monotonic() + TIMEOUT)
             break
         except (OSError, ValueError, http.client.HTTPException) as exc:
             # OSError includes URLError, HTTPError and timeouts
@@ -296,6 +313,37 @@ def fetch(url: str) -> Any:
         return json.loads(body)
     except (ValueError, RecursionError) as exc:
         raise PluginError(f"registry hook: {url} did not return JSON: {exc}") from exc
+
+
+def read(response: Any, deadline: float) -> bytes:
+    """Reads a response body in chunks, within a deadline and a size limit.
+
+    The timeout of `urlopen` applies to each socket operation only, so a
+    registry that sends a trickle of data could stall the build without the
+    deadline.
+
+    Args:
+        response: The response to read.
+        deadline: The `time.monotonic()` value by which the body must be
+            read.
+
+    Returns:
+        The body, or its first `MAX_BYTES + 1` bytes if it is larger.
+
+    Raises:
+        TimeoutError: If the deadline passes before the body is read.
+    """
+    chunks: list[bytes] = []
+    size = 0
+    while size <= MAX_BYTES:
+        if time.monotonic() > deadline:
+            raise TimeoutError(f"response not read within {TIMEOUT} s")
+        chunk = response.read(min(CHUNK_BYTES, MAX_BYTES + 1 - size))
+        if not chunk:
+            break
+        chunks.append(chunk)
+        size += len(chunk)
+    return b"".join(chunks)
 
 
 def transient(error: Exception) -> bool:

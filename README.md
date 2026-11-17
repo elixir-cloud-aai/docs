@@ -89,7 +89,9 @@ DOCS_REGISTRY_OFFLINE=1 mkdocs build --strict
 DOCS_REGISTRY_OFFLINE=1 mkdocs serve
 ```
 
-Never set `DOCS_REGISTRY_OFFLINE` in CI or in `.readthedocs.yaml`.
+The hook refuses `DOCS_REGISTRY_OFFLINE=1` in CI and on Read the Docs
+(where `CI` or `READTHEDOCS` is set), so published builds always show
+the services.
 
 ## Contributing
 

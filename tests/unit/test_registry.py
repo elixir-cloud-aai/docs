@@ -42,6 +42,8 @@ def configured(monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch: The pytest monkeypatch fixture.
     """
     monkeypatch.delenv(registry.OFFLINE_VARIABLE, raising=False)
+    for variable in registry.PUBLISHING_VARIABLES:
+        monkeypatch.delenv(variable, raising=False)
     monkeypatch.setattr(registry.time, "sleep", lambda _: None)
     registry.on_config(config({"registry_url": URL}))
 
@@ -362,9 +364,53 @@ def test_fetch_fails_on_invalid_json(
 def test_fetch_fails_on_large_response(monkeypatch: pytest.MonkeyPatch) -> None:
     """Fails the build if the response is too large."""
     monkeypatch.setattr(registry, "MAX_BYTES", 10)
+    monkeypatch.setattr(registry, "CHUNK_BYTES", 3)
     fake_urlopen(monkeypatch, b"[" + b" " * 20 + b"]")
     with pytest.raises(PluginError, match="more than 10 bytes"):
         registry.fetch(f"{URL}/services")
+
+
+def test_fetch_reads_in_chunks(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reads bodies larger than a chunk completely."""
+    monkeypatch.setattr(registry, "CHUNK_BYTES", 2)
+    fake_urlopen(monkeypatch, b'["a", "b"]')
+    assert registry.fetch(f"{URL}/services") == ["a", "b"]
+
+
+def test_fetch_enforces_deadline(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Retries, then fails, if the body trickles in past the deadline."""
+    clock = iter(range(0, 1000, 6))
+    monkeypatch.setattr(registry.time, "monotonic", lambda: next(clock))
+    monkeypatch.setattr(registry, "CHUNK_BYTES", 1)
+    requests = fake_urlopen(monkeypatch, b"[1, 2, 3]", b"[1, 2, 3]")
+    with pytest.raises(PluginError, match="not read within"):
+        registry.fetch(f"{URL}/services")
+    assert len(requests) == registry.ATTEMPTS
+
+
+def test_fetch_rejects_invalid_url() -> None:
+    """Reports an invalid registry URL as a build error."""
+    with pytest.raises(PluginError, match="could not fetch not-a-url"):
+        registry.fetch("not-a-url")
+
+
+@pytest.mark.parametrize("variable", ["CI", "READTHEDOCS"])
+@pytest.mark.parametrize("value", ["true", "True", "1"])
+def test_offline_refused_when_publishing(
+    monkeypatch: pytest.MonkeyPatch, variable: str, value: str
+) -> None:
+    """Refuses offline builds in CI and on Read the Docs."""
+    monkeypatch.setenv(registry.OFFLINE_VARIABLE, "1")
+    monkeypatch.setenv(variable, value)
+    with pytest.raises(PluginError, match=f"local builds only, not with {variable}"):
+        registry.offline()
+
+
+def test_offline_allowed_with_false_ci(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Allows offline builds if the CI variable is set but false."""
+    monkeypatch.setenv(registry.OFFLINE_VARIABLE, "1")
+    monkeypatch.setenv("CI", "false")
+    assert registry.offline()
 
 
 def test_validate_accepts_recorded_response(services: list[dict[str, Any]]) -> None:
