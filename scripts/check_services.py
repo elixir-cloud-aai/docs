@@ -233,11 +233,12 @@ def collect(files: Iterable[Path]) -> dict[str, list[str]]:
     return mentions
 
 
-def find_files(args: Iterable[str]) -> list[Path]:
-    """Lists the Markdown files of the given paths.
+def find_files(args: Iterable[str], suffixes: Iterable[str] = SUFFIXES) -> list[Path]:
+    """Lists the files of the given paths, e.g. the Markdown files.
 
     Args:
         args: Files and directories.
+        suffixes: Suffixes of the files to list in directories.
 
     Returns:
         The files, directories expanded in sorted order.
@@ -249,7 +250,7 @@ def find_files(args: Iterable[str]) -> list[Path]:
     for arg in args:
         path = Path(arg)
         if path.is_dir():
-            files += sorted(p for p in path.rglob("*") if p.suffix in SUFFIXES)
+            files += sorted(p for p in path.rglob("*") if p.suffix in suffixes)
         elif path.is_file():
             files.append(path)
         else:
@@ -354,13 +355,21 @@ class Redirects(urllib.request.HTTPRedirectHandler):
 OPENER = urllib.request.build_opener(Redirects)
 
 
-def fetch_json(url: str) -> Any:
+def fetch_json(
+    url: str,
+    headers: dict[str, str] | None = None,
+    secret_headers: dict[str, str] | None = None,
+) -> Any:
     """Fetches and decodes a JSON document, with one retry.
 
     Network errors, timeouts, HTTP 429 and 5xx responses are retried once.
 
     Args:
         url: The URL to fetch.
+        headers: Request headers in addition to the defaults (`Accept:
+            application/json`, a `User-Agent`), which they may replace.
+        secret_headers: Request headers that are not sent again when the
+            server redirects, e.g. `Authorization`.
 
     Returns:
         The decoded document.
@@ -376,9 +385,12 @@ def fetch_json(url: str) -> Any:
                 url,
                 headers={
                     "Accept": "application/json",
-                    "User-Agent": "elixir-on-cloud-docs-service-check",
+                    "User-Agent": "elixir-on-cloud-docs-checks",
+                    **(headers or {}),
                 },
             )
+            for name, value in (secret_headers or {}).items():
+                request.add_unredirected_header(name, value)
             with OPENER.open(request, timeout=TIMEOUT) as response:
                 body = read(response, time.monotonic() + TIMEOUT)
             break

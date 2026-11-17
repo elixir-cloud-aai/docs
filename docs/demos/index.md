@@ -99,6 +99,7 @@ Propose a new demo, or report one that no longer works, in the
 repository](https://github.com/elixir-cloud-aai/docs/issues).
 
 [docs-sdk]: <https://biohackeu26-ga4gh-sdk-upgrade.readthedocs.io/en/latest/>
+<!-- historical -->
 [repo-crypt4gh]: <https://github.com/elixir-cloud-aai/protes-middleware-crypt4gh>
 [repo-data]: <https://github.com/elixir-cloud-aai/elixir-cloud-demos/tree/main/data>
 [repo-f2f]: <https://github.com/elixir-cloud-aai/elixir-cloud-demos/tree/main/demos/2023-ecp-f2f>
@@ -107,4 +108,5 @@ repository](https://github.com/elixir-cloud-aai/docs/issues).
 [repo-nvflare]: <https://github.com/elixir-cloud-aai/nvflare-wes-testbed>
 [repo-sdk]: <https://github.com/elixir-cloud-aai/biohackeu26-ga4gh-sdk-upgrade>
 [repo-txf]: <https://github.com/elixir-cloud-aai/token-exchange-flow-testbed>
+<!-- historical -->
 [repo-workflows]: <https://github.com/elixir-cloud-aai/demo-workflows>

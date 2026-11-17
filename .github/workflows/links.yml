@@ -1,5 +1,6 @@
 # Weekly checks of what the docs point to outside this repository: external
-# links (`links`) and GA4GH service URLs (`services`). Not part of `ci.yml`
+# links (`links`), GA4GH service URLs (`services`) and links to archived
+# repositories of the organization (`archived`). Not part of `ci.yml`
 # and not required checks, because external sites go down at random and
 # would block merges; each check opens (or comments on) one issue instead.
 # Links between pages are checked by `mkdocs build --strict` in `ci.yml`
@@ -106,5 +107,52 @@ jobs:
             in the docs or with `service-check.toml`
           report: service-check/out.md
       - name: Fail on problems
+        if: steps.check.outputs.exit_code == '2'
+        run: exit 1
+
+  # Links to archived repositories of the organization that are not marked
+  # `<!-- historical -->` (`scripts/check_archived.py`)
+  archived:
+    name: Archived repos
+    if: github.repository_owner == 'elixir-cloud-aai'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Standard library only, no dependencies
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+      # The token only raises the rate limit of the GitHub API; the
+      # repositories are public. Exit code 2 for unmarked links, 1 if the
+      # check could not run, which fails the run without an issue
+      - name: Check links to archived repositories
+        id: check
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          status=0
+          python scripts/check_archived.py --output archived-check/out.md || status=$?
+          echo "exit_code=$status" >> "$GITHUB_OUTPUT"
+          if [ "$status" != 0 ] && [ "$status" != 2 ]; then
+            exit "$status"
+          fi
+      - name: Report links
+        if: steps.check.outputs.exit_code == '2'
+        uses: ./.github/actions/report-issue
+        with:
+          title: Links to archived repositories in the docs
+          intro: >-
+            The weekly check found links to archived repositories that are
+            not marked as historical
+          report: archived-check/out.md
+      - name: Fail on links
         if: steps.check.outputs.exit_code == '2'
         run: exit 1

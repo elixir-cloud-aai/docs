@@ -50,11 +50,12 @@ Set `GITHUB_TOKEN` to any token first to avoid GitHub's rate limits.
 The same workflow checks the GA4GH service URLs in the docs (URLs with
 `/ga4gh/<api>/v<n>`) and opens an issue "Service URLs in the docs" if a
 service is not in the [Cloud Registry](#services-from-the-cloud-registry)
-or does not answer `GET <url>/service-info`. Both checks run every Monday
-and can be started by hand (`gh workflow run links.yml`); they run only in
-the `elixir-cloud-aai` organization, not in forks, and are not required
-checks of pull requests. While a problem persists, each run comments on
-the open issue. To run the service check locally:
+or does not answer `GET <url>/service-info`. All three checks of the
+workflow (links, services and archived repositories, below) run every
+Monday and can be started by hand (`gh workflow run links.yml`); they
+run only in the `elixir-cloud-aai` organization, not in forks, and are
+not required checks of pull requests. While a problem persists, each run
+comments on the open issue. To run the service check locally:
 
 ```sh
 python scripts/check_services.py
@@ -79,6 +80,35 @@ addresses are skipped. Configure the rest in
 
 Prefer linking to a service's registry entry over naming its address; a
 new address in the docs needs a registry entry first.
+
+The third job reports links to archived repositories of the
+organization (`github.com/elixir-cloud-aai/<repo>`, also SSH clone URLs
+and `raw.githubusercontent.com`) in Markdown, YAML, JSON and shell files,
+in an issue "Links to archived repositories in the docs". It asks the
+GitHub API which repositories are archived, so the list is never out of
+date. Remove such a link, point it to the successor, or, where the page
+deliberately talks about the past (e.g. retired demos), mark it with an
+HTML comment on the same line or alone on the line above (above reference
+definitions, which can't take one on their line; in YAML and shell files
+as a comment, `# <!-- historical -->`; JSON files can't take one, so
+remove or replace links there). A marker covers every link on its line,
+or on the next line if it stands alone:
+
+```markdown
+- [Crypt4GH middleware](https://github.com/elixir-cloud-aai/protes-middleware-crypt4gh) (archived) <!-- historical -->
+
+<!-- historical -->
+[repo-workflows]: <https://github.com/elixir-cloud-aai/demo-workflows>
+```
+
+To run the check locally (it checks `README.md`, `mkdocs.yml`, `docs` and
+`includes`, or the paths you pass; exit codes as above):
+
+```sh
+python scripts/check_archived.py
+```
+
+Set `GITHUB_TOKEN` to any token first to avoid GitHub's rate limits.
 
 ### Services from the Cloud Registry
 

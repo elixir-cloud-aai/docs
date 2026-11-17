@@ -23,9 +23,9 @@ the decrypted files.
     - proTES 0.3.0 and earlier load only middlewares that derive from its
       class `AbstractMiddleware`. The released middleware (version 0.0.1 on
       the default branch of
-      [protes-middleware-crypt4gh](https://github.com/elixir-cloud-aai/protes-middleware-crypt4gh),
+      [protes-middleware-crypt4gh](https://github.com/elixir-cloud-aai/protes-middleware-crypt4gh), <!-- historical -->
       last changed in 2024) doesn't, so proTES refuses it at startup. The
-      fix ([protes-middleware-crypt4gh#33](https://github.com/elixir-cloud-aai/protes-middleware-crypt4gh/pull/33))
+      fix ([protes-middleware-crypt4gh#33](https://github.com/elixir-cloud-aai/protes-middleware-crypt4gh/pull/33)) <!-- historical -->
       was never merged, and the repository is archived.
 
     The steps below therefore use the branch on which the authors of this
@@ -50,7 +50,7 @@ the decrypted files.
     | Product | Version |
     |---|---|
     | proTES, with the middleware | branch [`adjust_middleware`](https://github.com/elixir-cloud-aai/proTES/tree/adjust_middleware), commit [`0d7efdf`](https://github.com/elixir-cloud-aai/proTES/commit/0d7efdf) (April 2026): not merged, in no release |
-    | Middleware, as a separate package | branch `update_middleware` of protes-middleware-crypt4gh ([#33](https://github.com/elixir-cloud-aai/protes-middleware-crypt4gh/pull/33), not merged) |
+    | Middleware, as a separate package | branch `update_middleware` of protes-middleware-crypt4gh ([#33](https://github.com/elixir-cloud-aai/protes-middleware-crypt4gh/pull/33), not merged) <!-- historical --> |
     | Funnel | built from the default branch of its repository, at a commit that wasn't recorded |
 
     The steps were not run again for this page.
@@ -466,6 +466,6 @@ curl http://localhost:8080/ga4gh/tes/v1/tasks/<task-id>
 
 - [Funnel](https://github.com/calypr/funnel)
 - [proTES](https://protes.readthedocs.io/en/v0.3.0/)
-- [Crypt4GH middleware](https://github.com/elixir-cloud-aai/protes-middleware-crypt4gh)
+- [Crypt4GH middleware](https://github.com/elixir-cloud-aai/protes-middleware-crypt4gh) (archived) <!-- historical -->
 - [Crypt4GH](https://crypt4gh.readthedocs.io/)
 - [GA4GH TES][ga4gh-tes]
