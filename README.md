@@ -36,6 +36,40 @@ pytest
 
 To preview the site while you edit, run `mkdocs serve`.
 
+### Services from the Cloud Registry
+
+Tables of the deployed services are not written by hand: the hook
+[`hooks/registry.py`](hooks/registry.py) fetches them from the
+[Cloud Registry](https://elixir-on.cloud/ga4gh/registry/v1/services) on
+every build. To add a table to a page, put a marker on a line of its own:
+
+```markdown
+<!-- registry:services -->
+<!-- registry:services type=tes -->
+<!-- registry:services type=tes,wes environment=all -->
+```
+
+- `type`: comma-separated service types (the `type.artifact` of the
+  service, e.g. `tes`, `wes`); all types if left out.
+- `environment`: `prod` (default), `test`, any other environment of the
+  registry, or `all`.
+
+The table lists name, organisation, type and API version, service version,
+environment, URL and docs link of each matching service. The registry is
+set by `extra.registry_url` in `mkdocs.yml`; forks can point it to their
+own registry.
+
+The build needs network access to the registry and **fails** if the
+registry can't be reached or answers with something that isn't a list of
+services, so the site never shows stale data. For local builds without
+network access, render a warning in place of each table instead:
+
+```sh
+DOCS_REGISTRY_OFFLINE=1 mkdocs build --strict
+```
+
+Never set `DOCS_REGISTRY_OFFLINE` in CI or in `.readthedocs.yaml`.
+
 The strict build checks the links between pages. External links are checked
 weekly by the [`Links` workflow](.github/workflows/links.yml), which opens an
 issue "Dead links in the docs" when it finds any. To run the same check

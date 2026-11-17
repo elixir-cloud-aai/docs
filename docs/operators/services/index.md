@@ -29,3 +29,14 @@ Also see the [Cloud Registry](../cloud-registry.md), where services are
 registered, and [LS Login](../ls-login.md) for the log in of users. The
 registry lists the services that run in the deployment, with their
 addresses and the versions of the APIs that they report.
+
+## Deployed services
+
+The services registered in the [Cloud Registry](../cloud-registry.md) for
+production use. This table is generated from the registry each time the
+docs are built; services for testing are in the registry too.
+
+<!-- registry:services -->
+
+The registry doesn't record how a service is accessed (with a token or
+publicly); see the page of each service.
