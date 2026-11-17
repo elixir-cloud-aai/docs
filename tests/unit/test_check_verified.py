@@ -80,7 +80,6 @@ def test_read_page(tmp_path: Path, text: str, expected: datetime.date | None) ->
     [
         "# No front matter\n\nlast_verified: null\n",
         "---\ntitle: X\n---\n\nlast_verified: null\n",
-        "---\ntitle: X\n  last_verified: null\n---\n",
         "---\nlast_verified_by: someone\n---\n",
         "\n---\nlast_verified: null\n---\n",
         "---\nlast_verified: null\n",
@@ -104,6 +103,8 @@ def test_read_page_byte_order_mark(tmp_path: Path) -> None:
         ("last_verified: null\nlast_verified: 2020-01-01\n", "more than once"),
         ('"last_verified": 2020-01-01\n', "without quotes"),
         ("'last_verified': null\n", "without quotes"),
+        ("  last_verified: null\n", "start of its line"),
+        ("x:\n  'last_verified': 2020-01-01\n", "start of its line"),
         ("last_verified:\n  2020-01-01\n", "on its line"),
         ("last_verified:\n\n# x\n  2020-01-01\n", "on its line"),
     ],
@@ -122,6 +123,7 @@ def test_read_page_unsupported_key(tmp_path: Path, text: str, message: str) -> N
         ("2026-05-01T10:00:00", "must be a date"),
         ("yes", "must be a date"),
         ("2026-13-01", "invalid date"),
+        ("2026-05-01#x", "must be a date"),
     ],
 )
 def test_read_page_malformed(tmp_path: Path, value: str, message: str) -> None:
@@ -153,7 +155,7 @@ def test_report_without_due() -> None:
     """Says that all is fine."""
     text = check_verified.report([], [], 3, datetime.date(2026, 5, 17))
     assert text == (
-        "3 pages have a `last_verified` date. All of them were verified on "
+        "3 pages have a `last_verified` key. All of them were verified on "
         "or after 2026-05-17.\n"
     )
 
@@ -167,7 +169,7 @@ def test_report_with_due() -> None:
         datetime.date(2026, 5, 17),
     )
     assert text.startswith(
-        "5 pages have a `last_verified` date. Due for verification: 2"
+        "5 pages have a `last_verified` key. Due for verification: 2"
     )
     assert "\n- `docs/a'b.md`: verified on 2025-01-02\n" in text
     assert "\n- `docs/c.md`\n" in text
@@ -291,3 +293,23 @@ def test_script(site: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     with pytest.raises(SystemExit) as info:
         runpy.run_path(str(SCRIPT), run_name="__main__")
     assert info.value.code == 1
+
+
+def test_read_page_unreadable(tmp_path: Path) -> None:
+    """Fails on files that aren't UTF-8."""
+    path = tmp_path / "page.md"
+    path.write_bytes(b"---\nlast_verified: \xff\n---\n")
+    with pytest.raises(CheckError, match="page.md"):
+        check_verified.read_page(path)
+
+
+def test_main_future_date(site: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """Exits with 1 for a date after the current date."""
+    assert check_verified.main(["--today", "2026-10-31"]) == 1
+    assert "in the future: 2026-11-01" in capsys.readouterr().err
+
+
+def test_main_overlapping_paths(site: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """Reads each file once, also if paths overlap."""
+    assert check_verified.main(["--today", "2026-11-17", "docs", "docs/fresh.md"]) == 0
+    assert capsys.readouterr().out.startswith("1 pages have")

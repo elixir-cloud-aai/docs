@@ -9,10 +9,11 @@ left out.
 
 The front matter is read without a YAML parser, so that the check needs
 the standard library only: the key must be at the top level of the front
-matter, unquoted and set once, and its value a date, `null`, `~` or
+matter, unquoted, unindented and set once, and its value a date, `null`, `~` or
 empty, on the same line and optionally followed by a comment. The build
 (`hooks/last_verified.py`) rejects other values; this script rejects
-them too, and a quoted or repeated key or a value on a later line. Rarer
+them too, a date in the future, and a quoted, indented or repeated
+key or a value on a later line. Rarer
 YAML forms, such as explicit (`? last_verified`) or flow-style keys,
 aren't recognized.
 
@@ -49,13 +50,16 @@ README = (
 
 # As MkDocs reads front matter (`mkdocs.utils.meta.YAML_RE`)
 FRONT_MATTER = re.compile(r"^-{3}[ \t]*\n(.*?\n)(?:\.{3}|-{3})[ \t]*\n", re.DOTALL)
-# The key at the top level, its value up to a comment
+# The key at the top level, its value up to a comment (which YAML starts
+# only after a space)
 KEY = re.compile(
-    r"^last_verified[ \t]*:(?P<value>[^\n#]*?)[ \t]*(?:#[^\n]*)?$", re.MULTILINE
+    r"^last_verified[ \t]*:(?P<value>[^\n]*?)(?:[ \t]+#[^\n]*)?$", re.MULTILINE
 )
-# Forms of the key that YAML reads but this script doesn't: a quoted key, and
-# a value on a later, indented line
-OTHER_KEY = re.compile(r"""^["']last_verified["'][ \t]*:""", re.MULTILINE)
+# Forms of the key that YAML may read but this script doesn't: a quoted or
+# indented key, and a value on a later, indented line
+OTHER_KEY = re.compile(
+    r"""^(?:[ \t]+["']?|["'])last_verified["']?[ \t]*:""", re.MULTILINE
+)
 # (after blank and comment lines)
 NEXT_LINE = re.compile(r"(?:\n[ \t]*(?:#[^\n]*)?)*\n[ \t]+[^\s#]")
 NULLS = {"", "null", "Null", "NULL", "~"}
@@ -104,17 +108,23 @@ def read_page(path: Path) -> Page | None:
         The page, or None if its front matter doesn't set `last_verified`.
 
     Raises:
-        CheckError: If the value is neither a valid date nor null, or the
-            key is set more than once or in a form that the script can't
-            read.
+        CheckError: If the file can't be read, the value is neither a valid
+            date nor null, or the key is set more than once or in a form
+            that the script can't read.
     """
-    # MkDocs drops a byte order mark too
-    front_matter = FRONT_MATTER.match(path.read_text(encoding="utf-8-sig"))
+    try:
+        # MkDocs drops a byte order mark too
+        front_matter = FRONT_MATTER.match(path.read_text(encoding="utf-8-sig"))
+    except (OSError, UnicodeDecodeError) as exc:
+        raise CheckError(f"{path}: {exc}") from exc
     if not front_matter:
         return None
     text = front_matter.group(1)
     if OTHER_KEY.search(text):
-        raise CheckError(f"{path}: write the key `last_verified` without quotes")
+        raise CheckError(
+            f"{path}: write the key `last_verified` without quotes, at the start "
+            "of its line"
+        )
     keys = list(KEY.finditer(text))
     if not keys:
         return None
@@ -170,7 +180,7 @@ def report(
     Returns:
         The report.
     """
-    summary = f"{checked} pages have a `last_verified` date."
+    summary = f"{checked} pages have a `last_verified` key."
     if not stale and not unverified:
         return f"{summary} All of them were verified on or after {cutoff}.\n"
     lines = [
@@ -253,8 +263,14 @@ def main(args: list[str]) -> int:
     today = options.today or datetime.date.today()
     cutoff = months_before(today, options.months)
     try:
-        files = find_files(options.paths or DEFAULT_PATHS, SUFFIXES)
+        # Once each, also if paths overlap
+        files = dict.fromkeys(find_files(options.paths or DEFAULT_PATHS, SUFFIXES))
         pages = [page for path in files if (page := read_page(path)) is not None]
+        for page in pages:
+            if page.verified is not None and page.verified > today:
+                raise CheckError(
+                    f"{page.path}: `last_verified` is in the future: {page.verified}"
+                )
     except CheckError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1

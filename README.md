@@ -191,7 +191,7 @@ last_verified: 2026-11-17
   [`hooks/last_verified.py`](hooks/last_verified.py)). Write the key
   unquoted, once, at the top level of the front matter, with its value
   on the same line, as above: the weekly check below can't read other
-  forms and fails on them.
+  forms and fails on them, and on dates in the future.
 - Every Monday, the [`Links` workflow](.github/workflows/links.yml) lists
   the pages whose date is older than 6 months or still `null` in an issue
   "Docs pages to verify", and comments on it while pages are due; unlike
