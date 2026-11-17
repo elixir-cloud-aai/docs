@@ -22,6 +22,7 @@ set it in CI or on Read the Docs).
 
 from __future__ import annotations
 
+import http.client
 import json
 import logging
 import os
@@ -48,9 +49,13 @@ ALL_ENVIRONMENTS = "all"
 OPTIONS = {"type", "environment"}
 
 MARKER = re.compile(
-    r"^[ \t]*<!--[ \t]*registry:services(?P<options>[^\n]*?)[ \t]*-->[ \t]*$",
+    r"^(?P<indent>[ \t]*)<!--[ \t]*registry:services(?P<options>[^\n]*?)[ \t]*-->"
+    r"[ \t]*$",
     re.MULTILINE,
 )
+# Opening or closing line of a fenced code block, where markers are examples
+FENCE = re.compile(r"^[ \t]*(?P<fence>`{3,}|~{3,})(?P<info>.*)$")
+MAX_BYTES = 5 * 1024 * 1024
 OPTION = re.compile(r"(?P<key>[\w-]+)=(?P<value>[^\s=]+)")
 SAFE_URL = re.compile(r"^https?://[^\s]+$", re.IGNORECASE)
 
@@ -110,15 +115,53 @@ def on_page_markdown(
     if not MARKER.search(markdown):
         return markdown
     where = page.file.src_uri
-
-    def replace(match: re.Match[str]) -> str:
-        options = parse_options(match.group("options"), where)
+    lines = []
+    fence: str | None = None
+    for line in markdown.split("\n"):
+        fence_match = FENCE.match(line)
+        if fence is not None:
+            # Inside a fenced code block until a closing fence of the same
+            # kind and at least the same length
+            if (
+                fence_match
+                and fence_match.group("fence")[0] == fence[0]
+                and len(fence_match.group("fence")) >= len(fence)
+                and not fence_match.group("info").strip()
+            ):
+                fence = None
+            lines.append(line)
+            continue
+        if fence_match:
+            fence = fence_match.group("fence")
+            lines.append(line)
+            continue
+        marker = MARKER.match(line)
+        if marker is None:
+            lines.append(line)
+            continue
+        options = parse_options(marker.group("options"), where)
         if offline():
             log.info("%s: %s=1, registry table not rendered", where, OFFLINE_VARIABLE)
-            return offline_notice()
-        return render_table(filter_services(get_services(), options))
+            text = offline_notice()
+        else:
+            text = render_table(filter_services(get_services(), options))
+        lines.append(indent(text, marker.group("indent")))
+    return "\n".join(lines)
 
-    return MARKER.sub(replace, markdown)
+
+def indent(text: str, prefix: str) -> str:
+    """Indents the lines of a replacement like the marker it replaces.
+
+    Args:
+        text: The replacement, ending with a line break.
+        prefix: The indentation of the marker.
+
+    Returns:
+        The indented text, without its final line break.
+    """
+    return "\n".join(
+        f"{prefix}{line}" if line else line for line in text.rstrip("\n").split("\n")
+    )
 
 
 def offline() -> bool:
@@ -192,6 +235,9 @@ def get_services() -> list[dict[str, Any]]:
 def fetch(url: str) -> Any:
     """Fetches and decodes a JSON document, with one retry.
 
+    Network errors, timeouts, HTTP 429 and 5xx responses are retried once;
+    other errors (e.g. HTTP 404, an invalid URL) fail at once.
+
     Args:
         url: The URL to fetch.
 
@@ -199,31 +245,46 @@ def fetch(url: str) -> Any:
         The decoded JSON document.
 
     Raises:
-        PluginError: If both attempts fail or the response is not JSON.
+        PluginError: If the fetch fails, the response is larger than
+            `MAX_BYTES` or it is not JSON.
     """
     request = urllib.request.Request(url, headers={"Accept": "application/json"})
-    error: Exception | None = None
-    for attempt in range(ATTEMPTS):
-        if attempt:
-            time.sleep(RETRY_DELAY)
+    attempt = 0
+    while True:
+        attempt += 1
         try:
             with urllib.request.urlopen(request, timeout=TIMEOUT) as response:
-                body = response.read()
+                body = response.read(MAX_BYTES + 1)
             break
-        except (OSError, ValueError) as exc:  # URLError, HTTPError, timeouts
-            error = exc
-            log.debug(
-                "registry hook: attempt %d for %s failed: %s", attempt + 1, url, exc
-            )
-    else:
-        raise PluginError(
-            f"registry hook: could not fetch {url}: {error}. Set "
-            f"{OFFLINE_VARIABLE}=1 for local builds without network access"
-        )
+        except (OSError, ValueError, http.client.HTTPException) as exc:
+            # OSError includes URLError, HTTPError and timeouts
+            if attempt == ATTEMPTS or not transient(exc):
+                raise PluginError(
+                    f"registry hook: could not fetch {url}: {exc}. Set "
+                    f"{OFFLINE_VARIABLE}=1 for local builds without network access"
+                ) from exc
+            log.debug("registry hook: attempt %d for %s failed: %s", attempt, url, exc)
+            time.sleep(RETRY_DELAY)
+    if len(body) > MAX_BYTES:
+        raise PluginError(f"registry hook: {url} returned more than {MAX_BYTES} bytes")
     try:
         return json.loads(body)
-    except ValueError as exc:
+    except (ValueError, RecursionError) as exc:
         raise PluginError(f"registry hook: {url} did not return JSON: {exc}") from exc
+
+
+def transient(error: Exception) -> bool:
+    """Tells whether a failed fetch is worth a retry.
+
+    Args:
+        error: The error of the fetch.
+
+    Returns:
+        True for network errors, timeouts and HTTP 429 and 5xx responses.
+    """
+    if isinstance(error, urllib.error.HTTPError):
+        return error.code == 429 or error.code >= 500
+    return not isinstance(error, ValueError)
 
 
 def validate(data: Any) -> list[dict[str, Any]]:
@@ -329,8 +390,10 @@ def escape(text: str) -> str:
         replaced by spaces.
     """
     text = " ".join(text.split())
+    text = MARKDOWN_SPECIAL.sub(r"\\\1", text)
     text = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-    return MARKDOWN_SPECIAL.sub(r"\\\1", text)
+    # An entity, so that `:name:` doesn't become an emoji or icon
+    return text.replace(":", "&#58;")
 
 
 def link(text: str, url: str | None) -> str:

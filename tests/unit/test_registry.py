@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import copy
+import http.client
 import io
 import json
 import urllib.error
+from email.message import Message
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, Self
@@ -161,6 +163,37 @@ def test_marker_renders_table(
     assert len(requests) == 1
 
 
+def test_markers_in_code_blocks_are_examples(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Leaves markers in fenced code blocks alone."""
+    monkeypatch.setenv(registry.OFFLINE_VARIABLE, "1")
+    markdown = (
+        "````markdown\n"
+        "```\n"
+        "<!-- registry:services -->\n"
+        "```\n"
+        "````\n"
+        "~~~\n"
+        "<!-- registry:services unknown=1 -->\n"
+        "~~~\n"
+        "<!-- registry:services -->\n"
+    )
+    lines = registry.on_page_markdown(
+        markdown, page(), NO_CONFIG, NO_FILES
+    ).splitlines()
+    assert lines[:8] == markdown.splitlines()[:8]
+    assert lines[8].startswith("!!! warning")
+
+
+def test_marker_keeps_indentation(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Indents the replacement like the marker, e.g. inside an admonition."""
+    monkeypatch.setenv(registry.OFFLINE_VARIABLE, "1")
+    markdown = '!!! note "Services"\n\n    <!-- registry:services -->\n\nAfter\n'
+    result = registry.on_page_markdown(markdown, page(), NO_CONFIG, NO_FILES)
+    expected = registry.indent(registry.offline_notice(), "    ")
+    assert result == f'!!! note "Services"\n\n{expected}\n\nAfter\n'
+    assert expected.startswith('    !!! warning "Services not loaded"\n\n        This')
+
+
 def test_marker_offline_renders_warning(
     monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -234,12 +267,26 @@ def test_fetch_retries_once(monkeypatch: pytest.MonkeyPatch) -> None:
     assert sleeps == [registry.RETRY_DELAY]
 
 
+def http_error(code: int) -> urllib.error.HTTPError:
+    """Builds an HTTP error.
+
+    Args:
+        code: The HTTP status code.
+
+    Returns:
+        The error.
+    """
+    return urllib.error.HTTPError(f"{URL}/services", code, "Error", Message(), None)
+
+
 @pytest.mark.parametrize(
     "error",
     [
         urllib.error.URLError("no route"),
-        urllib.error.HTTPError(f"{URL}/services", 503, "Unavailable", {}, None),  # type: ignore[arg-type]
-        ValueError("unknown url type"),
+        TimeoutError("timed out"),
+        http.client.IncompleteRead(b""),
+        http_error(503),
+        http_error(429),
     ],
 )
 def test_fetch_fails_after_retry(
@@ -252,10 +299,34 @@ def test_fetch_fails_after_retry(
     assert len(requests) == registry.ATTEMPTS
 
 
-def test_fetch_fails_on_invalid_json(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Fails the build if the response isn't JSON."""
-    fake_urlopen(monkeypatch, b"<html>Bad gateway</html>")
+@pytest.mark.parametrize(
+    "error", [http_error(404), http_error(401), ValueError("unknown url type")]
+)
+def test_fetch_fails_at_once_on_permanent_errors(
+    monkeypatch: pytest.MonkeyPatch, error: Exception
+) -> None:
+    """Doesn't retry errors that a retry can't fix."""
+    requests = fake_urlopen(monkeypatch, error)
+    with pytest.raises(PluginError, match="could not fetch"):
+        registry.fetch(f"{URL}/services")
+    assert len(requests) == 1
+
+
+@pytest.mark.parametrize("body", [b"<html>Bad gateway</html>", b"[" * 100_000])
+def test_fetch_fails_on_invalid_json(
+    monkeypatch: pytest.MonkeyPatch, body: bytes
+) -> None:
+    """Fails the build if the response isn't JSON (or nested too deeply)."""
+    fake_urlopen(monkeypatch, body)
     with pytest.raises(PluginError, match="did not return JSON"):
+        registry.fetch(f"{URL}/services")
+
+
+def test_fetch_fails_on_large_response(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Fails the build if the response is too large."""
+    monkeypatch.setattr(registry, "MAX_BYTES", 10)
+    fake_urlopen(monkeypatch, b"[" + b" " * 20 + b"]")
+    with pytest.raises(PluginError, match="more than 10 bytes"):
         registry.fetch(f"{URL}/services")
 
 
@@ -377,6 +448,7 @@ def test_filter_services_without_environment(
         ("[x](y) *z* _w_ `v` #1 !", r"\[x\]\(y\) \*z\* \_w\_ \`v\` \#1 \!"),
         ("two\n  lines", "two lines"),
         ("back\\slash", "back\\\\slash"),
+        (":smile:", "&#58;smile&#58;"),
     ],
 )
 def test_escape(text: str, expected: str) -> None:
@@ -421,7 +493,7 @@ def test_render_row(services: list[dict[str, Any]]) -> None:
         "| BIH Funnel "
         "| [Berlin Institute of Health at Charité \\(BIH\\)](https://www.bihealth.org/) "
         "| TES unknown | unknown | prod "
-        "| [https://spe4hd.tes.bihealth.org/ga4gh/tes/v1]"
+        "| [https&#58;//spe4hd.tes.bihealth.org/ga4gh/tes/v1]"
         "(https://spe4hd.tes.bihealth.org/ga4gh/tes/v1) "
         "| [Docs](https://docs.elixir-on.cloud/) |"
     )
@@ -436,7 +508,7 @@ def test_render_row_without_optional_fields(
     del service["organization"]["url"]
     assert registry.render_row(service) == (
         "| BIH weskit | BIH Germany | WES 1.1.0 | 1.1.0 | – "
-        "| [https://spe4hd.weskit.bihealth.org/ga4gh/wes/v1/service-info]"
+        "| [https&#58;//spe4hd.weskit.bihealth.org/ga4gh/wes/v1/service-info]"
         "(https://spe4hd.weskit.bihealth.org/ga4gh/wes/v1/service-info) | – |"
     )
 
