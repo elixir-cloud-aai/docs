@@ -48,7 +48,7 @@ jobs:
     permissions: {}
     steps:
       - name: Check PR title
-        uses: elixir-cloud-aai/.github/actions/pr-title@743e82d290a53768454999e413756a924e383259 # v1.0.0
+        uses: elixir-cloud-aai/.github/actions/pr-title@31f22fccc1f3c597ed7c1d1f75b2f85522155348 # v1.1.0
 
   docs:
     name: Docs
@@ -108,7 +108,7 @@ jobs:
     permissions: {}
     steps:
       - name: Check results of all jobs
-        uses: elixir-cloud-aai/.github/actions/gate@743e82d290a53768454999e413756a924e383259 # v1.0.0
+        uses: elixir-cloud-aai/.github/actions/gate@31f22fccc1f3c597ed7c1d1f75b2f85522155348 # v1.1.0
         with:
           needs: ${{ toJSON(needs) }}
           # `title` is skipped on purpose on pushes and for Dependabot
