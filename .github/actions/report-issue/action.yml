@@ -38,8 +38,8 @@ runs:
           echo
           # GitHub rejects bodies over 65,536 characters
           if [ "$(wc -c < "$REPORT")" -gt 60000 ]; then
-            head -c 60000 "$REPORT"
-            echo
+            # Whole lines only, so that no character is cut in half
+            head -c 60000 "$REPORT" | sed '$d'
             echo
             echo "The report is longer; see the run for all of it."
           else

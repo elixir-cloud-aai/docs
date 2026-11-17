@@ -116,6 +116,9 @@ def write(path: Path, text: str) -> Path:
         ("See https://h.org/ga4gh/tes/v1.", "https://h.org/ga4gh/tes/v1"),
         ("https://u:p@h.org:443/ga4gh/tes/v1", "https://h.org/ga4gh/tes/v1"),
         ("http://h.org:80/ga4gh/tes/v1", "http://h.org/ga4gh/tes/v1"),
+        ("https://h.org./ga4gh/tes/v1", "https://h.org/ga4gh/tes/v1"),
+        ("https://h.org.:443/ga4gh/tes/v1", "https://h.org/ga4gh/tes/v1"),
+        ("https://h.org.:8443/ga4gh/tes/v1", "https://h.org:8443/ga4gh/tes/v1"),
         ("http://h.org:443/ga4gh/tes/v1", "http://h.org:443/ga4gh/tes/v1"),
         ("https://h.org/ga4gh/drs/v1.2", None),
         ("https://h.org/ga4gh/tes/v1beta", None),
@@ -592,8 +595,9 @@ def site(tmp_path: Path, server: str, monkeypatch: pytest.MonkeyPatch) -> Path:
         ),
     }
     monkeypatch.chdir(tmp_path)
-    # The local server's address is a loopback address, which the check
-    # skips as a placeholder in real docs
+    # Only the local server counts as a real host: the check would skip its
+    # loopback address, and every other host (e.g. tes.example.org) is
+    # treated as a placeholder
     monkeypatch.setattr(check_services, "placeholder", lambda host: host != "127.0.0.1")
     return tmp_path
 

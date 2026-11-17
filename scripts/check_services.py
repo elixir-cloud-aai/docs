@@ -134,6 +134,9 @@ def base_url(match: re.Match[str]) -> str:
     scheme = match["scheme"].lower()
     host = match["host"].lower().rsplit("@", 1)[-1]
     host = host.removesuffix(f":{DEFAULT_PORTS[scheme]}")
+    # Fully qualified names may end with a dot, before the port if any
+    name, colon, port = host.partition(":")
+    host = f"{name.rstrip('.')}{colon}{port}"
     return (
         f"{scheme}://{host}{match['prefix']}"
         f"/ga4gh/{match['api'].lower()}/v{match['version']}"
