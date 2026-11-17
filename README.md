@@ -47,6 +47,30 @@ lychee --config lychee.toml "docs/**/*.md" "includes/*.md" README.md
 
 Set `GITHUB_TOKEN` to any token first to avoid GitHub's rate limits.
 
+The same workflow checks the GA4GH service URLs in the docs (URLs with
+`/ga4gh/<api>/v<n>`) and opens an issue "Service URLs in the docs" if a
+service is not in the [Cloud Registry](#services-from-the-cloud-registry)
+or does not answer `GET <url>/service-info`. To run it locally:
+
+```sh
+python scripts/check_services.py
+```
+
+It exits with 0 if all services are fine, 2 if it found problems and 1 if
+it could not run (e.g. the registry is down). Placeholders such as
+`example.org`, `<HOST>` and `localhost` are skipped. Configure the rest in
+[`service-check.toml`](service-check.toml):
+
+- `skip_hosts`: public third-party services (e.g. WorkflowHub), which are
+  not ours to register.
+- `unregistered`: our services that pages still name but that are not
+  registered yet, each with the reason. They must still answer
+  `service-info`. The check reports an entry once the service is
+  registered or no page names it any more, so remove it then.
+
+Prefer linking to a service's registry entry over naming its address; a
+new address in the docs needs a registry entry first.
+
 ### Services from the Cloud Registry
 
 Tables of the deployed services are not written by hand: the hook

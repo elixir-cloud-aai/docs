@@ -1,7 +1,8 @@
-# Weekly check of the external links in the docs. Not part of `ci.yml` and
-# not a required check, because external sites go down at random and would
-# block merges; dead links open (or comment on) one issue instead. Links
-# between pages are checked by `mkdocs build --strict` in `ci.yml`
+# Weekly checks of what the docs point to outside this repository: external
+# links (`links`) and GA4GH service URLs (`services`). Not part of `ci.yml`
+# and not required checks, because external sites go down at random and
+# would block merges; each check opens (or comments on) one issue instead.
+# Links between pages are checked by `mkdocs build --strict` in `ci.yml`
 name: Links
 
 on:
@@ -52,28 +53,57 @@ jobs:
         run: exit 1
       - name: Report dead links
         if: steps.lychee.outputs.exit_code == '2'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          RUN_URL: >-
-            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        uses: ./.github/actions/report-issue
+        with:
+          title: Dead links in the docs
+          intro: The weekly link check found dead links
+          report: lychee/out.md
+      # Show the run as failed, too
+      - name: Fail on dead links
+        if: steps.lychee.outputs.exit_code == '2'
+        run: exit 1
+
+  # GA4GH service URLs in the docs that are not in the Cloud Registry or
+  # don't answer `service-info` (`scripts/check_services.py`, configured in
+  # `service-check.toml`)
+  services:
+    name: Service check
+    if: github.repository_owner == 'elixir-cloud-aai'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Standard library only, no dependencies
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+      # Exit code 2 for problems, 1 if the check could not run (e.g. the
+      # registry is down), which fails the run without an issue
+      - name: Check services
+        id: check
         run: |
-          title="Dead links in the docs"
-          {
-            echo "The weekly link check found dead links ([run]($RUN_URL))."
-            echo
-            # GitHub rejects bodies over 65,536 characters
-            head -c 60000 lychee/out.md
-          } > body.md
-          existing=$(gh issue list --state open --search "in:title \"$title\"" \
-            --json number,title \
-            --jq "map(select(.title == \"$title\")) | .[0].number // empty")
-          if [ -n "$existing" ]; then
-            gh issue comment "$existing" --body-file body.md
-          else
-            gh issue create --title "$title" --body-file body.md \
-              --label "type: bug" --label "priority: medium" \
-              --label "workload: hours" --label "status: triage"
+          status=0
+          python scripts/check_services.py --output service-check/out.md || status=$?
+          echo "exit_code=$status" >> "$GITHUB_OUTPUT"
+          if [ "$status" != 0 ] && [ "$status" != 2 ]; then
+            exit "$status"
           fi
-          # Show the run as failed, too
-          exit 1
+      - name: Report problems
+        if: steps.check.outputs.exit_code == '2'
+        uses: ./.github/actions/report-issue
+        with:
+          title: Service URLs in the docs
+          intro: >-
+            The weekly service check found service URLs that are not in
+            the Cloud Registry or don't answer `service-info`
+          report: service-check/out.md
+      - name: Fail on problems
+        if: steps.check.outputs.exit_code == '2'
+        run: exit 1

@@ -1,0 +1,46 @@
+# Opens an issue with a report of a scheduled check, or comments on the open
+# issue of the same title, so that every check keeps one issue. Used by the
+# jobs of `.github/workflows/links.yml`; the job needs `issues: write`
+name: Report issue
+description: Open or comment on the issue of a check's findings
+inputs:
+  title:
+    description: Title of the issue, the same for every run of a check
+    required: true
+  intro:
+    description: First paragraph of the issue or comment (Markdown)
+    required: true
+  report:
+    description: Path of the report (Markdown), appended to the intro
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Open or comment on the issue
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
+        TITLE: ${{ inputs.title }}
+        INTRO: ${{ inputs.intro }}
+        REPORT: ${{ inputs.report }}
+        RUN_URL: >-
+          ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      run: |
+        body="$RUNNER_TEMP/issue-body.md"
+        {
+          echo "$INTRO ([run]($RUN_URL))."
+          echo
+          # GitHub rejects bodies over 65,536 characters
+          head -c 60000 "$REPORT"
+        } > "$body"
+        existing=$(gh issue list --state open --search "in:title \"$TITLE\"" \
+          --json number,title \
+          --jq 'map(select(.title == env.TITLE)) | .[0].number // empty')
+        if [ -n "$existing" ]; then
+          gh issue comment "$existing" --body-file "$body"
+        else
+          gh issue create --title "$TITLE" --body-file "$body" \
+            --label "type: bug" --label "priority: medium" \
+            --label "workload: hours" --label "status: triage"
+        fi
