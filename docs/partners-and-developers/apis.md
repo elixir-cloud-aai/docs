@@ -35,7 +35,7 @@ curl "https://elixir-on.cloud/ga4gh/registry/v1/services" -H "accept: applicatio
 ```
 
 Each entry has the URL of the service, its `type` (for example, artifact
-`TES` and version `1.0.0`), its `environment` and its organization. Use the
+`tes` and version `1.0.0`), its `environment` and its organization. Use the
 `type` to choose a service and the `url` to call it.
 
 You can also browse the registry in its [web
@@ -81,7 +81,8 @@ These services of the deployment accept LS Login access tokens:
 | Cloud Registry | writes; reads are public |
 | [WESkit](https://gitlab.com/one-touch-pipeline/weskit/documentation) at the Berlin Institute of Health (BIH) | as its operators set it up |
 
-Find their addresses in the Cloud Registry (step 1).
+Find their addresses in the Cloud Registry (step 1). proTES and TRS-Filer
+aren't registered yet: their pages give their addresses.
 
 !!! note "Your client ID must be accepted by the service"
     A service accepts tokens only for the client IDs on its

@@ -1,5 +1,5 @@
 ---
-last_verified: null
+last_verified: 2026-11-17
 ---
 
 # Onboarding
@@ -14,7 +14,7 @@ follow [Tutorial: Onboard a Data Centre](data-centre-onboarding-tutorial.md).
 
 You need:
 
-- a Kubernetes cluster, or an HPC or HTC cluster with Slurm
+- a Kubernetes cluster, or an HPC or HTC cluster with Slurm or OpenPBS
 - an LS Login account (see [LS Login](ls-login.md))
 - an HTTPS host name for your TES service
 
@@ -37,7 +37,7 @@ Choose the TES service that fits your cluster:
 |---|---|
 | Kubernetes or OpenShift | [TESK](services/tesk.md) |
 | Kubernetes | [Poiesis](services/poiesis.md) |
-| HPC or HTC (Slurm) | [Funnel](services/funnel.md) |
+| HPC or HTC (Slurm, OpenPBS) | [Funnel](services/funnel.md) |
 
 Follow the product docs that each page links to. When it works,
 `GET /ga4gh/tes/v1/tasks` on your TES service returns a list of tasks.

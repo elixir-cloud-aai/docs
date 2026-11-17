@@ -146,7 +146,8 @@ TRS-Filer's default, `dev`, is refused here). Follow the checklist of
 
 The chart of TRS-Filer 0.5.0 has no value for the service info yet: without
 an overlay of your own, it serves the placeholders of its base config
-(`id: org.example.trs-filer`). A value is planned
+(`id: org.example.trs-filer`). The chart on TRS-Filer's default branch
+has the value, which comes with the next release
 ([trs-filer#135][trsfiler-135]). Until then, add a config overlay to the
 unpacked chart, as described in [Configuration][trsfiler-configuration]:
 
@@ -184,8 +185,11 @@ every upgrade, until the chart takes the service info as a value.
 
 TRS-Filer 0.5.0 has no authentication: anyone who reaches the API can
 register, replace and delete tools (see [Access
-control][trsfiler-access-control]). Tokens for writes are planned
-([trs-filer#7][trsfiler-7]). Until then:
+control][trsfiler-access-control]). Tokens for writes are on TRS-Filer's
+default branch and come with the next release
+([trs-filer#7][trsfiler-7]); the [TRS-Filer of the
+deployment](services/trsfiler.md#in-the-elixir-on-cloud) runs such a
+development build. Until then:
 
 - Let your Ingress controller, router or a proxy in front of the cluster
   allow only `GET`, `HEAD` and `OPTIONS` from the public, and the other
@@ -323,6 +327,9 @@ labelled `synced`; after a new URL or API type, ask the
 or an upgrade](using-cloud-registry.md#after-a-deployment-or-an-upgrade).
 
 ## Planned
+
+These are on TRS-Filer's default branch and come with its next release;
+this tutorial will then move to that release.
 
 - **Writes with tokens** in TRS-Filer ([trs-filer#7][trsfiler-7]), which
   replace the restriction of writes at the Ingress controller or proxy.

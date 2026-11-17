@@ -193,8 +193,11 @@ curl https://tes.example.org/ga4gh/tes/v1/service-info
 **The policy of the ELIXIR On-Cloud:** users of a Node's TES service must be
 members of the LS Login group `ECP_CLN` or of one of its subgroups. LS Login
 releases group memberships as values of the claim `eduperson_entitlement`.
-The exact values are being recorded in [generic-issues#46][gi-46]: ask the
-[admins][elixir-on-cloud-email] for them rather than guessing them.
+The values are recorded in [generic-issues#46][gi-46]: LS Login releases
+them in the user info only, not in the access token, and only those of the
+groups assigned to the client that issued the token. Ask the
+[admins][elixir-on-cloud-email] which values your service must accept
+rather than guessing them.
 
 **Keep `GET /service-info` public.** The registry can only import and sync
 service info that answers without a token (see [Using the Cloud
@@ -204,8 +207,9 @@ Registry](using-cloud-registry.md#registering-a-service)).
 
 With `auth.mode: auth`, TESK requires an access token for every endpoint
 except `GET /service-info`, which stays public by default
-(`auth.serviceInfoPublic`). Until the groups of `ECP_CLN` are recorded (see
-the gaps below), authorise users by a claim of the user info (see
+(`auth.serviceInfoPublic`). Until the group model of TESK has been checked
+with the groups of `ECP_CLN` (see the gaps below), authorise users by a
+claim of the user info (see
 [Authorisation by a claim][tesk-claim]). Add to `my-values.yaml`, with the
 values that the admins give you:
 
@@ -237,9 +241,10 @@ change them later, run its `helm upgrade --install` command again.
       accepted with it has not been verified for this tutorial.
     - **Group model:** from chart 0.3.0, the chart also sets the prefix and
       suffix that tesk-api expects around group names (`auth.groups`, see
-      [LS Login and other providers][tesk-ls-login]). The names of the
-      groups of `ECP_CLN` aren't recorded yet ([generic-issues#46][gi-46]).
-      Hence the claim above.
+      [LS Login and other providers][tesk-ls-login]). The values of the
+      groups of `ECP_CLN` are recorded in [generic-issues#46][gi-46], but
+      whether the group model of tesk-api works with them has not been
+      verified for this tutorial. Hence the claim above.
     - **Status:** enabling LS Login on the TESK deployments of the ELIXIR
       On-Cloud, and recording a configuration that works, is tracked in
       [generic-issues#35][gi-35] and [generic-issues#50][gi-50]. Check them
@@ -454,9 +459,13 @@ TESK, as described in [Deployment][sidecar-deployment]:
     ```
 
 !!! warning "Gap"
-    The central Pubgrade service of the ELIXIR On-Cloud isn't deployed yet
-    ([generic-issues#32][gi-32]), so nothing notifies the sidecar so far.
-    Until then, upgrade TESK by hand, following the [upgrade
+    The central Pubgrade service of the ELIXIR On-Cloud runs on the Finnish
+    Node since 2026-11-12 ([generic-issues#32][gi-32]) and notifies the
+    sidecars subscribed to tesk-api of its new releases. So far, only the
+    sidecar next to the TESK of the Finnish Node is subscribed; sidecars at
+    more Nodes are tracked in [generic-issues#34][gi-34]. Ask the
+    [admins][elixir-on-cloud-email] to subscribe yours. Until then, upgrade
+    TESK by hand, following the [upgrade
     notes][tesk-upgrading], and end with [step
     9](#9-keep-the-registry-entry-up-to-date).
 
@@ -494,6 +503,7 @@ follow [Tutorial: Onboard a Data Centre](data-centre-onboarding-tutorial.md).
 [gi-21]: <https://github.com/elixir-cloud-aai/generic-issues/issues/21>
 [gi-31]: <https://github.com/elixir-cloud-aai/generic-issues/issues/31>
 [gi-32]: <https://github.com/elixir-cloud-aai/generic-issues/issues/32>
+[gi-34]: <https://github.com/elixir-cloud-aai/generic-issues/issues/34>
 [gi-35]: <https://github.com/elixir-cloud-aai/generic-issues/issues/35>
 [gi-46]: <https://github.com/elixir-cloud-aai/generic-issues/issues/46>
 [gi-50]: <https://github.com/elixir-cloud-aai/generic-issues/issues/50>

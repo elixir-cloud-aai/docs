@@ -578,14 +578,16 @@ end with the exit code `1` on errors and `2` on missing arguments, like the
 
 ## What's coming
 
-These features are planned in the GA4GH SDK. Follow the issues to see when
-they arrive; this page will be updated when they do.
+These features are in the GA4GH SDK after the commit that this page
+describes (`af0e021`), or come with its first release. This page will be
+updated when it moves to a newer commit or a release.
 
 | Feature | Status |
 |---|---|
-| Ready-made binaries, without Rust | Planned: [ga4gh-sdk#91](https://github.com/ga4gh/ga4gh-sdk/issues/91). |
-| A container image of the CLI | Planned: [ga4gh-sdk#189](https://github.com/ga4gh/ga4gh-sdk/issues/189). |
-| Download the logs and output files of TES tasks | Planned: [ga4gh-sdk#188](https://github.com/ga4gh/ga4gh-sdk/issues/188). |
+| Ready-made binaries, without Rust | Built by the release workflow on the default branch ([ga4gh-sdk#91](https://github.com/ga4gh/ga4gh-sdk/issues/91)); none published yet, as the SDK has no release yet. |
+| A container image of the CLI | Built by the release workflow on the default branch ([ga4gh-sdk#189](https://github.com/ga4gh/ga4gh-sdk/issues/189)); none published yet, as the SDK has no release yet. |
+| Download the logs and output files of TES tasks | On the default branch since 2026-11-15 ([ga4gh-sdk#188](https://github.com/ga4gh/ga4gh-sdk/issues/188)). |
+| Log in with the OpenID Connect device flow, which LS Login offers | On the default branch since 2026-11-15 ([ga4gh-sdk#248](https://github.com/ga4gh/ga4gh-sdk/pull/248)); see the SDK's [authentication guide](https://github.com/ga4gh/ga4gh-sdk/blob/main/docs/authentication.md). |
 
 ## How this page was tested
 

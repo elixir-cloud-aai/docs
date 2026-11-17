@@ -38,12 +38,14 @@ As of November 2026:
 | Address | TES API at `https://protes.rahtiapp.fi/ga4gh/tes/v1` (the host itself has no page) |
 | Version | proTES 0.6.0 |
 | Access | LS Login access tokens of members of the group `ECP_CLN:EOC-Compute`, issued to a client that it accepts, such as Krini's (see [Researchers](../../researchers/index.md#before-you-start)) |
-| TES services | the TESK of the Finnish Node, listed in its configuration |
+| Environment | `test`: its service info calls it "proTES sandbox (BioHackathon 2026)" |
+| TES services | one, listed in its configuration: the TESK for tests at CSC (`csc-tesk-noauth.rahtiapp.fi`), which accepts tasks without a token |
 | Discovery in the Cloud Registry | off |
 
 A Node's TES service is added to the configuration when its admins ask for
 it and the service requires LS Login tokens (see [Get added behind the
 gateway](../node-onboarding-tutorial.md#7-get-added-behind-the-gateway)).
+No Node's TES service has been added yet.
 The service info of proTES (`GET /ga4gh/tes/v1/service-info`) lists the TES
 services that it uses. The rest of its configuration, such as its plugins
 and how it authenticates at its TES services, is tracked in
