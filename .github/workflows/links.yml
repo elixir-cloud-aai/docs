@@ -86,6 +86,7 @@ jobs:
           python-version: "3.13"
       # Exit code 2 for problems, 1 if the check could not run (e.g. the
       # registry is down), which fails the run without an issue
+      # The report is also in the job log, in case the issue cuts it
       - name: Check services
         id: check
         run: |
@@ -101,8 +102,8 @@ jobs:
         with:
           title: Service URLs in the docs
           intro: >-
-            The weekly service check found service URLs that are not in
-            the Cloud Registry or don't answer `service-info`
+            The weekly service check found problems with the service URLs
+            in the docs or with `service-check.toml`
           report: service-check/out.md
       - name: Fail on problems
         if: steps.check.outputs.exit_code == '2'

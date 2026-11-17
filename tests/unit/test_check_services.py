@@ -23,7 +23,12 @@ from check_services import CheckError, Config, Finding
 
 ROOT = Path(__file__).parent.parent.parent
 SCRIPT = ROOT / "scripts" / "check_services.py"
+# The recorded registry response of the hook tests, shared on purpose:
+# both must handle the real response
 DATA = ROOT / "tests" / "data" / "registry" / "services.json"
+
+# The real function, which the fixture `site` replaces
+PLACEHOLDER = check_services.placeholder
 
 
 class Server(http.server.BaseHTTPRequestHandler):
@@ -108,6 +113,10 @@ def write(path: Path, text: str) -> Path:
         ("https://H.org/ga4gh/TES/v1/tasks?x=1", "https://h.org/ga4gh/tes/v1"),
         ("HTTP://h.org:8443/p/q/ga4gh/wes/v1/", "http://h.org:8443/p/q/ga4gh/wes/v1"),
         ("${TES:-https://h.org}/ga4gh/tes/v1", "https://h.org/ga4gh/tes/v1"),
+        ("See https://h.org/ga4gh/tes/v1.", "https://h.org/ga4gh/tes/v1"),
+        ("https://u:p@h.org:443/ga4gh/tes/v1", "https://h.org/ga4gh/tes/v1"),
+        ("http://h.org:80/ga4gh/tes/v1", "http://h.org/ga4gh/tes/v1"),
+        ("http://h.org:443/ga4gh/tes/v1", "http://h.org:443/ga4gh/tes/v1"),
         ("https://h.org/ga4gh/drs/v1.2", None),
         ("https://h.org/ga4gh/tes/v1beta", None),
         ("https://h.org/ga4gh/tes/", None),
@@ -149,12 +158,19 @@ def test_hostname(url: str, host: str) -> None:
         ("127.0.0.1", True),
         ("0.0.0.0", True),
         ("::1", True),
+        ("10.0.0.5", True),
+        ("192.168.1.2", True),
+        ("169.254.169.254", True),
+        ("host.docker.internal", True),
+        ("printer.local", True),
+        ("tesk-api.tesk.svc", True),
+        ("tesk-api.tesk.svc.cluster.local", True),
         ("%3chost%3e.org", True),
         ("$host.org", True),
         ("*.rahtiapp.fi", True),
         ("protes.rahtiapp.fi", False),
         ("example.org.evil.fi", False),
-        ("192.0.2.10", False),
+        ("8.8.8.8", False),
     ],
 )
 def test_placeholder(host: str, expected: bool) -> None:
@@ -414,87 +430,115 @@ def test_registered_urls_unreachable(server: str) -> None:
         check_services.registered_urls(f"{server}/r")
 
 
-def test_probe(server: str) -> None:
+def test_probe_service_info(server: str) -> None:
     """Accepts a JSON object and reports anything else."""
     Server.routes = {
         "/ok/service-info": (200, {"id": "x"}),
         "/list/service-info": (200, []),
     }
-    assert check_services.probe(f"{server}/ok") is None
-    assert check_services.probe(f"{server}/list") == (
-        "`service-info` is not a JSON object"
-    )
-    assert check_services.probe(f"{server}/gone") == "`service-info` failed: HTTP 404"
+    probe = check_services.probe_service_info
+    assert probe(f"{server}/ok") is None
+    assert probe(f"{server}/list") == "`service-info` is not a JSON object"
+    assert probe(f"{server}/gone") == "`service-info` failed: HTTP 404"
 
 
-def fake_probe(results: dict[str, str | None]) -> Any:
-    """Returns a probe that answers from a table and records its calls.
+TES = "https://tes.org/ga4gh/tes/v1"
+
+
+def run_check(
+    mentions: dict[str, list[str]],
+    registered: set[str] | None = None,
+    config: Config | None = None,
+    problems: dict[str, str] | None = None,
+) -> tuple[list[Finding], int, list[str]]:
+    """Runs `check` with a fake probe of `service-info`.
 
     Args:
-        results: The problem (or None) per URL; unknown URLs are fine.
+        mentions: Where each base URL is named.
+        registered: The base URLs in the registry; none if not given.
+        config: The configuration; the default if not given.
+        problems: The problem of `service-info` per URL; others are fine.
 
     Returns:
-        The probe; its calls are in its attribute `calls`.
+        The findings, the number of services checked and the probed URLs.
     """
-    calls: list[str] = []
+    probed: list[str] = []
 
     def probe(url: str) -> str | None:
-        calls.append(url)
-        return results.get(url)
+        probed.append(url)
+        return (problems or {}).get(url)
 
-    probe.calls = calls  # type: ignore[attr-defined]
-    return probe
-
-
-def test_check() -> None:
-    """Reports unregistered and unreachable services and stale entries."""
-    mentions = {
-        "https://ok.org/ga4gh/tes/v1": ["a.md:1"],
-        "https://new.org/ga4gh/tes/v1": ["a.md:2", "b.md:3"],
-        "https://down.org/ga4gh/tes/v1": ["a.md:4"],
-        "https://known.org/ga4gh/trs/v2": ["a.md:5"],
-        "https://tes.example.org/ga4gh/tes/v1": ["a.md:6"],
-        "https://workflowhub.eu/ga4gh/trs/v2": ["a.md:7"],
-    }
-    registered = {
-        "https://ok.org/ga4gh/tes/v1",
-        "https://down.org/ga4gh/tes/v1",
-        "https://now.org/ga4gh/tes/v1",
-    }
-    config = Config(
-        skip_hosts=frozenset({"workflowhub.eu"}),
-        unregistered={
-            "https://known.org/ga4gh/trs/v2": "later",
-            "https://now.org/ga4gh/tes/v1": "registered meanwhile",
-            "https://gone.org/ga4gh/tes/v1": "no page names it",
-        },
+    findings, checked = check_services.check(
+        mentions, registered or set(), config or Config(), probe
     )
-    probe = fake_probe({"https://down.org/ga4gh/tes/v1": "`service-info` failed"})
-    findings, checked = check_services.check(mentions, registered, config, probe)
-    assert checked == 4
-    assert sorted(probe.calls) == sorted(
-        [
-            "https://ok.org/ga4gh/tes/v1",
-            "https://new.org/ga4gh/tes/v1",
-            "https://down.org/ga4gh/tes/v1",
-            "https://known.org/ga4gh/trs/v2",
-        ]
-    )
+    return findings, checked, probed
+
+
+def test_check_registered_service() -> None:
+    """Finds nothing for a registered service that answers."""
+    assert run_check({TES: ["a.md:1"]}, {TES}) == ([], 1, [TES])
+
+
+def test_check_unregistered_service() -> None:
+    """Reports a service that is not in the registry, with its locations."""
+    findings, _, _ = run_check({TES: ["a.md:1", "b.md:2"]})
+    assert findings == [Finding(TES, "not in the Cloud Registry", ("a.md:1", "b.md:2"))]
+
+
+def test_check_service_down() -> None:
+    """Reports a registered service whose `service-info` fails."""
+    findings, _, _ = run_check({TES: ["a.md:1"]}, {TES}, problems={TES: "down"})
+    assert findings == [Finding(TES, "down", ("a.md:1",))]
+
+
+def test_check_unregistered_and_down() -> None:
+    """Reports both problems of a service."""
+    findings, _, _ = run_check({TES: ["a.md:1"]}, problems={TES: "down"})
+    assert [f.problem for f in findings] == ["not in the Cloud Registry", "down"]
+
+
+def test_check_allowed_unregistered_service() -> None:
+    """Accepts a listed unregistered service but still probes it."""
+    config = Config(unregistered={TES: "later"})
+    assert run_check({TES: ["a.md:1"]}, config=config) == ([], 1, [TES])
+
+
+@pytest.mark.parametrize(
+    "url",
+    ["https://tes.example.org/ga4gh/tes/v1", "https://workflowhub.eu/ga4gh/trs/v2"],
+)
+def test_check_skips(url: str) -> None:
+    """Neither checks nor probes placeholders and skipped hosts."""
+    config = Config(skip_hosts=frozenset({"workflowhub.eu"}))
+    assert run_check({url: ["a.md:1"]}, config=config) == ([], 0, [])
+
+
+def test_check_stale_entries() -> None:
+    """Reports listed services that are registered now or no longer named."""
+    now = "https://now.org/ga4gh/tes/v1"
+    gone = "https://gone.org/ga4gh/tes/v1"
+    config = Config(unregistered={now: "r", gone: "r"})
+    findings, _, _ = run_check({now: ["a.md:1"]}, {now}, config)
     assert findings == [
-        Finding("https://down.org/ga4gh/tes/v1", "`service-info` failed", ("a.md:4",)),
-        Finding(
-            "https://new.org/ga4gh/tes/v1",
-            "not in the Cloud Registry",
-            ("a.md:2", "b.md:3"),
-        ),
-        Finding(
-            "https://gone.org/ga4gh/tes/v1",
-            "no page names it; remove it from `unregistered`",
-        ),
-        Finding(
-            "https://now.org/ga4gh/tes/v1",
-            "registered now; remove it from `unregistered`",
-        ),
+        Finding(gone, "no page names it; remove it from `unregistered`"),
+        Finding(now, "registered now; remove it from `unregistered`"),
+    ]
+
+
+def test_check_order() -> None:
+    """Lists findings of named services by URL, then stale entries."""
+    gone = "https://gone.org/ga4gh/tes/v1"
+    mentions = {
+        "https://b.org/ga4gh/tes/v1": ["a.md:1"],
+        "https://a.org/ga4gh/tes/v1": ["a.md:2"],
+    }
+    config = Config(unregistered={gone: "r"})
+    findings, checked, _ = run_check(mentions, config=config)
+    assert checked == 2
+    assert [f.url for f in findings] == [
+        "https://a.org/ga4gh/tes/v1",
+        "https://b.org/ga4gh/tes/v1",
+        gone,
     ]
 
 
@@ -559,6 +603,15 @@ def test_main_without_problems(site: Path, capsys: pytest.CaptureFixture[str]) -
     Server.routes["/ga4gh/registry/v1/service-info"] = (200, {"id": "r"})
     assert check_services.main([]) == 0
     assert "Checked 1 service URLs" in capsys.readouterr().out
+
+
+def test_main_skips_placeholders(
+    site: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Skips the loopback and example services of the docs in a real run."""
+    monkeypatch.setattr(check_services, "placeholder", PLACEHOLDER)
+    assert check_services.main([]) == 0
+    assert "Checked 0 service URLs" in capsys.readouterr().out
 
 
 def test_main_with_problems(site: Path, capsys: pytest.CaptureFixture[str]) -> None:

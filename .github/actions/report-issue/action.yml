@@ -13,6 +13,10 @@ inputs:
   report:
     description: Path of the report (Markdown), appended to the intro
     required: true
+  labels:
+    description: Comma-separated labels of a new issue
+    required: false
+    default: "type: bug,priority: medium,workload: hours,status: triage"
 runs:
   using: composite
   steps:
@@ -24,6 +28,7 @@ runs:
         TITLE: ${{ inputs.title }}
         INTRO: ${{ inputs.intro }}
         REPORT: ${{ inputs.report }}
+        LABELS: ${{ inputs.labels }}
         RUN_URL: >-
           ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
       run: |
@@ -32,7 +37,14 @@ runs:
           echo "$INTRO ([run]($RUN_URL))."
           echo
           # GitHub rejects bodies over 65,536 characters
-          head -c 60000 "$REPORT"
+          if [ "$(wc -c < "$REPORT")" -gt 60000 ]; then
+            head -c 60000 "$REPORT"
+            echo
+            echo
+            echo "The report is longer; see the run for all of it."
+          else
+            cat "$REPORT"
+          fi
         } > "$body"
         existing=$(gh issue list --state open --search "in:title \"$TITLE\"" \
           --json number,title \
@@ -41,6 +53,5 @@ runs:
           gh issue comment "$existing" --body-file "$body"
         else
           gh issue create --title "$TITLE" --body-file "$body" \
-            --label "type: bug" --label "priority: medium" \
-            --label "workload: hours" --label "status: triage"
+            --label "$LABELS"
         fi

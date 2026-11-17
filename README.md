@@ -50,15 +50,24 @@ Set `GITHUB_TOKEN` to any token first to avoid GitHub's rate limits.
 The same workflow checks the GA4GH service URLs in the docs (URLs with
 `/ga4gh/<api>/v<n>`) and opens an issue "Service URLs in the docs" if a
 service is not in the [Cloud Registry](#services-from-the-cloud-registry)
-or does not answer `GET <url>/service-info`. To run it locally:
+or does not answer `GET <url>/service-info`. Both checks run every Monday
+and can be started by hand (`gh workflow run links.yml`); they run only in
+the `elixir-cloud-aai` organization, not in forks, and are not required
+checks of pull requests. While a problem persists, each run comments on
+the open issue. To run the service check locally:
 
 ```sh
 python scripts/check_services.py
 ```
 
-It exits with 0 if all services are fine, 2 if it found problems and 1 if
-it could not run (e.g. the registry is down). Placeholders such as
-`example.org`, `<HOST>` and `localhost` are skipped. Configure the rest in
+It checks `README.md`, `docs` and `includes` (or the paths you pass)
+against the registry of `extra.registry_url` in `mkdocs.yml` (or
+`--registry URL`); `--output FILE` also writes the report to a file, and
+`--help` lists all options. It exits with 0 if all services are fine, 2 if
+it found problems and 1 if it could not run (e.g. the registry is down or
+the configuration is invalid). Placeholders and local hosts such as
+`example.org`, `<HOST>`, `localhost`, in-cluster names and private
+addresses are skipped. Configure the rest in
 [`service-check.toml`](service-check.toml):
 
 - `skip_hosts`: public third-party services (e.g. WorkflowHub), which are

@@ -2,9 +2,9 @@
 # job `services` of `.github/workflows/links.yml`). The check collects the
 # GA4GH service URLs (`.../ga4gh/<api>/v<n>`) named in the docs and reports
 # those that are not in the Cloud Registry or don't answer
-# `GET <url>/service-info`. Placeholders (`example.org`, `<HOST>`,
-# `localhost`, `127.0.0.1`, in-cluster names without a dot) are always
-# skipped
+# `GET <url>/service-info`. Placeholders and local hosts (`example.org`,
+# `<HOST>`, `localhost`, `.local`, `.internal`, in-cluster names, loopback
+# and private addresses) are always skipped
 
 # Public third-party services, which are not ours to register. They are
 # skipped entirely (subdomains included)

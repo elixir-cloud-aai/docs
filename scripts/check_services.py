@@ -58,14 +58,17 @@ STOP = r"\s/<>\"'`()\[\]{}|\\"
 SERVICE_URL = re.compile(
     rf"(?P<scheme>https?)://(?P<host>[^{STOP}]+)\}}?"
     rf"(?P<prefix>(?:/[^{STOP}]+?)*?)"
-    r"/ga4gh/(?P<api>[a-z][a-z0-9-]*)/v(?P<version>[0-9]+)(?![\w.-])",
+    r"/ga4gh/(?P<api>[a-z][a-z0-9-]*)/v(?P<version>[0-9]+)(?![\w-]|\.\w)",
     re.IGNORECASE,
 )
 REGISTRY_URL = re.compile(
     r"^[ \t]+registry_url:[ \t]*(?P<url>\S+)[ \t]*$", re.MULTILINE
 )
-# Domains reserved for documentation and testing (RFC 2606, RFC 6761)
-PLACEHOLDER_TLDS = {"example", "invalid", "localhost", "test"}
+# Domains reserved for documentation and testing (RFC 2606, RFC 6761), and
+# local and in-cluster names
+PLACEHOLDER_TLDS = {"example", "internal", "invalid", "local", "localhost", "test"}
+IN_CLUSTER_SUFFIXES = (".svc", ".svc.cluster.local")
+DEFAULT_PORTS = {"http": "80", "https": "443"}
 PLACEHOLDER_DOMAINS = {"example.com", "example.net", "example.org"}
 
 
@@ -125,10 +128,14 @@ def base_url(match: re.Match[str]) -> str:
         match: The match.
 
     Returns:
-        The base URL, with scheme and host in lower case.
+        The base URL, with scheme and host in lower case, without user info
+        and default port.
     """
+    scheme = match["scheme"].lower()
+    host = match["host"].lower().rsplit("@", 1)[-1]
+    host = host.removesuffix(f":{DEFAULT_PORTS[scheme]}")
     return (
-        f"{match['scheme'].lower()}://{match['host'].lower()}{match['prefix']}"
+        f"{scheme}://{host}{match['prefix']}"
         f"/ga4gh/{match['api'].lower()}/v{match['version']}"
     )
 
@@ -155,17 +162,26 @@ def placeholder(host: str) -> bool:
         host: The host, in lower case and without port.
 
     Returns:
-        True for reserved example and test domains, `localhost`, loopback
-        and unspecified addresses, names without a dot (in-cluster names,
-        shell variables) and hosts with template characters.
+        True for reserved example and test domains, `localhost`, local and
+        in-cluster names (`.local`, `.internal`, `.svc`, names without a
+        dot, which also covers shell variables), loopback, private,
+        link-local and unspecified addresses, and hosts with template
+        characters.
     """
     try:
         address = ipaddress.ip_address(host)
     except ValueError:
         pass
     else:
-        return address.is_loopback or address.is_unspecified
+        return (
+            address.is_loopback
+            or address.is_private
+            or address.is_link_local
+            or address.is_unspecified
+        )
     if "." not in host or any(char in host for char in "%$*"):
+        return True
+    if host.rstrip(".").endswith(IN_CLUSTER_SUFFIXES):
         return True
     labels = host.rstrip(".").split(".")
     return labels[-1] in PLACEHOLDER_TLDS or ".".join(labels[-2:]) in (
@@ -393,7 +409,7 @@ def registered_urls(registry: str) -> set[str]:
     return urls
 
 
-def probe(url: str) -> str | None:
+def probe_service_info(url: str) -> str | None:
     """Checks that a service answers `GET <url>/service-info`.
 
     Args:
@@ -416,7 +432,7 @@ def check(
     mentions: dict[str, list[str]],
     registered: set[str],
     config: Config,
-    probe: Callable[[str], str | None] = probe,
+    probe: Callable[[str], str | None] = probe_service_info,
 ) -> tuple[list[Finding], int]:
     """Checks the service URLs named in the docs.
 
@@ -512,10 +528,8 @@ def main(args: list[str]) -> int:
     try:
         config = load_config(options.config)
         files = find_files(options.paths or DEFAULT_PATHS)
-        registry = (options.registry or default_registry(Path(MKDOCS_CONFIG))).rstrip(
-            "/"
-        )
-        registered = registered_urls(registry)
+        registry = options.registry or default_registry(Path(MKDOCS_CONFIG))
+        registered = registered_urls(registry.rstrip("/"))
     except CheckError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
