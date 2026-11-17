@@ -1,5 +1,5 @@
 ---
-last_verified: null
+last_verified: 2026-11-17
 ---
 
 # Services
@@ -32,7 +32,8 @@ Every Node runs one of these in front of its cluster (see
 Also see the [Cloud Registry](../cloud-registry.md), where services are
 registered, and [LS Login](../ls-login.md) for the log in of users. The
 registry lists the services that run in the deployment, with their
-addresses and the versions of the APIs that they report.
+addresses and the versions of the APIs that they report. proTES and
+TRS-Filer aren't registered yet: their pages give their addresses.
 
 ## Deployed services
 
