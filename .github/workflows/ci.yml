@@ -75,7 +75,8 @@ jobs:
       - name: Build documentation
         run: mkdocs build --strict
 
-  # Unit tests of `scripts/check_names.py` with 100% coverage
+  # Tests of `scripts/check_names.py` and `hooks/registry.py` with 100%
+  # coverage
   test:
     name: Test
     runs-on: ubuntu-latest
@@ -91,8 +92,9 @@ jobs:
           python-version: "3.13"
           cache: pip
           cache-dependency-path: pyproject.toml
+      # The tests of the hook build sites with MkDocs
       - name: Install dependencies
-        run: pip install -e ".[tests]"
+        run: pip install -e ".[docs,tests]"
       - name: Run tests
         run: pytest
 

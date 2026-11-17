@@ -22,6 +22,9 @@ extra:
             form</a>.
     provider: google
     property: G-65GGNT08KH
+  # API of the Cloud Registry, read by `hooks/registry.py` to render the
+  # tables of services; forks can point it to their own registry
+  registry_url: https://elixir-on.cloud/ga4gh/registry/v1
   consent:
     cookies:
       analytics:
@@ -130,6 +133,10 @@ nav:
   - About: "about.md"
 extra_css:
   - stylesheets/extra.css
+# Replaces `<!-- registry:services ... -->` markers with tables of the
+# services in the Cloud Registry (see `README.md`)
+hooks:
+  - hooks/registry.py
 plugins:
   - search
 repo_name: elixir-cloud-aai/docs

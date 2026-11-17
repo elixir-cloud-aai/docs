@@ -1,0 +1,80 @@
+[
+  {
+    "createdAt": "2026-11-12T11:12:38.004Z",
+    "description": "GA4GH Task Execution Service (TES) powered by Funnel, operated by the Berlin Institute of Health at Charité as part of ELIXIR On-Cloud.",
+    "documentationUrl": "https://docs.elixir-on.cloud/",
+    "environment": "prod",
+    "id": "GC6ZQG",
+    "name": "BIH Funnel",
+    "organization": {
+      "name": "Berlin Institute of Health at Charité (BIH)",
+      "url": "https://www.bihealth.org/"
+    },
+    "type": {
+      "artifact": "tes",
+      "group": "org.ga4gh",
+      "version": "unknown"
+    },
+    "updatedAt": "2026-11-17T07:49:18.800Z",
+    "url": "https://spe4hd.tes.bihealth.org/ga4gh/tes/v1",
+    "version": "unknown"
+  },
+  {
+    "createdAt": "2026-11-12T11:14:03.180Z",
+    "description": "Registry of GA4GH and other web services of ELIXIR On-Cloud.",
+    "documentationUrl": "https://cloud-registry.readthedocs.io/",
+    "environment": "prod",
+    "id": "J0LBQG",
+    "name": "ELIXIR On-Cloud Service Registry",
+    "organization": {
+      "name": "ELIXIR On-Cloud",
+      "url": "https://elixir-on.cloud/"
+    },
+    "type": {
+      "artifact": "service-registry",
+      "group": "org.ga4gh",
+      "version": "1.0.0"
+    },
+    "updatedAt": "2026-11-12T11:14:03.180Z",
+    "url": "https://elixir-on.cloud/ga4gh/registry/v1",
+    "version": "1.0.0rc2"
+  },
+  {
+    "createdAt": "2026-11-17T02:40:43.102Z",
+    "description": "Temporary public TES endpoint for ELIXIR On-Cloud onboarding validation",
+    "documentationUrl": "https://docs.elixir-on.cloud/en/latest/operators/node-onboarding-tutorial/",
+    "environment": "test",
+    "id": "N27TBG",
+    "name": "JAN DIGITRUST temporary TESK lab",
+    "organization": {
+      "name": "JAN DIGITRUST",
+      "url": "https://www.jandigitrust.org/"
+    },
+    "type": {
+      "artifact": "tes",
+      "group": "org.ga4gh",
+      "version": "1.0.0"
+    },
+    "updatedAt": "2026-11-17T02:40:43.102Z",
+    "url": "https://jan-tesk-lab-113-20261116.swedencentral.cloudapp.azure.com/ga4gh/tes/v1",
+    "version": "1.2.0"
+  },
+  {
+    "createdAt": "2026-11-17T07:48:58.425Z",
+    "environment": "prod",
+    "id": "EW7DI3",
+    "name": "BIH weskit",
+    "organization": {
+      "name": "BIH Germany",
+      "url": "https://www.bihealth.org/"
+    },
+    "type": {
+      "artifact": "wes",
+      "group": "org.ga4gh",
+      "version": "1.1.0"
+    },
+    "updatedAt": "2026-11-17T07:48:58.425Z",
+    "url": "https://spe4hd.weskit.bihealth.org/ga4gh/wes/v1/service-info",
+    "version": "1.1.0"
+  }
+]

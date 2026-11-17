@@ -25,7 +25,8 @@ docs = [
     "pymdown-extensions>=12.3,<14",
 ]
 
-# Tests of `scripts/check_names.py`
+# Tests of `scripts/check_names.py` and `hooks/registry.py` (the hook's tests
+# need the `docs` dependencies too)
 tests = [
     "pytest>=8,<10",
     "pytest-cov>=6,<8",
@@ -37,5 +38,5 @@ packages = []
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["scripts"]
-addopts = "--cov=check_names --cov-branch --cov-report=term-missing --cov-fail-under=100"
+pythonpath = ["scripts", "hooks"]
+addopts = "--cov=check_names --cov=registry --cov-branch --cov-report=term-missing --cov-fail-under=100"

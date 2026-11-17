@@ -47,6 +47,52 @@ lychee --config lychee.toml "docs/**/*.md" "includes/*.md" README.md
 
 Set `GITHUB_TOKEN` to any token first to avoid GitHub's rate limits.
 
+### Services from the Cloud Registry
+
+Tables of the deployed services are not written by hand: the hook
+[`hooks/registry.py`](hooks/registry.py) fetches them from the
+[Cloud Registry](https://elixir-on.cloud/ga4gh/registry/v1/services) on
+every build. To add a table to a page, put a marker on a line of its own,
+e.g.:
+
+```markdown
+<!-- registry:services -->
+<!-- registry:services type=tes -->
+<!-- registry:services type=tes,wes environment=all -->
+```
+
+- `type`: comma-separated service types (the `type.artifact` of the
+  service, e.g. `tes`, `wes`); all types if left out.
+- `environment`: `prod` (default), `test`, any other environment of the
+  registry, or `all`. Services without an environment are listed only
+  with `all`.
+
+A marker may be indented, e.g. inside an admonition or a tab; the table
+gets the same indentation. Markers in fenced code blocks are left alone,
+so pages can show the syntax there (not in indented code blocks, where
+markers are replaced).
+
+The table lists name, organization, type and API version, service version,
+environment, URL and docs link of each matching service. The registry is
+set by `extra.registry_url` in `mkdocs.yml`; forks can point it to their
+own registry.
+
+The build needs network access to the registry and **fails** if the
+registry can't be reached or answers with something that isn't a list of
+services, so the site never shows stale data. This applies to the `Docs`
+job of CI and to Read the Docs too: if the registry is down, re-run the
+job once it is back. For local builds and previews without network
+access, render a warning in place of each table instead:
+
+```sh
+DOCS_REGISTRY_OFFLINE=1 mkdocs build --strict
+DOCS_REGISTRY_OFFLINE=1 mkdocs serve
+```
+
+The hook refuses `DOCS_REGISTRY_OFFLINE=1` in CI and on Read the Docs
+(where `CI` or `READTHEDOCS` is set), so published builds always show
+the services.
+
 ## Contributing
 
 Contributions are welcome! See the organisation's [contributing
