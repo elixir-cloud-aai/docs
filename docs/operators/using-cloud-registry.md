@@ -205,7 +205,9 @@ service with this step: update its entry, or check that sync did.**
 - **A new URL or API type:** with sync on, the URL can't change (see
   [Labels](#labels)), and a new API type needs a new entry. Either change
   removes the verification: ask the
-  [admins][elixir-on-cloud-email] to verify the entry again.
+  [admins][elixir-on-cloud-email] to verify the entry again. If you
+  registered a new entry, delete the old one, so that it isn't listed next
+  to its replacement.
 - **A service that you take down:** delete its entry, or tell the
   [admins][elixir-on-cloud-email].
 

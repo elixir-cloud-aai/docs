@@ -1,3 +1,7 @@
+---
+last_verified: null
+---
+
 # Use the Command Line
 
 This page shows how to use the services of ELIXIR On-Cloud from your terminal

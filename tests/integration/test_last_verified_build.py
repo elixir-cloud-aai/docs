@@ -2,7 +2,8 @@
 
 Pages with operational facts carry `last_verified` in their front matter: a
 date, or `null` until someone has verified them. The override of the
-`content` partial in `overrides/partials/` shows it at the end of the page.
+`content` partial in `overrides/partials/` shows it at the end of the page;
+the hook `hooks/last_verified.py` fails the build on any other value.
 """
 
 from __future__ import annotations
@@ -12,15 +13,43 @@ from pathlib import Path
 import pytest
 from mkdocs.commands.build import build
 from mkdocs.config import load_config
+from mkdocs.exceptions import Abort
 
 ROOT = Path(__file__).parent.parent.parent
 OVERRIDES = ROOT / "overrides"
+HOOK = ROOT / "hooks" / "last_verified.py"
 
 PAGES = {
     "verified.md": "---\nlast_verified: 2026-11-17\n---\n\n# Verified\n",
     "unverified.md": "---\nlast_verified: null\n---\n\n# Unverified\n",
     "other.md": "# Other\n",
 }
+
+
+def build_site(tmp_path: Path, pages: dict[str, str]) -> Path:
+    """Builds a site with the overrides and the hook, strictly.
+
+    Args:
+        tmp_path: Directory to write to.
+        pages: The Markdown of each page, by file name.
+
+    Returns:
+        The directory of the built site.
+    """
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    for name, text in pages.items():
+        (docs / name).write_text(text, encoding="utf-8")
+    config = tmp_path / "mkdocs.yml"
+    config.write_text(
+        "site_name: Test\n"
+        f"theme: {{name: material, custom_dir: '{OVERRIDES}'}}\n"
+        f"hooks: ['{HOOK}']\n",
+        encoding="utf-8",
+    )
+    cfg = load_config(str(config), strict=True)
+    build(cfg)
+    return Path(cfg.site_dir)
 
 
 @pytest.fixture(scope="module")
@@ -33,20 +62,7 @@ def site(tmp_path_factory: pytest.TempPathFactory) -> Path:
     Returns:
         The directory of the built site.
     """
-    tmp_path = tmp_path_factory.mktemp("site")
-    docs = tmp_path / "docs"
-    docs.mkdir()
-    for name, text in PAGES.items():
-        (docs / name).write_text(text, encoding="utf-8")
-    config = tmp_path / "mkdocs.yml"
-    config.write_text(
-        "site_name: Test\n"
-        f"theme: {{name: material, custom_dir: '{OVERRIDES}'}}\n",
-        encoding="utf-8",
-    )
-    cfg = load_config(str(config), strict=True)
-    build(cfg)
-    return Path(cfg.site_dir)
+    return build_site(tmp_path_factory.mktemp("site"), PAGES)
 
 
 def read_page(site: Path, name: str) -> str:
@@ -82,3 +98,10 @@ def test_leaves_other_pages_alone(site: Path) -> None:
     """Adds nothing to pages without `last_verified`."""
     html = read_page(site, "other")
     assert "last-verified" not in html
+
+
+@pytest.mark.parametrize("value", ["'2026-11-17'", "17.11.2026", "never"])
+def test_fails_on_malformed_date(tmp_path: Path, value: str) -> None:
+    """Fails the build for a value that isn't a date or `null`."""
+    with pytest.raises(Abort):
+        build_site(tmp_path, {"bad.md": f"---\nlast_verified: {value}\n---\n\n# Bad\n"})
