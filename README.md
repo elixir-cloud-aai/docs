@@ -45,6 +45,8 @@ locally, install [lychee](https://lychee.cli.rs/) and run:
 lychee --config lychee.toml "docs/**/*.md" README.md
 ```
 
+Set `GITHUB_TOKEN` to any token first to avoid GitHub's rate limits.
+
 ## Contributing
 
 Contributions are welcome! See the organisation's [contributing

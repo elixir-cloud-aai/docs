@@ -20,6 +20,8 @@ jobs:
 
   links:
     name: Link check
+    # Forks would open issues in their own copy every week
+    if: github.repository_owner == 'elixir-cloud-aai'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -30,11 +32,13 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      # Saved per run; lychee ignores entries older than a day
+      # (`lychee.toml`), so this only spares hosts on same-day reruns
       - name: Restore lychee cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .lycheecache
-          key: lychee-${{ github.sha }}
+          key: lychee-${{ github.run_id }}
           restore-keys: lychee-
       # Configuration in `lychee.toml`. The token raises GitHub's rate limit
       - name: Check links
@@ -47,8 +51,15 @@ jobs:
           output: lychee/out.md
           fail: false
           token: ${{ github.token }}
+      # lychee exits with 2 for dead links; other codes (e.g. a config
+      # error) fail the run without an issue
+      - name: Fail on lychee errors
+        if: >-
+          steps.lychee.outputs.exit_code != '0' &&
+          steps.lychee.outputs.exit_code != '2'
+        run: exit 1
       - name: Report dead links
-        if: steps.lychee.outputs.exit_code != '0'
+        if: steps.lychee.outputs.exit_code == '2'
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -59,7 +70,8 @@ jobs:
           {
             echo "The weekly link check found dead links ([run]($RUN_URL))."
             echo
-            cat lychee/out.md
+            # GitHub rejects bodies over 65,536 characters
+            head -c 60000 lychee/out.md
           } > body.md
           existing=$(gh issue list --state open --search "in:title \"$title\"" \
             --json number,title \
@@ -67,7 +79,9 @@ jobs:
           if [ -n "$existing" ]; then
             gh issue comment "$existing" --body-file body.md
           else
-            gh issue create --title "$title" --body-file body.md
+            gh issue create --title "$title" --body-file body.md \
+              --label "type: bug" --label "priority: medium" \
+              --label "workload: hours" --label "status: triage"
           fi
           # Show the run as failed, too
           exit 1

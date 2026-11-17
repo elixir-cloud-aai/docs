@@ -20,7 +20,7 @@ include_mail = false
 
 exclude = [
   # Placeholders and local services in examples
-  '^https?://([a-z0-9-]+\.)*example\.(org|com)',
+  '^https?://([a-z0-9-]+\.)*example\.(org|com)(:|/|$)',
   '^https?://localhost',
   '^https?://127\.0\.0\.1',
   # In-cluster service names in examples
