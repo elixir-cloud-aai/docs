@@ -1,3 +1,7 @@
+---
+last_verified: null
+---
+
 # Tutorial: Onboard a Data Centre
 
 ## Synopsis
@@ -308,6 +312,15 @@ check](using-cloud-registry.md#what-the-admins-check).
 Register your tools and workflows from a trusted client, as described in
 [Registering tools][trsfiler-registering-tools] in the TRS-Filer docs.
 Researchers then find them through the TRS API of your service.
+
+## 7. Keep the registry entry up to date
+
+End every upgrade, move or change of TRS-Filer, e.g., with `helm upgrade`,
+with this step: **update the service's Cloud Registry entry, or check that
+sync did.** With sync on, check that the entry shows the new version,
+labelled `synced`; after a new URL or API type, ask the
+[admins][elixir-on-cloud-email] to verify it again. See [After a deployment
+or an upgrade](using-cloud-registry.md#after-a-deployment-or-an-upgrade).
 
 ## Planned
 

@@ -1,3 +1,7 @@
+---
+last_verified: null
+---
+
 # Tutorial: Your First Run from the Command Line
 
 ## Synopsis

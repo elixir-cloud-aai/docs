@@ -1,3 +1,7 @@
+---
+last_verified: null
+---
+
 # Using the Cloud Registry UI
 
 ## Synopsis

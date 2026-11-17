@@ -133,10 +133,12 @@ nav:
   - About: "about.md"
 extra_css:
   - stylesheets/extra.css
-# Replaces `<!-- registry:services ... -->` markers with tables of the
-# services in the Cloud Registry (see `README.md`)
+# `registry.py` replaces `<!-- registry:services ... -->` markers with tables
+# of the services in the Cloud Registry; `last_verified.py` fails the build
+# on malformed `last_verified` dates of fact pages (see `README.md`)
 hooks:
   - hooks/registry.py
+  - hooks/last_verified.py
 plugins:
   - search
 repo_name: elixir-cloud-aai/docs
