@@ -7,8 +7,8 @@ services from the [Cloud Registry][elixir-cloud-registry], run
 and follow your runs. This page shows how, and says what doesn't work yet.
 
 Krini has no user guide of its own; its
-[README](https://github.com/elixir-cloud-aai/krini/tree/staging#readme) and
-[deployment guide](https://github.com/elixir-cloud-aai/krini/blob/staging/docs/deployment.md)
+[README](https://github.com/elixir-cloud-aai/krini/tree/dev#readme) and
+[deployment guide](https://github.com/elixir-cloud-aai/krini/blob/dev/deployment/README.md)
 are for developers and operators.
 
 !!! note "The new Krini"

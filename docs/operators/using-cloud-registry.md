@@ -108,9 +108,9 @@ your entry.
 - **proTES**, the gateway, when it discovers its TES services in a Cloud
   Registry: it uses verified entries only (see [Get added behind the
   gateway](node-onboarding-tutorial.md#7-get-added-behind-the-gateway)).
-  Whether the ELIXIR On-Cloud's proTES discovers its TES services this way,
-  or lists them in its configuration, is tracked in
-  [generic-issues#31][gi-31].
+  The ELIXIR On-Cloud's proTES doesn't discover its TES services this way:
+  it lists them in its configuration (see
+  [proTES](services/protes.md#in-the-elixir-on-cloud)).
 - **Users**, who check the label before they trust a service. Krini and the
   CLI don't show it: they list verified and unverified services alike (see
   [Krini](../researchers/krini.md) and the [CLI](../researchers/cli.md)).
@@ -195,4 +195,3 @@ UI](using-cloud-registry-ui.md) adds what applies to this deployment.
 [cr-ui-user-guide]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/user-guide/>
 [cr-verified]: <https://cloud-registry.readthedocs.io/en/latest/api/#verified-services>
 [gi-21]: <https://github.com/elixir-cloud-aai/generic-issues/issues/21>
-[gi-31]: <https://github.com/elixir-cloud-aai/generic-issues/issues/31>

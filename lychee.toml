@@ -1,0 +1,30 @@
+# Configuration of the weekly link check (`.github/workflows/links.yml`).
+# Links between pages are checked by `mkdocs build --strict`; lychee checks
+# the external ones
+
+max_retries = 3
+retry_wait_time = 5
+timeout = 30
+max_concurrency = 16
+
+# 429: rate limited, so the target exists
+accept = ["200..=299", "429"]
+
+# Only web links; mail addresses can't be verified
+scheme = ["https", "http"]
+include_mail = false
+
+exclude = [
+  # Placeholders and local services in examples
+  '^https?://([a-z0-9-]+\.)*example\.(org|com)(:|/|$)',
+  '^https?://(<|%3C)',
+  '^https?://localhost',
+  '^https?://127\.0\.0\.1',
+  # In-cluster service names in examples
+  '^http://cloud-registry/',
+  # Base URLs of GA4GH APIs, which serve no page (their endpoints do)
+  '/ga4gh/[a-z-]+/v[0-9]+/?$',
+  # Need a login or reject bots
+  '^https://registry\.elixir-on\.cloud/auth/',
+  '^https://join\.slack\.com/',
+]

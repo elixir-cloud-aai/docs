@@ -3,7 +3,6 @@
 [elixir-on-cloud-github]: <https://github.com/elixir-cloud-aai/>
 [elixir-on-cloud-forum]: <https://github.com/orgs/elixir-cloud-aai/discussions>
 [elixir-on-cloud-email]: <mailto:cloud-service@elixir-europe.org>
-[elixir-cloud-demo-cwl]: <https://github.com/elixir-cloud-aai/elixir-cloud-demos/tree/main/demos/2023-ecp-f2f>
 [elixir-cloud-demo-smk]: <https://github.com/elixir-cloud-aai/demo-tes-hybrid-cloud>
 [elixir-cloud-registry]: <https://registry.elixir-on.cloud/>
 [eur-lex-ehds]: <https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=OJ:L_202500327>

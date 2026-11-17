@@ -20,7 +20,7 @@ what it does today and what is planned. For the full reference, see the
 |---|---|---|
 | `ga4gh-cli registry` | GA4GH Service Registry, such as the Cloud Registry | [Find services](#find-services-in-the-cloud-registry) and their addresses. |
 | `ga4gh-cli tes` | GA4GH TES, such as proTES, TESK or Funnel | [Create, list, read and cancel tasks](#run-tasks-with-tes). |
-| `ga4gh-cli wes` | GA4GH WES, such as WESkit or cwl-WES | [Start runs of workflows, follow and cancel them](#run-workflows-with-wes). |
+| `ga4gh-cli wes` | GA4GH WES, such as WESkit | [Start runs of workflows, follow and cancel them](#run-workflows-with-wes). |
 | `ga4gh-cli trs` | GA4GH TRS, such as WorkflowHub or Dockstore | [Find workflows and download their files](#find-workflows-with-trs). |
 | `ga4gh-cli drs` | GA4GH DRS, such as DRS-Filer | [Read the metadata and access URLs of objects](#look-up-objects-with-drs). |
 

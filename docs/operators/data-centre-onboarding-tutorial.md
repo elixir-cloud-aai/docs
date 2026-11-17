@@ -16,7 +16,7 @@ What a data centre can offer today, and what is planned:
 |---|---|---|
 | Storage for the inputs and outputs of tasks | an S3 or FTP server, e.g., [MinIO][minio] or [vsftpd][vsftpd] | available: see [step 2](#2-offer-storage-for-tasks) |
 | Tools and workflows, through the TRS API | [TRS-Filer](services/trsfiler.md) 0.5.0 | available, without authentication of writes: see [step 3](#3-deploy-trs-filer) |
-| Data objects, through the [DRS API][ga4gh-drs] | [DRS-Filer](services/drsfiler.md) | planned: no release yet, not covered here |
+| Data objects, through the [DRS API][ga4gh-drs] | [DRS-Filer](services/drsfiler.md) | being revived: not covered here yet |
 
 The commands and values on this page come from the docs of each product,
 at the versions in the table below. For anything else, follow the linked
@@ -29,10 +29,12 @@ hosting provider.
 | [TRS-Filer][trsfiler-docs] (Helm chart) | 0.5.0 | TRS service, with a MongoDB database |
 | [Cloud Registry][cr-docs] | 1.0.0rc2 | Registry of the services |
 
-!!! warning "Under construction"
-    The policies for joining the federation are not written down yet: who
-    can join, what a data centre has to provide, and what the admins check
-    before they verify a service. Write to
+!!! warning "Requirements will follow"
+    Data nodes may join the federation, but their requirements are not
+    written down yet (see [Who can join](index.md#who-can-join)). What the
+    admins check
+    before they verify a service is in [What the admins
+    check](using-cloud-registry.md#what-the-admins-check). Write to
     [cloud-service@elixir-europe.org][elixir-on-cloud-email] before you
     start. The steps below have not yet been tested by an operator who
     didn't write them: please report what doesn't work.
@@ -82,7 +84,7 @@ their outputs to, S3 or FTP servers. To offer storage:
 3. The operators of those TES services configure them with your server and
    credentials, e.g., the `storage` value of the [TESK chart][tesk-storage].
 
-!!! warning "Under construction"
+!!! note "Storage servers and the registry"
     Storage servers aren't registered in the Cloud Registry: there is no
     GA4GH API type for them yet. Which storage servers the TES services of
     the federation use is agreed with the admins.
@@ -298,9 +300,8 @@ Write to [cloud-service@elixir-europe.org][elixir-on-cloud-email] with the
 address of your entry, and ask for its verification, as described in [step
 6 of the Node tutorial](node-onboarding-tutorial.md#6-get-verified).
 
-!!! warning "Under construction"
-    The checks for the verification of a TRS service are not written down
-    yet.
+The admins check a TRS entry as any other entry, see [What the admins
+check](using-cloud-registry.md#what-the-admins-check).
 
 ## 6. Add tools and workflows
 
@@ -310,8 +311,6 @@ Researchers then find them through the TRS API of your service.
 
 ## Planned
 
-- **DRS-Filer**, for data objects through the DRS API, has no release yet.
-  This tutorial will cover it once it has one.
 - **Writes with tokens** in TRS-Filer ([trs-filer#7][trsfiler-7]), which
   replace the restriction of writes at the Ingress controller or proxy.
 - **The service info as a value** of the TRS-Filer chart
