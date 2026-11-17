@@ -31,10 +31,18 @@ Registry][elixir-cloud-registry] (see [Onboarding](../onboarding.md)).
   policy of the federation requires, is tracked in
   [generic-issues#21][gi-21].
 
-!!! warning "Under construction"
-    Which Nodes of the ELIXIR On-Cloud run Poiesis is recorded with the
-    configuration of the gateway, in [generic-issues#31][gi-31].
+## In the ELIXIR On-Cloud
+
+As of November 2026, where and how Poiesis runs may change:
+
+| Node | Address | Status |
+|---|---|---|
+| Czech Republic (CZ) | <https://poiesis.dyn.cloud.e-infra.cz/> | runs; not behind the gateway yet |
+| Finland (FI) | none | not part of the deployment yet |
+
+Poiesis joins the TES services of the [gateway](protes.md) once it checks
+the groups of LS Login tokens ([generic-issues#21][gi-21]). Find the
+current entries in the [Cloud Registry][elixir-cloud-registry].
 
 [poiesis-usage]: <https://poiesis.jaeaeich.com/docs/usage/usage.html>
 [gi-21]: <https://github.com/elixir-cloud-aai/generic-issues/issues/21>
-[gi-31]: <https://github.com/elixir-cloud-aai/generic-issues/issues/31>
