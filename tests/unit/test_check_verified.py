@@ -90,6 +90,29 @@ def test_read_page_without_key(tmp_path: Path, text: str) -> None:
     assert check_verified.read_page(write(tmp_path / "page.md", text)) is None
 
 
+def test_read_page_byte_order_mark(tmp_path: Path) -> None:
+    """Reads pages that start with a byte order mark, as MkDocs does."""
+    path = tmp_path / "page.md"
+    path.write_bytes(b"\xef\xbb\xbf---\nlast_verified: 2020-01-01\n---\n")
+    assert check_verified.read_page(path) == Page(str(path), datetime.date(2020, 1, 1))
+
+
+@pytest.mark.parametrize(
+    ("text", "message"),
+    [
+        ("last_verified: null\nlast_verified: 2020-01-01\n", "more than once"),
+        ('"last_verified": 2020-01-01\n', "without quotes"),
+        ("'last_verified': null\n", "without quotes"),
+        ("last_verified:\n  2020-01-01\n", "on its line"),
+    ],
+)
+def test_read_page_unsupported_key(tmp_path: Path, text: str, message: str) -> None:
+    """Fails on forms of the key that YAML reads but the script doesn't."""
+    path = write(tmp_path / "page.md", f"---\n{text}---\n")
+    with pytest.raises(CheckError, match=message):
+        check_verified.read_page(path)
+
+
 @pytest.mark.parametrize(
     ("value", "message"),
     [

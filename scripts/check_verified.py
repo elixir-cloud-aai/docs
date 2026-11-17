@@ -9,9 +9,10 @@ left out.
 
 The front matter is read without a YAML parser, so that the check needs
 the standard library only: the key must be at the top level of the front
-matter, and its value a date, `null`, `~` or empty, optionally followed
-by a comment. The build (`hooks/last_verified.py`) rejects other values,
-and so does this script.
+matter, unquoted and set once, and its value a date, `null`, `~` or
+empty, on the same line and optionally followed by a comment. The build
+(`hooks/last_verified.py`) rejects other values; this script rejects
+them too, and the other forms of the key.
 
 Usage:
     python scripts/check_verified.py [--months N] [--today YYYY-MM-DD]
@@ -50,6 +51,10 @@ FRONT_MATTER = re.compile(r"^-{3}[ \t]*\n(.*?\n)(?:\.{3}|-{3})[ \t]*\n", re.DOTA
 KEY = re.compile(
     r"^last_verified[ \t]*:(?P<value>[^\n#]*?)[ \t]*(?:#[^\n]*)?$", re.MULTILINE
 )
+# Forms of the key that YAML reads but this script doesn't: a quoted key, and
+# a value on the next, indented line
+OTHER_KEY = re.compile(r"""^["']last_verified["'][ \t]*:""", re.MULTILINE)
+NEXT_LINE = re.compile(r"\n[ \t]+\S")
 NULLS = {"", "null", "Null", "NULL", "~"}
 DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 
@@ -96,15 +101,26 @@ def read_page(path: Path) -> Page | None:
         The page, or None if its front matter doesn't set `last_verified`.
 
     Raises:
-        CheckError: If the value is neither a valid date nor null.
+        CheckError: If the value is neither a valid date nor null, or the
+            key is set more than once or in a form that the script can't
+            read.
     """
-    front_matter = FRONT_MATTER.match(path.read_text(encoding="utf-8"))
+    # MkDocs drops a byte order mark too
+    front_matter = FRONT_MATTER.match(path.read_text(encoding="utf-8-sig"))
     if not front_matter:
         return None
-    key = KEY.search(front_matter.group(1))
-    if not key:
+    text = front_matter.group(1)
+    if OTHER_KEY.search(text):
+        raise CheckError(f"{path}: write the key `last_verified` without quotes")
+    keys = list(KEY.finditer(text))
+    if not keys:
         return None
+    if len(keys) > 1:
+        raise CheckError(f"{path}: `last_verified` is set more than once")
+    key = keys[0]
     value = key["value"].strip()
+    if not value and NEXT_LINE.match(text, key.end()):
+        raise CheckError(f"{path}: put the value of `last_verified` on its line")
     if value in NULLS:
         return Page(str(path), None)
     if not DATE.fullmatch(value):
