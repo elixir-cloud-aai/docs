@@ -10,26 +10,38 @@ deployment's other services.
 
 ## What a Node runs
 
-A Node offers compute and storage to the federation:
+A compute Node offers compute and storage to the federation:
 
-- **Compute:** a [GA4GH Task Execution Service][ga4gh-tes] (TES) in front of
-  the Node's cluster: [TESK](services/tesk.md) or
-  [Poiesis](services/poiesis.md) on Kubernetes, [Funnel](services/funnel.md)
-  on an HPC or HTC cluster.
+- **Compute:** at least one [GA4GH Task Execution Service][ga4gh-tes] (TES)
+  or [Workflow Execution Service][ga4gh-wes] (WES) in front of the Node's
+  cluster, which requires access tokens of [LS Login](ls-login.md): e.g.,
+  [TESK](services/tesk.md) or [Poiesis](services/poiesis.md) on Kubernetes,
+  [Funnel](services/funnel.md) on an HPC or HTC cluster.
 - **Storage:** an S3 or FTP server that the TES service uses for the input
   and output files of tasks.
-- **Registration:** the Node's TES service is registered in the
+- **Registration:** the Node's services are registered in the
   [Cloud Registry](cloud-registry.md) of the deployment, so that others can
-  find it.
+  find them.
 
 A Node can also run the other [services](services/index.md) of the
 deployment.
 
+## Who can join
+
+These pages are for compute Nodes. A compute Node joins the federation with
+at least one TES or WES service that requires LS Login access tokens, and
+registers it in the Cloud Registry. Data nodes, which offer cloud storage or
+data through the [GA4GH DRS][ga4gh-drs] API, may join too: their
+requirements will follow. [Tutorial: Onboard a Data
+Centre](data-centre-onboarding-tutorial.md) shows what they can offer
+today. Write to the admins at
+[cloud-service@elixir-europe.org][elixir-on-cloud-email] before you start.
+
 ## Steps to join
 
 1. Read [Onboarding](onboarding.md).
-2. Deploy a TES service and a storage server at your Node.
-3. Register your TES service in the Cloud Registry.
+2. Deploy a TES or WES service and a storage server at your Node.
+3. Register your service in the Cloud Registry.
 4. Optional: deploy more [services](services/index.md), and connect your own
    services to [LS Login](ls-login.md).
 
@@ -45,10 +57,3 @@ deployment.
 | [Using the Cloud Registry UI](using-cloud-registry-ui.md) | How to log in to the registry's front end, who has which rights, and whom to ask. |
 | [LS Login](ls-login.md) | How to connect JupyterHub, HedgeDoc and MinIO to LS Login. |
 | [Services](services/index.md) | The services of the deployment and their role. |
-
-!!! warning "Under construction"
-    The policies for joining the federation are not written down yet:
-    who can join, what a Node has to provide, and how long it takes to be
-    verified. Until then, write to
-    [cloud-service@elixir-europe.org][elixir-on-cloud-email] before you
-    start.
