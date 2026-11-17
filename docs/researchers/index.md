@@ -43,6 +43,13 @@ require LS Login tokens. Find them, and their addresses, in the Cloud
 Registry (see [Using the
 APIs](../partners-and-developers/apis.md#1-find-the-services)).
 
+!!! warning "Send your token only to services that you trust"
+    Anyone who runs a service that receives your token can act as you until
+    the token expires. Before you send it to a TES service, check that the
+    service is verified in the Cloud Registry (see [Verified
+    services](../operators/using-cloud-registry.md#verified-services)) and
+    that you trust its operator.
+
 [gi-49]: <https://github.com/elixir-cloud-aai/generic-issues/issues/49>
 
 ## Where to go next
