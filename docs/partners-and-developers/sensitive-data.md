@@ -75,5 +75,6 @@ the researcher's own environment?
 
 ## Where to go next
 
-- To try an analysis in an SPE, see [Researchers](../researchers/index.md).
+- To try analyses of sensitive data, e.g., of Crypt4GH-encrypted files, see
+  [Researchers](../researchers/index.md).
 - To plan access for your users and service, see [User Stories](user-stories.md).
