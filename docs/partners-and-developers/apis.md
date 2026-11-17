@@ -5,8 +5,8 @@ deployment. The steps are the same for all services. What each API offers is
 in the docs of its product and in the GA4GH specification (see [GA4GH
 Standards](ga4gh-standards.md)).
 
-There is no separate test environment for partners: use the production
-services with a test account.
+There is no separate test environment for partners: use the services of
+the deployment with a test account.
 
 ## 1. Find the services
 
@@ -14,7 +14,12 @@ The [Cloud Registry](https://cloud-registry.readthedocs.io/en/latest/) of
 the deployment is the source of truth for its services: which services
 run, their endpoints, and the versions of the GA4GH APIs that they
 implement, which the registry reads from the service info of each service
-(`GET /service-info`). These docs don't repeat them. The registry
+(`GET /service-info`). These docs don't repeat them. Entries labelled
+`synced` follow their service; entries without a label were entered by
+hand, and `out-of-sync` entries keep their last values, so both may be
+out of date: check the service info of such a service before you rely on
+it (see
+[Labels](../operators/using-cloud-registry.md#labels)). The registry
 implements the [GA4GH Service Registry
 API](https://github.com/ga4gh-discovery/ga4gh-service-registry). Anyone can
 read it, without a token.
