@@ -42,7 +42,7 @@ issue "Dead links in the docs" when it finds any. To run the same check
 locally, install [lychee](https://lychee.cli.rs/) and run:
 
 ```sh
-lychee --config lychee.toml "docs/**/*.md" README.md
+lychee --config lychee.toml "docs/**/*.md" "includes/*.md" README.md
 ```
 
 Set `GITHUB_TOKEN` to any token first to avoid GitHub's rate limits.
