@@ -21,3 +21,7 @@ htmlcov/
 .notes
 .codespell*
 .DS_Store
+
+# Link check (lychee)
+.lycheecache
+lychee/
