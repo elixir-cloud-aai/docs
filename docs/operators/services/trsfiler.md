@@ -16,6 +16,16 @@ to offer tools and workflows through the TRS API.
 - [Tutorial: Onboard a Data Centre](../data-centre-onboarding-tutorial.md):
   deploy, register and verify TRS-Filer as a data centre of the federation
 
-!!! warning "Under construction"
-    The address of the ELIXIR On-Cloud's TRS-Filer and its contents are not
-    documented yet.
+## In the ELIXIR On-Cloud
+
+As of November 2026:
+
+| What | Value |
+|---|---|
+| Address | <https://trs-filer.rahtiapp.fi/ga4gh/trs/v2> |
+| Reads | public, without a token |
+| Writes | with LS Login access tokens, under the same access rules as the [Cloud Registry](../using-cloud-registry.md) |
+
+List its tools and workflows with `GET /tools` (e.g., `curl
+https://trs-filer.rahtiapp.fi/ga4gh/trs/v2/tools`); its service info
+(`GET /service-info`) gives its version.

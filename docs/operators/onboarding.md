@@ -14,10 +14,11 @@ You need:
 - an LS Login account (see [LS Login](ls-login.md))
 - an HTTPS host name for your TES service
 
-!!! warning "Under construction"
-    The requirements for a Node to join are not written down yet. Write to
-    [cloud-service@elixir-europe.org][elixir-on-cloud-email] before you
-    start.
+A compute Node runs at least one TES or WES service that requires LS Login
+access tokens, and registers it in the Cloud Registry (see [Who can
+join](index.md#who-can-join)). These steps cover a TES service. Write to
+[cloud-service@elixir-europe.org][elixir-on-cloud-email] before you start:
+the admins answer your questions and verify your entry.
 
 ## 1. Deploy compute
 
