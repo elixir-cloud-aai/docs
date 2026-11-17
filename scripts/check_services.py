@@ -51,6 +51,7 @@ TIMEOUT = 15
 ATTEMPTS = 2
 RETRY_DELAY = 2.0
 MAX_BYTES = 5 * 1024 * 1024
+CHUNK_BYTES = 64 * 1024
 
 # Characters that end a URL in Markdown, HTML and shell examples. A `}`
 # right after the host is allowed for defaults such as `${TES:-https://h}`
@@ -61,8 +62,12 @@ SERVICE_URL = re.compile(
     r"/ga4gh/(?P<api>[a-z][a-z0-9-]*)/v(?P<version>[0-9]+)(?![\w-]|\.\w)",
     re.IGNORECASE,
 )
+# `registry_url: <url>` in `mkdocs.yml`, the URL plain or quoted, with an
+# optional comment
 REGISTRY_URL = re.compile(
-    r"^[ \t]+registry_url:[ \t]*(?P<url>\S+)[ \t]*$", re.MULTILINE
+    r"^[ \t]+registry_url:[ \t]*(?P<quote>[\"']?)(?P<url>[^\s\"'#]+)(?P=quote)"
+    r"[ \t]*(?:#.*)?$",
+    re.MULTILINE,
 )
 # Domains reserved for documentation and testing (RFC 2606, RFC 6761), and
 # local and in-cluster names
@@ -168,13 +173,15 @@ def placeholder(host: str) -> bool:
         True for reserved example and test domains, `localhost`, local and
         in-cluster names (`.local`, `.internal`, `.svc`, names without a
         dot, which also covers shell variables), loopback, private,
-        link-local and unspecified addresses, and hosts with template
-        characters.
+        link-local and unspecified addresses (also in numeric shorthand
+        such as `127.1`), and hosts with template characters.
     """
     try:
         address = ipaddress.ip_address(host)
     except ValueError:
-        pass
+        # Shorthands such as `127.1`, which resolvers accept
+        if re.fullmatch(r"[0-9.]+", host):
+            return True
     else:
         return (
             address.is_loopback
@@ -313,6 +320,40 @@ def default_registry(path: Path) -> str:
     return match["url"].rstrip("/")
 
 
+class Redirects(urllib.request.HTTPRedirectHandler):
+    """Follows redirects, except to placeholder and local hosts."""
+
+    def redirect_request(
+        self,
+        req: urllib.request.Request,
+        fp: Any,
+        code: int,
+        msg: str,
+        headers: Any,
+        newurl: str,
+    ) -> urllib.request.Request | None:
+        """Refuses a redirect to a placeholder or local host.
+
+        Args:
+            req: The request that was redirected.
+            fp: The response.
+            code: The HTTP status of the redirect.
+            msg: The reason of the status.
+            headers: The headers of the response.
+            newurl: The target of the redirect.
+
+        Returns:
+            The request to the target, or None to refuse it, which fails
+            the fetch with the status of the redirect.
+        """
+        if placeholder(hostname(newurl)):
+            return None
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+OPENER = urllib.request.build_opener(Redirects)
+
+
 def fetch_json(url: str) -> Any:
     """Fetches and decodes a JSON document, with one retry.
 
@@ -338,8 +379,8 @@ def fetch_json(url: str) -> Any:
                     "User-Agent": "elixir-on-cloud-docs-service-check",
                 },
             )
-            with urllib.request.urlopen(request, timeout=TIMEOUT) as response:
-                body = response.read(MAX_BYTES + 1)
+            with OPENER.open(request, timeout=TIMEOUT) as response:
+                body = read(response, time.monotonic() + TIMEOUT)
             break
         except (OSError, ValueError, http.client.HTTPException) as exc:
             # OSError includes URLError, HTTPError and timeouts
@@ -352,6 +393,36 @@ def fetch_json(url: str) -> Any:
         return json.loads(body)
     except (ValueError, RecursionError) as exc:
         raise CheckError("response is not JSON") from exc
+
+
+def read(response: Any, deadline: float) -> bytes:
+    """Reads a response body in chunks, within a deadline and a size limit.
+
+    The timeout of `open` applies to each socket operation only, so a server
+    that sends a trickle of data could stall the check without the deadline.
+
+    Args:
+        response: The response to read.
+        deadline: The `time.monotonic()` value by which the body must be
+            read.
+
+    Returns:
+        The body, or its first `MAX_BYTES + 1` bytes if it is larger.
+
+    Raises:
+        TimeoutError: If the deadline passes before the body is read.
+    """
+    chunks: list[bytes] = []
+    size = 0
+    while size <= MAX_BYTES:
+        if time.monotonic() > deadline:
+            raise TimeoutError(f"response not read within {TIMEOUT} s")
+        chunk = response.read(min(CHUNK_BYTES, MAX_BYTES + 1 - size))
+        if not chunk:
+            break
+        chunks.append(chunk)
+        size += len(chunk)
+    return b"".join(chunks)
 
 
 def transient(error: Exception) -> bool:
@@ -533,15 +604,21 @@ def main(args: list[str]) -> int:
         files = find_files(options.paths or DEFAULT_PATHS)
         registry = options.registry or default_registry(Path(MKDOCS_CONFIG))
         registered = registered_urls(registry.rstrip("/"))
-    except CheckError as exc:
+        mentions = collect(files)
+    except (CheckError, OSError, UnicodeDecodeError) as exc:
+        # OSError and UnicodeDecodeError: a file of the docs can't be read
         print(f"error: {exc}", file=sys.stderr)
         return 1
-    findings, checked = check(collect(files), registered, config)
+    findings, checked = check(mentions, registered, config)
     text = report(findings, checked)
     print(text, end="")
     if options.output is not None:
-        options.output.parent.mkdir(parents=True, exist_ok=True)
-        options.output.write_text(text, encoding="utf-8")
+        try:
+            options.output.parent.mkdir(parents=True, exist_ok=True)
+            options.output.write_text(text, encoding="utf-8")
+        except OSError as exc:
+            print(f"error: {options.output}: {exc}", file=sys.stderr)
+            return 1
     return 2 if findings else 0
 
 

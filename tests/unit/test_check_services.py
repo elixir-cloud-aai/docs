@@ -12,6 +12,7 @@ import json
 import runpy
 import sys
 import threading
+import time
 import urllib.error
 from collections.abc import Iterator
 from pathlib import Path
@@ -39,11 +40,18 @@ class Server(http.server.BaseHTTPRequestHandler):
     """
 
     routes: ClassVar[dict[str, tuple[int, Any]]] = {}
+    redirects: ClassVar[dict[str, str]] = {}
     calls: ClassVar[dict[str, int]] = {}
 
     def do_GET(self) -> None:
         """Answers a GET request from `routes`."""
         self.calls[self.path] = self.calls.get(self.path, 0) + 1
+        if self.path in self.redirects:
+            self.send_response(302)
+            self.send_header("Location", self.redirects[self.path])
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
         status, body = self.routes.get(self.path, (404, b""))
         if not isinstance(body, bytes):
             body = json.dumps(body).encode()
@@ -70,6 +78,7 @@ def server() -> Iterator[str]:
         Its base URL, e.g. `http://127.0.0.1:12345`.
     """
     Server.routes = {}
+    Server.redirects = {}
     Server.calls = {}
     httpd = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Server)
     thread = threading.Thread(target=httpd.serve_forever, daemon=True)
@@ -161,6 +170,8 @@ def test_hostname(url: str, host: str) -> None:
         ("127.0.0.1", True),
         ("0.0.0.0", True),
         ("::1", True),
+        ("127.1", True),
+        ("1.2.3", True),
         ("10.0.0.5", True),
         ("192.168.1.2", True),
         ("169.254.169.254", True),
@@ -286,6 +297,20 @@ def test_default_registry(tmp_path: Path) -> None:
     assert check_services.default_registry(path) == "https://r.org/v1"
 
 
+@pytest.mark.parametrize(
+    "line",
+    [
+        '  registry_url: "https://r.org/v1"',
+        "  registry_url: 'https://r.org/v1'  # comment",
+        "  registry_url: https://r.org/v1 # comment",
+    ],
+)
+def test_default_registry_yaml_forms(tmp_path: Path, line: str) -> None:
+    """Reads quoted values and values with comments."""
+    path = write(tmp_path / "mkdocs.yml", f"extra:\n{line}\n")
+    assert check_services.default_registry(path) == "https://r.org/v1"
+
+
 def test_default_registry_of_repository() -> None:
     """Finds the registry of the site in `mkdocs.yml`."""
     url = check_services.default_registry(ROOT / "mkdocs.yml")
@@ -305,6 +330,46 @@ def test_fetch_json(server: str) -> None:
     """Returns the decoded document."""
     Server.routes = {"/x": (200, {"a": 1})}
     assert check_services.fetch_json(f"{server}/x") == {"a": 1}
+
+
+def test_fetch_json_follows_redirects(
+    server: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Follows a redirect to a public host."""
+    monkeypatch.setattr(check_services, "placeholder", lambda host: False)
+    Server.redirects = {"/x": f"{server}/y"}
+    Server.routes = {"/y": (200, {"a": 1})}
+    assert check_services.fetch_json(f"{server}/x") == {"a": 1}
+
+
+def test_fetch_json_refuses_local_redirects(server: str) -> None:
+    """Refuses a redirect to a local host."""
+    Server.redirects = {"/x": f"{server}/y"}
+    Server.routes = {"/y": (200, {"a": 1})}
+    with pytest.raises(CheckError, match="HTTP 302"):
+        check_services.fetch_json(f"{server}/x")
+    assert "/y" not in Server.calls
+
+
+def test_read_deadline() -> None:
+    """Stops reading a response when the deadline has passed."""
+
+    class Slow:
+        """A response that never ends."""
+
+        def read(self, size: int) -> bytes:
+            """Returns one byte.
+
+            Args:
+                size: Ignored.
+
+            Returns:
+                One byte.
+            """
+            return b"x"
+
+    with pytest.raises(TimeoutError, match="not read within"):
+        check_services.read(Slow(), time.monotonic() - 1)
 
 
 def test_fetch_json_retries_transient_errors(server: str) -> None:
@@ -643,6 +708,20 @@ def test_main_errors(site: Path, capsys: pytest.CaptureFixture[str]) -> None:
     Server.routes = {}
     assert check_services.main([]) == 1
     assert "HTTP 404" in capsys.readouterr().err
+
+
+def test_main_unreadable_file(site: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """Exits with 1 for a file that isn't UTF-8."""
+    (site / "docs" / "bad.md").write_bytes(b"\xff\xfe")
+    assert check_services.main([]) == 1
+    assert "utf-8" in capsys.readouterr().err
+
+
+def test_main_unwritable_output(site: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """Exits with 1 if the report can't be written."""
+    Server.routes["/ga4gh/registry/v1/service-info"] = (200, {"id": "r"})
+    assert check_services.main(["--output", "README.md/out.md"]) == 1
+    assert "error: README.md/out.md" in capsys.readouterr().err
 
 
 def test_script(site: Path, server: str, monkeypatch: pytest.MonkeyPatch) -> None:
