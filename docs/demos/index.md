@@ -22,18 +22,20 @@ Each demo has one of these states:
 |---|---|---|---|
 | [Token exchange testbed][repo-txf] | Current | Per-hop OAuth 2.0 token exchange with LS Login along a chain of services, from a front end through a WES and the proTES gateway to TES nodes. Runs on your computer against a local mock of LS Login. | [Token Exchange Testbed](token-exchange-testbed.md) |
 | [NVFlare on WES and TES testbed][repo-nvflare] | Current | A federated learning job with NVIDIA FLARE, started through GA4GH WES, with one GA4GH TES task per site, also through proTES. Runs on your computer with two local Funnel instances and synthetic data. | [NVFlare Testbed](nvflare-wes-testbed.md) |
+| [Federated analytics][repo-fa] (`elixir-cloud-demos`) | Current | The same analysis at two Nodes as GA4GH TES tasks, directly or through proTES; only aggregates leave the Nodes. Runs on your computer with `--local`, or against your own TES services. | [Demo README][repo-fa] |
 | [GA4GH SDK upgrade][repo-sdk] | Current | Plan and guide of a BioHackathon Europe 2026 project. Its goal: the command line tool of the GA4GH SDK sends tasks to proTES with an LS Login token. The tool sends tokens and runs TES tasks and WES workflows now; it can't log in to LS Login itself yet. | [Use the Command Line](../researchers/cli.md) and the [project docs][docs-sdk] |
 | [Hybrid cloud via TES][repo-hybrid] (`demo-tes-hybrid-cloud`) | Current | A Snakemake workflow on the TES services of several Nodes, one after the other, and then on all of them through proTES. Runs on your computer with two local Funnel instances, proTES 0.6.0 and an S3 service, or on your own services. | [Run Workflows Across Nodes](../researchers/federated-workflows.md) |
 | [Crypt4GH with proTES][repo-crypt4gh] (`protes-middleware-crypt4gh`) | Outdated | A task on Crypt4GH-encrypted files that are decrypted only inside the task's container, through a proTES middleware and Funnel. Needs proTES 0.3.0 or earlier, as later versions run plugins instead of middlewares. | [Crypt4GH with proTES](../researchers/crypt4gh-with-protes.md) |
 | [Demo 2023-ecp-f2f][repo-f2f] (`elixir-cloud-demos`) | Retired | Tasks with `curl` and `py-tes` on TESK and Funnel, distribution through proTES, and a CWL workflow with `cwl-tes`, as shown at the ELIXIR Compute Platform meeting in February 2023. | [Retired demos](#retired-demos) |
 | [Demo workflows][repo-workflows] (`demo-workflows`) | Retired | CWL and Snakemake workflows (GWAS, hash splitter, sequence comparison, rare diseases) for tests of the stack from 2019 to 2022. | [Retired demos](#retired-demos) |
 
-The states were checked on 2026-11-10, against the default branch of each
-repository: `token-exchange-flow-testbed` at `7585c99`,
+The states were checked on 2026-11-10 (`elixir-cloud-demos` on
+2026-11-15), against the default branch of each repository:
+`token-exchange-flow-testbed` at `7585c99`,
 `nvflare-wes-testbed` at `ca418a6`, `biohackeu26-ga4gh-sdk-upgrade` at
 `290cb80`, `demo-tes-hybrid-cloud` at `3fd00c8`,
 `protes-middleware-crypt4gh` at `2c33121`, `elixir-cloud-demos` at
-`5a7576b` and `demo-workflows` at `a069bea`.
+`73d6e6b` and `demo-workflows` at `a069bea`.
 
 ## Test beds and demos
 
@@ -48,6 +50,17 @@ services and a proTES gateway, or against real ones. There is no public
 deployment with a guaranteed uptime for it: deploy the services yourself, or
 write to
 [cloud-service@elixir-europe.org][elixir-on-cloud-email].
+
+The federated analytics demo runs on your computer with `--local`, or
+against TES services you deploy yourself, directly or through proTES. It
+hasn't been run against a deployed gateway with tokens yet.
+
+## Test data
+
+[`data/`][repo-data] in `elixir-cloud-demos` holds open, synthetic test data
+for demos and tests (D4.6): one CSV file per Node, made up by a seeded
+random number generator, under CC0 1.0. Its README describes the data sets;
+`manifest.json` lists each file with its URL and SHA-256 checksum.
 
 ## Retired demos
 
@@ -83,7 +96,9 @@ repository](https://github.com/elixir-cloud-aai/docs/issues).
 
 [docs-sdk]: <https://biohackeu26-ga4gh-sdk-upgrade.readthedocs.io/en/latest/>
 [repo-crypt4gh]: <https://github.com/elixir-cloud-aai/protes-middleware-crypt4gh>
+[repo-data]: <https://github.com/elixir-cloud-aai/elixir-cloud-demos/tree/main/data>
 [repo-f2f]: <https://github.com/elixir-cloud-aai/elixir-cloud-demos/tree/main/demos/2023-ecp-f2f>
+[repo-fa]: <https://github.com/elixir-cloud-aai/elixir-cloud-demos/blob/main/demos/federated-analytics/README.md>
 [repo-hybrid]: <https://github.com/elixir-cloud-aai/demo-tes-hybrid-cloud>
 [repo-nvflare]: <https://github.com/elixir-cloud-aai/nvflare-wes-testbed>
 [repo-sdk]: <https://github.com/elixir-cloud-aai/biohackeu26-ga4gh-sdk-upgrade>

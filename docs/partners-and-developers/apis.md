@@ -5,18 +5,22 @@ deployment. The steps are the same for all services. What each API offers is
 in the docs of its product and in the GA4GH specification (see [GA4GH
 Standards](ga4gh-standards.md)).
 
-!!! warning "Under construction"
-    Only the Cloud Registry has a known public endpoint. These are not
-    documented yet: the endpoints of the WES, TES, DRS and TRS services of
-    the deployment, which of them use LS Login, who may call them, how a
-    partner gets its client ID accepted, and a test environment. Until then,
-    find the services in the Cloud Registry (step 1) or write to
-    [cloud-service@elixir-europe.org][elixir-on-cloud-email].
+There is no separate test environment for partners: use the services of
+the deployment with a test account.
 
 ## 1. Find the services
 
-The [Cloud Registry](https://cloud-registry.readthedocs.io/en/latest/) lists
-the services of the deployment. It implements the [GA4GH Service Registry
+The [Cloud Registry](https://cloud-registry.readthedocs.io/en/latest/) of
+the deployment is the source of truth for its services: which services
+run, their endpoints, and the versions of the GA4GH APIs that they
+implement, which the registry reads from the service info of each service
+(`GET /service-info`). These docs don't repeat them. Entries labelled
+`synced` follow their service; entries without a label were entered by
+hand, and `out-of-sync` entries keep their last values, so both may be
+out of date: check the service info of such a service before you rely on
+it (see
+[Labels](../operators/using-cloud-registry.md#labels)). The registry
+implements the [GA4GH Service Registry
 API](https://github.com/ga4gh-discovery/ga4gh-service-registry). Anyone can
 read it, without a token.
 
@@ -62,12 +66,26 @@ To get one:
 The endpoints of LS Login are in its [discovery
 document](https://login.aai.lifescience-ri.eu/oidc/.well-known/openid-configuration).
 
-!!! note "Your client ID must be on the list of the Cloud Registry"
-    The Cloud Registry accepts tokens only for the client IDs on its list. If
-    a write fails with `401 Unauthorized` although the token is valid, the
-    operators of the deployment must add your client ID. Write to
-    [cloud-service@elixir-europe.org][elixir-on-cloud-email]. For other
-    services, ask their operators which tokens and clients they accept.
+### Services that use LS Login
+
+These services of the deployment accept LS Login access tokens:
+
+| Service | What needs a token |
+|---|---|
+| [proTES](../operators/services/protes.md), the TES gateway | all task requests |
+| [TRS-Filer](../operators/services/trsfiler.md) | writes; reads are public |
+| Cloud Registry | writes; reads are public |
+| [WESkit](https://gitlab.com/one-touch-pipeline/weskit/documentation) at the Berlin Institute of Health (BIH) | as its operators set it up |
+
+Find their addresses in the Cloud Registry (step 1).
+
+!!! note "Your client ID must be accepted by the service"
+    A service accepts tokens only for the client IDs on its
+    list (the `aud` claim). If a request fails with `401 Unauthorized`
+    although the token is valid, the operators of the service must add your
+    client ID. Write to
+    [cloud-service@elixir-europe.org][elixir-on-cloud-email], with your
+    client ID and the services that you want to call.
 
 ## 3. Send a request
 
@@ -101,8 +119,9 @@ tickets or chats.
   [proTES](https://protes.readthedocs.io/en/latest/api/) (TES) and
   [TRS-Filer](https://trs-filer.readthedocs.io/en/latest/api/) (TRS).
   [proWES](https://github.com/elixir-cloud-aai/proWES) (WES) and
-  [DRS-Filer](https://github.com/elixir-cloud-aai/drs-filer) (DRS) have no
-  separate docs yet: see their READMEs.
+  [DRS-Filer](https://github.com/elixir-cloud-aai/drs-filer) (DRS) are
+  being revived and get docs sites with the revival; until then, see
+  their READMEs.
 - The access rules of the products: [Cloud
   Registry](https://cloud-registry.readthedocs.io/en/latest/access-control/),
   [proTES](https://protes.readthedocs.io/en/latest/access-control/) and

@@ -23,10 +23,11 @@ product docs: they are the reference, and this page doesn't repeat them.
 | [proTES][protes-docs] | 0.6.0 | Gateway in front of the TES services |
 | [Pubgrade-Sidecar][sidecar-docs] | 0.2.0 | Automatic upgrades (optional) |
 
-!!! warning "Under construction"
-    The policies for joining the federation are not written down yet: who
-    can join, what a Node has to provide, and what the admins check before
-    they verify a service. Write to
+!!! note "Before you start"
+    A compute Node runs at least one TES or WES service that requires LS
+    Login access tokens (see [Who can join](index.md#who-can-join)). What
+    the admins check before they verify a service is in [What the admins
+    check](using-cloud-registry.md#what-the-admins-check). Write to
     [cloud-service@elixir-europe.org][elixir-on-cloud-email] before you
     start. The steps below have not yet been tested by an operator who
     didn't write them: please report what doesn't work.
@@ -359,9 +360,8 @@ Verification is kept when sync updates the entry, but changing the URL or
 the API type removes it. See [Verified
 services](using-cloud-registry.md#verified-services) for what it means.
 
-!!! warning "Under construction"
-    The checks for the verification of a TES service are not written down
-    yet.
+For what the admins check before they verify your entry, see [What the
+admins check](using-cloud-registry.md#what-the-admins-check).
 
 ## 7. Get added behind the gateway
 
@@ -396,10 +396,11 @@ service, and make your service accept it.
 Tell the [admins][elixir-on-cloud-email] that your service is ready, then
 check that tasks sent through the gateway arrive at your service.
 
-!!! warning "Under construction"
-    The configuration of the ELIXIR On-Cloud's proTES (its address, its
-    client, the TES services that it uses and how it authenticates at
-    them) is tracked in [generic-issues#31][gi-31].
+The ELIXIR On-Cloud's proTES lists its TES services in its configuration;
+it doesn't discover them in the Cloud Registry. Its address and the TES
+services that it uses are on the [proTES](services/protes.md#in-the-elixir-on-cloud)
+page. The rest of its configuration is tracked in
+[generic-issues#31][gi-31].
 
 ## 8. Optional: automatic upgrades with Pubgrade-Sidecar
 

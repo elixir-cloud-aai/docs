@@ -14,10 +14,16 @@ You need:
 - an LS Login account (see [LS Login](ls-login.md))
 - an HTTPS host name for your TES service
 
-!!! warning "Under construction"
-    The requirements for a Node to join are not written down yet. Write to
-    [cloud-service@elixir-europe.org][elixir-on-cloud-email] before you
-    start.
+A compute Node runs at least one TES or WES service that requires LS Login
+access tokens, and registers it in the Cloud Registry (see [Who can
+join](index.md#who-can-join)). These steps cover a TES service. For a WES
+service, e.g., [WESkit](https://gitlab.com/one-touch-pipeline/weskit/documentation),
+deploy it with the docs of its product and connect it to LS Login, then
+register it as in [step 3](#3-register-your-tes-service), with a WES type;
+the ELIXIR On-Cloud has no WES gateway yet ([proWES](services/prowes.md)
+is being revived). Write to
+[cloud-service@elixir-europe.org][elixir-on-cloud-email] before you start:
+the admins answer your questions and verify your entry.
 
 ## 1. Deploy compute
 
@@ -94,10 +100,9 @@ docs](https://cloud-registry.readthedocs.io/en/latest/api/).
 For the policies of the registry and what its labels mean, see [Using the
 Cloud Registry](using-cloud-registry.md).
 
-!!! warning "Under construction"
-    The checks for the verification of a TES service are not written down
-    yet. It is also not documented which services of the ELIXIR On-Cloud
-    use the verified entries.
+For what the admins check before they verify an entry, and who uses the
+verified entries, see [What the admins
+check](using-cloud-registry.md#what-the-admins-check).
 
 ## 4. Next steps
 

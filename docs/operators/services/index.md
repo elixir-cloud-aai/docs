@@ -21,10 +21,11 @@ Every Node runs one of these in front of its cluster (see
 | Service | Standard | Role |
 |---|---|---|
 | [proTES](protes.md) | [GA4GH TES][ga4gh-tes] | Gateway in front of several TES services. |
-| [CWL-WES](cwlwes.md) | [GA4GH WES][ga4gh-wes] | Runs CWL workflows on a TES service. |
-| [proWES](prowes.md) | [GA4GH WES][ga4gh-wes] | Gateway in front of several WES services. |
-| [DRS-Filer](drsfiler.md) | [GA4GH DRS][ga4gh-drs] | Serves data objects. |
+| [proWES](prowes.md) | [GA4GH WES][ga4gh-wes] | Gateway in front of several WES services. Being revived, not deployed yet. |
+| [DRS-Filer](drsfiler.md) | [GA4GH DRS][ga4gh-drs] | Serves data objects. Being revived, not deployed yet. |
 | [TRS-Filer](trsfiler.md) | [GA4GH TRS][ga4gh-trs] | Serves tools and workflows. |
 
 Also see the [Cloud Registry](../cloud-registry.md), where services are
-registered, and [LS Login](../ls-login.md) for the log in of users.
+registered, and [LS Login](../ls-login.md) for the log in of users. The
+registry lists the services that run in the deployment, with their
+addresses and the versions of the APIs that they report.
