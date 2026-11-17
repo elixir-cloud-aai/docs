@@ -36,6 +36,17 @@ pytest
 
 To preview the site while you edit, run `mkdocs serve`.
 
+The strict build checks the links between pages. External links are checked
+weekly by the [`Links` workflow](.github/workflows/links.yml), which opens an
+issue "Dead links in the docs" when it finds any. To run the same check
+locally, install [lychee](https://lychee.cli.rs/) and run:
+
+```sh
+lychee --config lychee.toml "docs/**/*.md" "includes/*.md" README.md
+```
+
+Set `GITHUB_TOKEN` to any token first to avoid GitHub's rate limits.
+
 ## Contributing
 
 Contributions are welcome! See the organisation's [contributing
