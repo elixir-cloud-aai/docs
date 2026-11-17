@@ -41,11 +41,13 @@ class Server(http.server.BaseHTTPRequestHandler):
 
     routes: ClassVar[dict[str, tuple[int, Any]]] = {}
     redirects: ClassVar[dict[str, str]] = {}
+    headers_seen: ClassVar[list[dict[str, str]]] = []
     calls: ClassVar[dict[str, int]] = {}
 
     def do_GET(self) -> None:
         """Answers a GET request from `routes`."""
         self.calls[self.path] = self.calls.get(self.path, 0) + 1
+        self.headers_seen.append(dict(self.headers))
         if self.path in self.redirects:
             self.send_response(302)
             self.send_header("Location", self.redirects[self.path])
@@ -79,6 +81,7 @@ def server() -> Iterator[str]:
     """
     Server.routes = {}
     Server.redirects = {}
+    Server.headers_seen = []
     Server.calls = {}
     httpd = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Server)
     thread = threading.Thread(target=httpd.serve_forever, daemon=True)
@@ -372,6 +375,35 @@ def test_read_deadline() -> None:
         check_services.read(Slow(), time.monotonic() - 1)
 
 
+def test_fetch_json_headers(server: str) -> None:
+    """Sends default headers, which given headers may replace."""
+    Server.routes = {"/x": (200, [])}
+    check_services.fetch_json(f"{server}/x")
+    check_services.fetch_json(
+        f"{server}/x", {"Accept": "text/plain"}, {"Authorization": "Bearer t"}
+    )
+    first, second = Server.headers_seen
+    assert first["Accept"] == "application/json"
+    assert first["User-Agent"] == "elixir-on-cloud-docs-checks"
+    assert "Authorization" not in first
+    assert second["Accept"] == "text/plain"
+    assert second["Authorization"] == "Bearer t"
+    assert second["User-Agent"] == "elixir-on-cloud-docs-checks"
+
+
+def test_fetch_json_secret_headers_not_redirected(
+    server: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Doesn't send secret headers to the target of a redirect on another host."""
+    monkeypatch.setattr(check_services, "placeholder", lambda host: False)
+    other = server.replace("127.0.0.1", "localhost")
+    Server.redirects = {"/x": f"{other}/y"}
+    Server.routes = {"/y": (200, [])}
+    check_services.fetch_json(f"{server}/x", None, {"Authorization": "Bearer t"})
+    assert Server.headers_seen[0]["Authorization"] == "Bearer t"
+    assert "Authorization" not in Server.headers_seen[1]
+
+
 def test_fetch_json_retries_transient_errors(server: str) -> None:
     """Retries a 5xx response once, then fails."""
     Server.routes = {"/x": (503, b"")}
@@ -608,6 +640,11 @@ def test_check_order() -> None:
         "https://b.org/ga4gh/tes/v1",
         gone,
     ]
+
+
+def test_code() -> None:
+    """Keeps file names from breaking out of inline code."""
+    assert check_services.code("a`[x](y)`\nb.md") == "`a'[x](y)''b.md`"
 
 
 def test_report_without_findings() -> None:

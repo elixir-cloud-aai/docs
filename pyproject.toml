@@ -39,4 +39,4 @@ packages = []
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["scripts", "hooks"]
-addopts = "--cov=check_names --cov=check_services --cov=registry --cov=last_verified --cov-branch --cov-report=term-missing --cov-fail-under=100"
+addopts = "--cov=check_archived --cov=check_names --cov=check_services --cov=registry --cov=last_verified --cov-branch --cov-report=term-missing --cov-fail-under=100"
