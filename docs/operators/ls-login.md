@@ -153,3 +153,43 @@ claim, read access to the bucket `sensitive`:
     ]
 }
 ```
+
+## Compute access
+
+Researchers get access to the compute services of the deployment, such as
+proTES, through the LS Login group `ECP_CLN:EOC-Compute`: proTES maps it
+to its `user` role, and `ECP_CLN:ADMIN` to `admin`. Researchers apply with
+the group's application form in Perun (see [Apply for compute
+access](../researchers/index.md#apply-for-compute-access)); the members of
+`ECP_CLN:ADMIN` approve or reject the applications.
+
+LS Login releases the group only to clients whose Perun facility has it
+assigned to a resource, as described under "Groups and facilities" on this
+page. `ECP_CLN:EOC-Compute` is assigned to the facility of Krini, so
+tokens that users get from Krini carry it.
+
+### How approvals work
+
+- **The form** asks for the applicant's affiliation (prefilled from the
+  identity provider, when it releases one) and the reason for access; both
+  are required. Applications are approved by hand.
+- **ELIXIR membership:** `ECP_CLN:EOC-Compute` is a group of the `elixir`
+  virtual organisation. Applicants who aren't members of it yet apply for
+  both at once; the group application can be approved only once the
+  organisation membership is (see Perun's [Creating and managing an
+  application
+  form](https://perunaai.atlassian.net/wiki/spaces/PERUN/pages/791609384/Creating+and+managing+an+application+form)).
+- **Who approves:** the group `ECP_CLN:ADMIN` holds a manager role on
+  `ECP_CLN:EOC-Compute`, so its members get an e-mail for each new
+  application. They review it in Perun, under the group's
+  **Applications**, and approve or reject it (see Perun's [Adding a member
+  via application
+  approval](https://perunaai.atlassian.net/wiki/spaces/PERUN/pages/1757675526/Adding+a+member+via+application+approval)).
+  The role belongs to the group, so admins lose it when they leave
+  `ECP_CLN:ADMIN`.
+- **What applicants get:** e-mails when their application was received,
+  approved or rejected. After the approval, they log in again: tokens
+  issued before it don't carry the group.
+- **Before approving,** check that the reason fits the deployment: a
+  sandbox for demos and tests with synthetic or public data, not for
+  personal or other sensitive data.

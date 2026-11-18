@@ -39,8 +39,10 @@ are for developers and operators.
    guide][ls-login-guide]. Krini has no sign-up page of its own.
 2. **Get access to services.** Each service decides whom it lets in. Krini
    shows the services of the Cloud Registry, but doesn't give you access to
-   them, and has no form to ask for it yet. To ask for services that you can
-   use, write to [cloud-service@elixir-europe.org][elixir-on-cloud-email].
+   them. For the compute services of the deployment, such as proTES, apply
+   for the group `ECP_CLN:EOC-Compute` (see [Apply for compute
+   access](index.md#apply-for-compute-access)). For other services, write to
+   [cloud-service@elixir-europe.org][elixir-on-cloud-email].
 
 !!! warning "Synthetic or public data only"
     The deployment is a sandbox for demos and tests (see [Researchers: Start

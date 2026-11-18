@@ -168,8 +168,8 @@ The TES services of ELIXIR On-Cloud accept only requests with an access
 token of [LS Login](https://www.lifescience-ri.eu/life-science-login/). To
 run tasks, your LS Login account must be a member of the ELIXIR On-Cloud
 compute group `ECP_CLN:EOC-Compute` (members of `ECP_CLN:ADMIN` may run tasks
-too). To join the group, write to
-[cloud-service@elixir-europe.org][elixir-on-cloud-email].
+too). To join the group, apply as [Apply for compute
+access](../../researchers/index.md#apply-for-compute-access) describes.
 
 1. Get an access token of your LS Login account from the web interface of
    the deployment that you use, or as [Using the
@@ -199,7 +199,7 @@ otherwise `up` waits for the old task, which can't connect any more.
 | Answer | Meaning | What to do |
 |---|---|---|
 | `401 Unauthorized` | No token, or the token is invalid or has expired. | Get a new token and set `TES_TOKEN` again. |
-| `403 Forbidden` | The token is valid, but your account may not run tasks. | Ask for membership in `ECP_CLN:EOC-Compute`. |
+| `403 Forbidden` | The token is valid, but your account may not run tasks. | Apply for membership in `ECP_CLN:EOC-Compute` (see [Apply for compute access](../../researchers/index.md#apply-for-compute-access)). |
 
 The keep-alive loop keeps the token that it started with, in its
 environment. When the token has expired, the loop writes the error to its
