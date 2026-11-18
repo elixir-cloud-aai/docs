@@ -74,9 +74,16 @@ new client that should reach proTES needs `ECP_CLN:EOC-Compute` and
 `ECP_CLN:ADMIN` assigned to its facility and its client ID added to the
 audience (see [LS Login](../ls-login.md)).
 
+The mapping matches the subgroup values, not the parent group `ECP_CLN`:
+members of a subgroup carry the parent value only if the parent group is
+assigned to the facility of the token's client, too
+([generic-issues#46][gi-46]). Members of other `ECP_CLN` subgroups get no
+role.
+
 proTES doesn't use a client of its own yet. Once it calls the TES services
 with its own LS Login token, the TESK at CSC moves to an address that
 requires tokens and its entry here changes from `auth: none` to
 `client_credentials` ([generic-issues#111][gi-111]).
 
+[gi-46]: <https://github.com/elixir-cloud-aai/generic-issues/issues/46>
 [gi-111]: <https://github.com/elixir-cloud-aai/generic-issues/issues/111>
