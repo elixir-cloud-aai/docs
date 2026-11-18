@@ -148,6 +148,7 @@ via standard input, so that it stays out of process listings:
 ```bash
 read -rs TOKEN
 printf 'Authorization: Bearer %s\n' "$TOKEN" | curl -fsS -H @- \
+  --connect-timeout 10 --max-time 30 \
   https://login.aai.lifescience-ri.eu/oidc/userinfo
 ```
 
@@ -164,7 +165,9 @@ Services fetch the user info of each token and map its values to roles:
   `security.access_control.group_mapping` (see [Cloud
   Registry](cloud-registry.md#identity-provider)).
 - TESK reads one claim of the user info and accepts the listed values (see
-  [Onboard a Node](node-onboarding-tutorial.md#tesk)).
+  [Onboard a Node](node-onboarding-tutorial.md#tesk)). Whether TESK accepts
+  LS Login tokens this way has not been verified yet (see the gaps listed
+  there).
 
 ### Checklist for a 403
 
@@ -173,7 +176,9 @@ If a user gets `403 Forbidden` from a service that maps groups:
 1. **Membership:** is the user a member of the group in Perun?
 2. **Release:** is the group assigned to a resource on the facility of the
    client that the user logged in with (the token's `aud`), not of another
-   client?
+   client? For an exchanged token, check the facility of the client that
+   called the exchange (see [Which client needs the
+   groups](#which-client-needs-the-groups)).
 3. **Scope:** did the client request `eduperson_entitlement`, and does the
    user info of the token list the group (see [Reading the entitlement
    values](#reading-the-entitlement-values))?
