@@ -6,8 +6,10 @@ last_verified: null
 
 [LS Login](https://lifescience-ri.eu/ls-login/) (Life Science Login) is the
 identity provider of the ELIXIR On-Cloud: the [Cloud Registry](cloud-registry.md) trusts it only. This
-page shows how to connect three services to LS Login: JupyterHub, HedgeDoc
-and MinIO.
+page shows how to register a service, how LS Login releases group
+memberships to it (see [Groups and facilities](#groups-and-facilities)),
+and how to connect three services to LS Login: JupyterHub, HedgeDoc and
+MinIO.
 
 For the registration of a service, and for everything else about LS Login,
 see the [LS Login docs](https://lifescience-ri.eu/registering-integrating-and-managing-your-service/).
@@ -26,6 +28,164 @@ Do this once for each service:
 5. Keep the client secret in a secret store, never in a repository.
 
 Use one LS Login client for each service.
+
+### Test and production
+
+LS Login keeps a new service in its test environment for at most 30 days.
+If its owner takes no action within another 14 days, LS Login deactivates
+the service (the LS Login team, December 2025). Move a service to
+production in time, as described in the [LS Login
+docs](https://lifescience-ri.eu/registering-integrating-and-managing-your-service/).
+
+The terms that apply to a registered service:
+
+- [Terms of Use for Service
+  Providers](https://www.lifescience-ri.eu/terms-of-use-for-service-providers/);
+- the [LS AAI service level
+  declaration](https://docs.google.com/document/d/17IoouL1vaY7TYCb7BrK_LFMtDYMv61SY0gZRxKoAIJQ/edit?usp=sharing),
+  which says what services that depend on LS Login can expect of it.
+
+Both are linked, with the other policies, from the [LS Login
+page](https://lifescience-ri.eu/ls-login/).
+
+## Groups and facilities
+
+Services of the ELIXIR On-Cloud that map LS Login groups to roles, such as
+the [Cloud Registry](cloud-registry.md#admins), proTES and TESK (see
+[Onboard a Node](node-onboarding-tutorial.md#tesk)), see only the groups
+that LS Login releases to them. A user who is a member of a group but gets
+`403 Forbidden` from such a service usually lacks the release, not the
+membership.
+
+### How LS Login releases groups
+
+LS Login keeps its users, groups and services in Perun:
+
+- A **virtual organisation** (VO) holds groups, e.g., `example_vo` with
+  the group `example_group`.
+- A **facility** represents a client (a registered service) in Perun.
+- A **resource** connects a facility with a VO. Groups of the VO are
+  assigned to the resource.
+
+LS Login puts a group into the user's entitlements **only if the group is
+assigned to a resource on the facility of the client that requested the
+token**. Membership alone is not enough: the same user gets a group from
+one client and not from another (see Perun's
+[Entitlements](https://perunaai.atlassian.net/wiki/spaces/PERUN/pages/209813518/Entitlements)).
+
+### Which client needs the groups
+
+Assign the groups to the facility of the client that users log in to: the
+portal or front end that starts tasks or registers services. Services that
+only validate the tokens of that client (APIs such as proTES, TESK or the
+Cloud Registry) see the groups of that client; they don't need the groups
+on a facility of their own. A client that only gets tokens for a service
+itself (client credentials), with no users, needs no groups.
+
+Assign only the groups that the services map to roles, e.g.,
+`example_vo:example_group:admins` for admins, not every group of the VO.
+
+With [token exchange](../demos/token-exchange-testbed.md), the LS Login
+team says that the entitlements are computed for the client that calls the
+exchange. Which groups a service at the end of such a chain sees is still
+being tested.
+
+### Users outside the groups
+
+To let anyone with an LS Login account log in to a client, not only the
+members of its groups, the LS Login team recommends a second resource on
+the client's facility, for the Lifescience VO, with the VO's members group
+assigned. Users outside the mapped groups can then log in, and services
+answer them with `403 Forbidden`, so that a portal can tell them how to get
+access.
+
+### Assigning groups
+
+1. In Perun, open the facility of the client and [create a
+   resource](https://perunaai.atlassian.net/wiki/spaces/PERUN/pages/670400518/Create+and+remove+a+resource)
+   for the VO that holds the groups.
+2. Assign the groups to the resource (see [How to assign a group(s) to a
+   resource](https://perunaai.atlassian.net/wiki/spaces/PERUN/pages/212828196/How+to+assign+a+group+s+to+a+resource)).
+   This takes the role TrustedFacilityAdmin within the VO (see [Perun roles
+   and their
+   rights](https://perunaai.atlassian.net/wiki/spaces/PERUN/pages/1760100400/Perun+roles+and+their+rights)):
+   being able to create the resource is not enough, and the button "Next"
+   under "Assign groups" stays greyed out. If the VO's admins don't grant
+   the role, send them links to the resource and to the groups, and ask
+   them to assign the groups and confirm.
+3. Check that the groups are listed among the resource's assigned groups.
+4. Log in to the client with an account that is a member of a group, and
+   read the released value (see [Reading the entitlement
+   values](#reading-the-entitlement-values)).
+
+### Reading the entitlement values
+
+Group entitlements have this form (see Perun's [Group
+entitlement](https://perunaai.atlassian.net/wiki/spaces/PERUN/pages/350879786/Group+entitlement)):
+
+```text
+urn:geant:lifescience-ri.eu:group:<vo>[:<group>[:<subgroup>]...]#aai.lifescience-ri.eu
+```
+
+For the group `example_group` of the VO `example_vo`:
+
+```text
+urn:geant:lifescience-ri.eu:group:example_vo:example_group#aai.lifescience-ri.eu
+```
+
+Group names are URL-encoded, and the value changes when a group is renamed
+or moved. Services must match the exact value: don't guess it, read it
+from a token of the client.
+
+LS Login releases the values **in the user info only, not in the access
+token**, in the claim `eduperson_entitlement`, and only if the client
+requested the scope `eduperson_entitlement` at login. The client's
+registration must allow that scope. To read the values, call the user info
+endpoint with an access token of the client. Read the token into a
+variable, so that it stays out of the shell history, and pass the header
+via standard input, so that it stays out of process listings:
+
+```bash
+read -rs TOKEN
+printf 'Authorization: Bearer %s\n' "$TOKEN" | curl -fsS -H @- \
+  --connect-timeout 10 --max-time 30 \
+  https://login.aai.lifescience-ri.eu/oidc/userinfo
+```
+
+Handle tokens like passwords: never paste them into websites, tickets or
+chats.
+
+### How services read the groups
+
+Services fetch the user info of each token and map its values to roles:
+
+- FOCA-based services, such as the Cloud Registry and proTES, add the claim
+  from the user info with `security.auth.userinfo_claims`, read it with
+  `security.access_control.claim_groups` and map values to roles with
+  `security.access_control.group_mapping` (see [Cloud
+  Registry](cloud-registry.md#identity-provider)).
+- TESK reads one claim of the user info and accepts the listed values (see
+  [Onboard a Node](node-onboarding-tutorial.md#tesk)). Whether TESK accepts
+  LS Login tokens this way has not been verified yet (see the gaps listed
+  there).
+
+### Checklist for a 403
+
+If a user gets `403 Forbidden` from a service that maps groups:
+
+1. **Membership:** is the user a member of the group in Perun?
+2. **Release:** is the group assigned to a resource on the facility of the
+   client that the user logged in with (the token's `aud`), not of another
+   client? For an exchanged token, check the facility of the client that
+   called the exchange (see [Which client needs the
+   groups](#which-client-needs-the-groups)).
+3. **Scope:** did the client request `eduperson_entitlement`, and does the
+   user info of the token list the group (see [Reading the entitlement
+   values](#reading-the-entitlement-values))?
+4. **Value:** does the service map exactly the value in the user info,
+   including the VO, the group path and `#aai.lifescience-ri.eu`?
+5. **Caching:** services may cache the user info for some minutes (the
+   Cloud Registry for 5): a change applies after that, or with a new token.
 
 ## JupyterHub
 
