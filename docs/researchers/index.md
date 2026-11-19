@@ -44,8 +44,9 @@ proTES. To become a member:
 3. Submit the form. You get an e-mail that your application was received.
 4. Wait for the e-mail that your application was approved. The admins of
    the deployment review each application by hand.
-5. Log out of Krini, or of any other client, and log in again: tokens that
-   you got before the approval don't carry the group.
+5. Log out of Krini and log in again: tokens that you got before the
+   approval don't carry the group. Other clients carry it only if their
+   LS Login registration releases the group; ask their operators.
 
 If you don't hear back within a week, write to
 [cloud-service@elixir-europe.org][elixir-on-cloud-email].
