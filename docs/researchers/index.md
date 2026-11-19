@@ -54,10 +54,7 @@ If you don't hear back within a week, write to
     Membership gives access to a sandbox for demos and tests. Don't use it
     with personal or other sensitive data.
 
-<!-- TODO(generic-issues#49): replace the target of eoc-compute-form with the
-     application URL that Perun shows under "Copy invitation link" of the
-     group ECP_CLN:EOC-Compute. -->
-[eoc-compute-form]: <https://github.com/elixir-cloud-aai/generic-issues/issues/49>
+[eoc-compute-form]: <https://signup.aai.lifescience-ri.eu/registrar/?vo=elixir&group=ECP_CLN%3AEOC-Compute>
 
 ## Which TES services you can use
 
