@@ -27,10 +27,35 @@ ELIXIR Nodes, and keep sensitive data under the control of its owner.
 1. Get an [LS Login](https://www.lifescience-ri.eu/life-science-login/)
    account. It is the identity provider of the deployment.
 2. Become a member of the LS Login group `ECP_CLN:EOC-Compute`, which
-   gives access to the compute services of the deployment. An application
-   form is coming ([generic-issues#49][gi-49]); until then, write to
-   [cloud-service@elixir-europe.org][elixir-on-cloud-email].
+   gives access to the compute services of the deployment (see [Apply for
+   compute access](#apply-for-compute-access)).
 3. Choose a page above and follow its steps.
+
+## Apply for compute access
+
+Members of the LS Login group `ECP_CLN:EOC-Compute` can run tasks and
+workflows on the compute services of the deployment, e.g., through Krini or
+proTES. To become a member:
+
+1. Open the [application form][eoc-compute-form] and log in with LS Login.
+2. Fill in your affiliation and the reason for access, i.e., what you want
+   to run. If you aren't a member of the ELIXIR community in LS Login yet,
+   the form asks you to apply for that too.
+3. Submit the form. You get an e-mail that your application was received.
+4. Wait for the e-mail that your application was approved. The admins of
+   the deployment review each application by hand.
+5. Log out of Krini and log in again: tokens that you got before the
+   approval don't carry the group. Other clients carry it only if their
+   LS Login registration releases the group; ask their operators.
+
+If you don't hear back within a week, write to
+[cloud-service@elixir-europe.org][elixir-on-cloud-email].
+
+!!! warning "Synthetic or public data only"
+    Membership gives access to a sandbox for demos and tests. Don't use it
+    with personal or other sensitive data.
+
+[eoc-compute-form]: <https://signup.aai.lifescience-ri.eu/registrar/?vo=elixir&group=ECP_CLN%3AEOC-Compute>
 
 ## Which TES services you can use
 
@@ -55,8 +80,6 @@ APIs](../partners-and-developers/apis.md#1-find-the-services)).
     service is verified in the Cloud Registry (see [Verified
     services](../operators/using-cloud-registry.md#verified-services)) and
     that you trust its operator.
-
-[gi-49]: <https://github.com/elixir-cloud-aai/generic-issues/issues/49>
 
 ## Where to go next
 
