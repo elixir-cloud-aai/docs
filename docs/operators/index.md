@@ -59,5 +59,5 @@ today. Write to the admins at
 | [Cloud Registry](cloud-registry.md) | The settings of the deployment's registry, for the admins who run it. |
 | [Using the Cloud Registry](using-cloud-registry.md) | How to look up, register and maintain services, and what the labels mean. |
 | [Using the Cloud Registry UI](using-cloud-registry-ui.md) | How to log in to the registry's front end, who has which rights, and whom to ask. |
-| [LS Login](ls-login.md) | How to connect JupyterHub, HedgeDoc and MinIO to LS Login. |
+| [LS Login](ls-login.md) | How to register a service, how LS Login releases groups (facilities, entitlements, 403 checklist), and how to connect JupyterHub, HedgeDoc and MinIO. |
 | [Services](services/index.md) | The services of the deployment and their role. |
