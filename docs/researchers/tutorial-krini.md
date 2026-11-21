@@ -10,20 +10,17 @@ This tutorial takes you from your first login to the results of your first
 analysis in [Krini][krini-repo], the web portal of ELIXIR On-Cloud. You count
 the lines, words and characters of a small text file twice: once as a
 [GA4GH TES][ga4gh-tes] task, and once as a [GA4GH WES][ga4gh-wes] workflow.
-It takes about 30 minutes, and you need nothing but a web browser and, for
-the last part, a terminal.
+It takes about 30 minutes, and you need nothing but a web browser.
 
 The tutorial uses the demo files in this documentation. Each step does one
 thing and links to the [Krini user guide](krini.md), which explains every
 field, button and message; this page doesn't repeat it.
 
-!!! note "The new Krini"
-    This tutorial describes the new Krini (branch `staging` of the [Krini
-    repository][krini-repo], commit
-    [`c81a259`](https://github.com/elixir-cloud-aai/krini/commit/c81a259)),
-    like the [Krini user guide](krini.md). Parts of it are still in progress
-    (see [What's coming](krini.md#whats-coming)), so what you see can
-    differ.
+!!! note "Krini 0.1.0, part 2 not possible yet"
+    This tutorial describes Krini 0.1.0 at <https://portal.elixir-on.cloud>,
+    like the [Krini user guide](krini.md). No WES service can be selected in
+    Krini yet (see [No WES service yet](krini.md#no-wes-service-yet)), so
+    for now you can follow part 1 only.
 
 !!! warning "Synthetic or public data only"
     The deployment is a sandbox for demos and tests. The demo file is public;
@@ -35,13 +32,14 @@ You need:
 
 - **An LS Login account.** See [Before you start](krini.md#before-you-start)
   in the user guide.
-- **Access to a TES service that accepts requests without a token,** for
-  part 1. Krini doesn't send your token to TES services yet (see [Run a
-  task](krini.md#run-a-task)).
+- **Compute access,** i.e., membership in the LS Login group
+  `ECP_CLN:EOC-Compute`, for part 1: Krini offers the task form only to its
+  members, and the TES gateway of the deployment, proTES, accepts their
+  tokens (see [Before you start](krini.md#before-you-start)).
 - **Access to a WES service that runs CWL `v1.0`,** for part 2.
 
 Krini shows the services of the Cloud Registry, but doesn't give you access
-to them. To ask for services that you can use, write to
+to them. To ask for other services that you can use, write to
 [cloud-service@elixir-europe.org][elixir-on-cloud-email] and say that you
 want to follow this tutorial.
 
@@ -55,10 +53,12 @@ The demo files:
 
 ## 2. Log in
 
-1. Open Krini in your browser.
+1. Open <https://portal.elixir-on.cloud> in your browser.
 2. Log in with LS Login, as [Log in](krini.md#log-in) describes.
 
-**Check:** the sidebar shows your name and email address.
+**Check:** the sidebar shows your name. Its menu shows your email address
+and **User Tier : Compute** (or **Admin**); with **User**, you can't run the
+task yet (see [Access tiers](krini.md#access-tiers)).
 
 ## Part 1: Run a task
 
@@ -68,15 +68,11 @@ service copies the text file into the container before the command starts.
 ### 3. Choose a TES service
 
 1. Open **Tasks** in the sidebar.
-2. Choose the TES service that you got access to in **Select TES Instance**
-   (see [Choose a service](krini.md#choose-a-service)).
+2. Choose **ELIXIR On-Cloud TES Gateway** (proTES), or another TES service
+   that you got access to, in **Select TES Instance** (see [Choose a
+   service](krini.md#choose-a-service)).
 
-**Check:** the list below shows the tasks of the service, or none.
-
-!!! warning "Don't choose TEST SERVER"
-    The **TEST SERVER** entry in the list of TES services doesn't work yet
-    ([krini#67](https://github.com/elixir-cloud-aai/krini/issues/67)).
-    Choose the service that you got access to.
+**Check:** the list below shows your tasks on the service, or none.
 
 ### 4. Create the task
 
@@ -88,13 +84,17 @@ service copies the text file into the container before the command starts.
     |---|---|
     | **Name** | `count-words` |
     | **Executors** › **Image** | `alpine:3.20` |
-    | **Executors** › **Commands** | `wc` in the first field, `/data/LICENSE` in the second |
+    | **Executors** › **Command** | `wc` on the first line, `/data/LICENSE` on the second |
     | **Inputs** › **URL** | `https://raw.githubusercontent.com/elixir-cloud-aai/docs/main/LICENSE` |
-    | **Inputs** › **Path** | `/data/LICENSE` |
+    | **Inputs** › **Path in container** | `/data/LICENSE` |
+    | **Inputs** › type | `FILE` |
 
-3. Submit the form.
+    **Inputs** is under **Inputs, outputs, resources and metadata**.
 
-**Check:** Krini shows the ID of the new task. Note it.
+3. Select **Submit Task**.
+
+**Check:** Krini shows "Task submitted successfully!" and the ID of the new
+task. Note it.
 
 !!! tip "If the service can't fetch the input"
     Not every TES service can fetch files from an `https` address. If the
@@ -108,7 +108,8 @@ service copies the text file into the container before the command starts.
    mean).
 2. Wait until the state is `COMPLETE`. Tasks first wait in `QUEUED` until the
    service has resources; this can take a few minutes.
-3. Expand the task and read the standard output in its logs.
+3. Select **View Details** and read the standard output in the logs of the
+   task.
 
 **Result:** the standard output of `wc`, the numbers of lines, words and
 characters of the file:
@@ -121,15 +122,18 @@ The numbers change if the file changes. If the state is `EXECUTOR_ERROR` or
 `SYSTEM_ERROR`, read the logs and see
 [Troubleshooting](krini.md#troubleshooting).
 
-!!! warning "No result files from tasks yet"
+!!! tip "Result files"
     This task writes its result to the standard output only. Tasks that
-    write result files need **Outputs**, which the task form of Krini
-    doesn't pass on to the service yet
-    ([cloud-components#574](https://github.com/elixir-cloud-aai/cloud-components/issues/574);
-    see [Run a task](krini.md#run-a-task)). Part 2 gets a result file
-    through WES instead.
+    write result files need **Outputs**, with an address that the service
+    can write to (see [Run a task](krini.md#run-a-task)). Part 2 gets a
+    result file through WES instead.
 
 ## Part 2: Run a workflow
+
+!!! warning "Not possible at the portal yet"
+    No WES service can be selected in Krini yet (see [No WES service
+    yet](krini.md#no-wes-service-yet)). The steps below are for when one
+    is registered.
 
 A WES service runs a whole workflow. Here, the workflow is
 [`count-words.cwl`](tutorial-files/count-words.cwl), which does the same as
@@ -182,18 +186,11 @@ with CWL `v1.0`.
 
 ### 9. Read the result
 
-!!! warning "No run details in Krini yet"
-    **View Details** doesn't open anything in Krini yet
-    ([krini#66](https://github.com/elixir-cloud-aai/krini/issues/66)), so
-    this step needs a terminal.
+In the list of runs, select **View Details** for your run (see [Read the
+details and outputs of a
+run](krini.md#read-the-details-and-outputs-of-a-run)).
 
-Read the details and outputs of the run from the WES service, with your
-access token, as [Read the details and outputs of a
-run](krini.md#read-the-details-and-outputs-of-a-run) describes: copy your
-token in Krini, look up the API endpoint of the service, and call it with
-`curl` and your run ID.
-
-**Result:** in the answer, `outputs` lists the file `counts.txt` with its
+**Result:** the outputs of the run list the file `counts.txt` with its
 address. Where the file is, and how you download it, depends on the service,
 e.g., in a bucket of its object storage. Its content is the same as in step
 5, without the file name:
@@ -205,8 +202,6 @@ e.g., in a bucket of its object storage. Its content is the same as in step
 ## 10. Clean up
 
 - Log out of Krini (see [Log in](krini.md#log-in)).
-- In the terminal, end the session in which you pasted your token, or remove
-  it with `unset TOKEN`.
 
 ## Where to go next
 
@@ -224,9 +219,9 @@ The workflow [`count-words.cwl`](tutorial-files/count-words.cwl) ran with
 `cwltool` and Docker on one computer, with
 [`count-words.json`](tutorial-files/count-words.json), and gave the result
 shown in step 9. The values of the forms follow the [Krini user
-guide](krini.md) and the source code of Krini at commit `c81a259`. The steps
-have not yet been run against a deployed Krini and deployed TES and WES
-services, and not yet by someone who didn't write them. If you follow this
+guide](krini.md) and the source code of Krini 0.1.0. The steps have not yet
+been run end to end at the portal, and not yet by someone who didn't write
+them. If you follow this
 tutorial, please tell us what didn't work: in the
 [Discussions][elixir-on-cloud-forum] or in an issue in the [docs
 repository](https://github.com/elixir-cloud-aai/docs/issues).
