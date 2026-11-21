@@ -14,6 +14,7 @@
   --eoc-border: #d8dfe6;           /* border */
 
   --md-default-bg-color: var(--eoc-background);
+  --md-default-fg-color: var(--eoc-foreground);
   --md-primary-fg-color: #0073cf;        /* primary */
   --md-primary-fg-color--light: #2f8adc; /* ring */
   --md-primary-fg-color--dark: #005ea9;
@@ -35,6 +36,7 @@
   --eoc-border: #2c3340;           /* border */
 
   --md-default-bg-color: var(--eoc-background);
+  --md-default-fg-color: var(--eoc-foreground);
   --md-code-bg-color: #131a25;           /* card */
   --md-primary-fg-color: #52b5f4;        /* primary */
   --md-primary-fg-color--light: #8acbf7;
@@ -48,12 +50,13 @@
   --md-typeset-a-color: var(--md-primary-fg-color);
 }
 
-/* Footer: slate-950 background, slate-800 rule, slate-400 text, in both
-   schemes (Material sets the footer colours per scheme) */
+/* Footer: slate-950 background, slate-800 rule, slate-200 for titles (the
+   main page's footer headings), slate-400 for other text, white on hover,
+   in both schemes (Material sets the footer colours per scheme) */
 [data-md-color-scheme] {
   --md-footer-bg-color: #020617;
   --md-footer-bg-color--dark: #020617;
-  --md-footer-fg-color: #ffffff;
+  --md-footer-fg-color: #e2e8f0;
   --md-footer-fg-color--light: #94a3b8;
   --md-footer-fg-color--lighter: #94a3b8;
 }
@@ -108,10 +111,12 @@
   width: auto;
 }
 
-/* Announcement bar: the banner of the main page, ELIXIR blue */
+/* Announcement bar: the ELIXIR blue of the main page's banner, with dark
+   text (slate-950) instead of white for a readable contrast (about 8:1;
+   white has about 2.6:1) */
 .md-banner {
   background-color: #3da9f6;
-  color: #ffffff;
+  color: #020617;
 }
 
 /* Headings: bold and in the text colour, like those of the main page */
