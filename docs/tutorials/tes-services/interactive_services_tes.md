@@ -98,7 +98,30 @@ passwords (readable only by you), the task IDs and the logs.
     tokens, at `https://csc-tesk-noauth.rahtiapp.fi`. That address now
     requires tokens too and will be removed: if you set `TES_URL` to it,
     set it to `https://tesk.rahtiapp.fi`. Tasks created there before the
-    switch can no longer be listed or read.
+    switch can no longer be listed, read or cancelled, by you or the
+    scripts.
+
+    If you ran the scripts before the switch, they still hold the IDs of
+    those tasks, and `up` would wait for them instead of starting new
+    ones. Once, stop the old services and remove the saved IDs, then set
+    `TES_TOKEN` and run `up` again. Skip the services that you never
+    started:
+
+    ```bash
+    cd ~/eoc_services
+    # stop the keep-alive loops and lock the old tasks out of the hub;
+    # each warns that it couldn't cancel its task
+    ./tes-hub/tes-service.sh rstudio-tesk down
+    ./tes-hub/tes-service.sh jupyter-tesk down
+    ./omop-tesk/omop-tesk-fi.sh down
+    # print the IDs of the old tasks, then remove them
+    cat rstudio-tesk/.state/task jupyter-tesk/.state/task omop-tesk/.state/task_*
+    rm -f rstudio-tesk/.state/task jupyter-tesk/.state/task omop-tesk/.state/task_*
+    ```
+
+    The old tasks may keep running until the operators of the TESK delete
+    them: send the printed IDs to
+    [cloud-service@elixir-europe.org][elixir-on-cloud-email].
 
 ## Set up the hub
 
