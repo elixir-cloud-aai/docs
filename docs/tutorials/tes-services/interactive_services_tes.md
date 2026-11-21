@@ -90,14 +90,15 @@ passwords (readable only by you), the task IDs and the logs.
 - A TES service whose tasks can make outbound HTTPS connections, and an
   access token for it if it needs one (see [Get an access
   token](#get-an-access-token)). The scripts use the TESK of ELIXIR-FI
-  without tokens (`https://csc-tesk-noauth.rahtiapp.fi`). To use another
+  (`https://tesk.rahtiapp.fi`), which requires a token. To use another
   service, set `TES_URL`.
 
-!!! note "The default address will change"
-    The TES services of ELIXIR On-Cloud move to access with tokens. The
-    default `TES_URL` will change to the address of the TESK of ELIXIR-FI
-    with tokens once that is published. Until then, set `TES_URL` to the
-    address that you were given.
+!!! note "The TESK of ELIXIR-FI has moved"
+    Until 21 November 2026, the scripts used the TESK of ELIXIR-FI without
+    tokens, at `https://csc-tesk-noauth.rahtiapp.fi`. That address now
+    requires tokens too and will be removed: if you set `TES_URL` to it,
+    set it to `https://tesk.rahtiapp.fi`. Tasks created there before the
+    switch can no longer be listed or read.
 
 ## Set up the hub
 
@@ -327,8 +328,8 @@ To change a default, set the environment variable before you run a script:
 
 | Variable | Default | Used by |
 |---|---|---|
-| `TES_URL` | `https://csc-tesk-noauth.rahtiapp.fi` (will change, see [What you need](#what-you-need)) | all scripts |
-| `TES_TOKEN` | none: no token is sent (see [Get an access token](#get-an-access-token)) | all scripts |
+| `TES_URL` | `https://tesk.rahtiapp.fi` (the TESK of ELIXIR-FI, which requires `TES_TOKEN`) | all scripts |
+| `TES_TOKEN` | none: no token is sent, and the default `TES_URL` answers `401` (see [Get an access token](#get-an-access-token)) | all scripts |
 | `HUB_LISTEN_PORT` | `8090` (`setup` saves it) | `tes-hub.sh` |
 | `CHISEL_VERSION` | `1.12.0` | `tes-hub.sh` |
 | `WATCH_INTERVAL` | `60` (seconds) | the keep-alive loops |

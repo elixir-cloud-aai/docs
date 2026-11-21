@@ -43,8 +43,8 @@ source "$DIR/service.conf"
 CONF_KEYS="$(sed -n 's/^[[:space:]]*\([A-Za-z_][A-Za-z0-9_]*\)=.*/\1/p' "$DIR/service.conf")"
 
 # ---- configuration -----------------------------------------------------------------------
-# TESK @ ELIXIR-FI. To be updated: the address of the instance with token access.
-TES_URL="${TES_URL:-https://csc-tesk-noauth.rahtiapp.fi}"
+# TESK @ ELIXIR-FI, which requires an LS Login access token (TES_TOKEN).
+TES_URL="${TES_URL:-https://tesk.rahtiapp.fi}"
 TES_API="${TES_URL%/}/ga4gh/tes/v1"
 HUB="${HUB:-$HERE/tes-hub.sh}"                                      # shared tunnel hub
 : "${NAME:?NAME missing in service.conf}" "${IMAGE:?IMAGE missing in service.conf}" "${PORT:?PORT missing in service.conf}"
