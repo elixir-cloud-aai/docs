@@ -65,6 +65,8 @@ Send your tasks to the TES gateway of the deployment,
 proTES forwards each task to one of the TES services that it knows; for
 now, that is only a TESK for tests at CSC, not yet the TES services of the
 Nodes (see [proTES](../operators/services/protes.md#in-the-elixir-on-cloud)).
+Since 21 November 2026, that TESK requires LS Login tokens, and proTES
+doesn't send one of its own yet: until it does, tasks sent to proTES fail.
 Get the
 token from [Krini](krini.md#copy-your-access-token): proTES accepts tokens
 that LS Login issued to Krini.

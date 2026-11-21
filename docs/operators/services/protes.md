@@ -39,7 +39,7 @@ As of November 2026:
 | Version | proTES 0.6.0 |
 | Access | LS Login access tokens of members of the group `ECP_CLN:EOC-Compute` or `ECP_CLN:ADMIN`, issued to a client that it accepts, such as Krini's (see [Researchers](../../researchers/index.md#before-you-start)) |
 | Environment | `test`: its service info calls it "proTES sandbox (BioHackathon 2026)" |
-| TES services | one, listed in its configuration: the TESK for tests at CSC (`csc-tesk-noauth.rahtiapp.fi`), which accepts tasks without a token |
+| TES services | one, listed in its configuration: the TESK for tests at CSC (`csc-tesk-noauth.rahtiapp.fi`). Since 21 November 2026, that TESK requires LS Login tokens, and proTES doesn't send one of its own yet, so tasks sent to proTES fail until [generic-issues#111][gi-111] is done |
 | Discovery in the Cloud Registry | off |
 
 A Node's TES service is added to the configuration when its admins ask for
@@ -66,7 +66,7 @@ roles may do):
 | Role `admin` | `urn:geant:lifescience-ri.eu:group:elixir:ECP_CLN:ADMIN#aai.lifescience-ri.eu`: the permissions API (`/admin/access-control/permissions`, on the public address) and the provenance of all tasks; three added rules (`admins-create-list-tasks`, `admins-list-plugins`, `admins-get-plugins`) give it the rights of `user` too |
 | Other tokens | valid tokens without either group get `403 Forbidden` on tasks and plugins; the service info is public |
 | Own tasks | only the user who created a task can read and cancel it; admins can read the provenance of any task, not the task |
-| TES services | the TESK for tests at CSC, without authentication (`auth: none`) |
+| TES services | the TESK for tests at CSC, without authentication (`auth: none`), at its old address `https://csc-tesk-noauth.rahtiapp.fi`, which answers `401` without a token since 21 November 2026 |
 | Plugins | none configured (the service info lists no capabilities) |
 
 LS Login releases only the groups assigned to the client's facility, so a
@@ -80,10 +80,12 @@ assigned to the facility of the token's client, too
 ([generic-issues#46][gi-46]). Members of other `ECP_CLN` subgroups get no
 role.
 
-proTES doesn't use a client of its own yet. Once it calls the TES services
-with its own LS Login token, the TESK at CSC moves to an address that
-requires tokens and its entry here changes from `auth: none` to
-`client_credentials` ([generic-issues#111][gi-111]).
+proTES doesn't use a client of its own yet. The TESK at CSC requires LS
+Login tokens since 21 November 2026, at its new address
+`https://tesk.rahtiapp.fi` (the old address requires them too, until it is
+removed). Once proTES calls it with its own LS Login token, the entry here
+changes to the new address with `auth: client_credentials`
+([generic-issues#111][gi-111]).
 
 [gi-46]: <https://github.com/elixir-cloud-aai/generic-issues/issues/46>
 [gi-111]: <https://github.com/elixir-cloud-aai/generic-issues/issues/111>

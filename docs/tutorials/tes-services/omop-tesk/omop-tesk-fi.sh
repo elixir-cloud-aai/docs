@@ -44,8 +44,8 @@ mkdir -p "$STATE_DIR"; chmod 700 "$STATE_DIR"
 [[ -f "$STATE_DIR/config" ]] && source "$STATE_DIR/config"
 
 # ---- configuration -----------------------------------------------------------------------
-# TESK @ ELIXIR-FI. To be updated: the address of the instance with token access.
-TES_URL="${TES_URL:-https://csc-tesk-noauth.rahtiapp.fi}"
+# TESK @ ELIXIR-FI, which requires an LS Login access token (TES_TOKEN).
+TES_URL="${TES_URL:-https://tesk.rahtiapp.fi}"
 TES_API="${TES_URL%/}/ga4gh/tes/v1"
 HUB="${HUB:-$HERE/../tes-hub/tes-hub.sh}"                           # shared tunnel hub
 HUB_ATLAS_PORT="${HUB_ATLAS_PORT:-8080}"                            # -> http://localhost:8080

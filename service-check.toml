@@ -18,6 +18,6 @@ skip_hosts = [
 # check reports an entry once its service is registered or no page names it
 # any more, so that this list only shrinks
 [unregistered]
-"https://csc-tesk-noauth.rahtiapp.fi/ga4gh/tes/v1" = "no-auth TESK, removed from the tutorial by #157"
+"https://tesk.rahtiapp.fi/ga4gh/tes/v1" = "TESK for tests at CSC, default of the TES tutorial; not registered (generic-issues#35)"
 "https://protes.rahtiapp.fi/ga4gh/tes/v1" = "not registered yet; pages point to the registry after #157"
 "https://trs-filer.rahtiapp.fi/ga4gh/trs/v2" = "not registered yet; pages point to the registry after #157"
