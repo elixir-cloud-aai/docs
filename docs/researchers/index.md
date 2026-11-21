@@ -61,7 +61,8 @@ If you don't hear back within a week, write to
 
 Send your tasks to the TES gateway of the deployment,
 [proTES](../operators/services/protes.md), at its TES API
-`https://protes.rahtiapp.fi/ga4gh/tes/v1`, with an LS Login access token.
+`https://gateway-tes.elixir-on.cloud/ga4gh/tes/v1`, with an LS Login access
+token (the old address `protes.rahtiapp.fi` keeps working).
 proTES forwards each task to one of the TES services that it knows; for
 now, that is only a TESK for tests at CSC, not yet the TES services of the
 Nodes (see [proTES](../operators/services/protes.md#in-the-elixir-on-cloud)).

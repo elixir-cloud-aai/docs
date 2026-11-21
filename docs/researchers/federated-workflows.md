@@ -49,8 +49,8 @@ You need:
 
 - Git, and Conda or Mamba (the README lists all requirements);
 - the address of a proTES gateway, and an access token for it: e.g., the
-  deployment's proTES at `https://protes.rahtiapp.fi`, with an LS Login
-  access token from Krini (see [Which TES services you can
+  deployment's proTES at `https://gateway-tes.elixir-on.cloud`, with an
+  LS Login access token from Krini (see [Which TES services you can
   use](index.md#which-tes-services-you-can-use));
 - the addresses of the TES services that the notebook runs the workflow on
   one by one, and their credentials: the TES services behind your gateway,

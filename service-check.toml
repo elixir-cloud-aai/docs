@@ -19,5 +19,4 @@ skip_hosts = [
 # any more, so that this list only shrinks
 [unregistered]
 "https://tesk.rahtiapp.fi/ga4gh/tes/v1" = "TESK for tests at CSC, default of the TES tutorial; not registered (generic-issues#35)"
-"https://protes.rahtiapp.fi/ga4gh/tes/v1" = "not registered yet; pages point to the registry after #157"
-"https://trs-filer.rahtiapp.fi/ga4gh/trs/v2" = "not registered yet; pages point to the registry after #157"
+"https://gateway-tes.elixir-on.cloud/ga4gh/tes/v1" = "registered under its old address protes.rahtiapp.fi until generic-issues#127"

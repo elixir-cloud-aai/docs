@@ -35,7 +35,7 @@ As of November 2026:
 
 | What | Value |
 |---|---|
-| Address | TES API at `https://protes.rahtiapp.fi/ga4gh/tes/v1` (the host itself has no page) |
+| Address | TES API at `https://gateway-tes.elixir-on.cloud/ga4gh/tes/v1` (the host itself has no page); the old address `protes.rahtiapp.fi` keeps working |
 | Version | proTES 0.6.0 |
 | Access | LS Login access tokens of members of the group `ECP_CLN:EOC-Compute` or `ECP_CLN:ADMIN`, issued to a client that it accepts, such as Krini's (see [Researchers](../../researchers/index.md#before-you-start)) |
 | Environment | `test`: its service info calls it "proTES sandbox (BioHackathon 2026)" |
