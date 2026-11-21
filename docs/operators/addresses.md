@@ -21,7 +21,7 @@ As of November 2026:
 | Documentation Hub | <https://docs.elixir-on.cloud/> | These docs | Read the Docs | [docs repository](https://github.com/elixir-cloud-aai/docs) |
 | TES gateway (proTES) | TES API at `https://gateway-tes.elixir-on.cloud/ga4gh/tes/v1` | Forwards TES tasks to the TES services behind it | CSC Rahti | [proTES](services/protes.md), [proTES docs](https://protes.readthedocs.io/) |
 | Pubgrade | <https://upgrade.elixir-on.cloud/ui/> (API docs) | Upgrades deployments when new images are published | CSC Rahti | [Pubgrade docs](https://pubgrade.readthedocs.io/) |
-| NVFlare hub | `flare-wes.elixir-on.cloud` (federated learning port only) | The NVIDIA FLARE server that the sites' clients connect to | CSC Rahti | [NVFlare Testbed](../demos/nvflare-wes-testbed.md), [testbed docs](https://nvflare-wes-testbed.readthedocs.io/) |
+| NVFlare hub | `flare-wes.elixir-on.cloud:30002` (the federated learning port, the only one open) | The NVIDIA FLARE server that the sites' clients connect to; the sites get the address in their start kits | CSC Rahti | [NVFlare Testbed](../demos/nvflare-wes-testbed.md), [testbed docs](https://nvflare-wes-testbed.readthedocs.io/) |
 
 The old addresses on CSC Rahti keep working as second names, so that
 registry entries, Node configurations and old links don't break:
