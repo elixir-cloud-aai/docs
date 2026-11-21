@@ -33,9 +33,10 @@ You need:
 - **An LS Login account.** See [Before you start](krini.md#before-you-start)
   in the user guide.
 - **Compute access,** i.e., membership in the LS Login group
-  `ECP_CLN:EOC-Compute`, for part 1: Krini offers the task form only to its
-  members, and the TES gateway of the deployment, proTES, accepts their
-  tokens (see [Before you start](krini.md#before-you-start)).
+  `ECP_CLN:EOC-Compute` (or `ECP_CLN:ADMIN`, for the admins of the
+  deployment), for part 1: Krini offers the task form only to members of
+  these groups, and the TES gateway of the deployment, proTES, accepts
+  their tokens (see [Before you start](krini.md#before-you-start)).
 - **Access to a WES service that runs CWL `v1.0`,** for part 2.
 
 Krini shows the services of the Cloud Registry, but doesn't give you access
@@ -72,7 +73,9 @@ service copies the text file into the container before the command starts.
    that you got access to, in **Select TES Instance** (see [Choose a
    service](krini.md#choose-a-service)).
 
-**Check:** the list below shows your tasks on the service, or none.
+**Check:** the list below shows the tasks that the service returns, or
+none. proTES returns only your own tasks; other services may also return
+the tasks of other users.
 
 ### 4. Create the task
 
