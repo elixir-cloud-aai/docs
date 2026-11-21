@@ -1,0 +1,9 @@
+{#-
+  Replaces the partial of Material for MkDocs: like the header of the main
+  page (`elixir-on.cloud`), the header shows the colour version of the logo
+  on light backgrounds and the white (night) version on dark ones. The
+  classes `only-light` and `only-dark` follow the colour scheme of the site
+  (`docs/stylesheets/extra.css`)
+-#}
+<img class="only-light" src="{{ 'images/logo_elixir_on_cloud.png' | url }}" alt="ELIXIR On-Cloud logo">
+<img class="only-dark" src="{{ 'images/logo_elixir_on_cloud_night.png' | url }}" alt="ELIXIR On-Cloud logo">

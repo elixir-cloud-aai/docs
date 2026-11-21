@@ -1,7 +1,140 @@
+/* Design of the main page (`elixir-on.cloud`, repository
+   `elixir-cloud-aai/landing-page`). Its colours are OKLCH tokens in
+   `src/styles/globals.css`; the hex values below are their conversions
+   (commented with the token names), and the footer colours are Tailwind's
+   slate colours of `src/components/footer/index.tsx`. When the main page
+   changes its colours, change them here too */
+
+/* Light scheme */
+[data-md-color-scheme="default"] {
+  --eoc-background: #f8fafc;       /* background */
+  --eoc-foreground: #111826;       /* foreground */
+  --eoc-muted: #ecf1f5;            /* muted */
+  --eoc-muted-foreground: #5b6472; /* muted-foreground */
+  --eoc-border: #d8dfe6;           /* border */
+
+  --md-default-bg-color: var(--eoc-background);
+  --md-default-fg-color: var(--eoc-foreground);
+  --md-primary-fg-color: #0073cf;        /* primary */
+  --md-primary-fg-color--light: #2f8adc; /* ring */
+  --md-primary-fg-color--dark: #005ea9;
+  --md-primary-bg-color: #fcfcfc;        /* primary-foreground */
+  --md-primary-bg-color--light: #fcfcfcb3;
+  --md-accent-fg-color: #2f8adc;         /* ring */
+  --md-accent-fg-color--transparent: #2f8adc1a;
+  --md-accent-bg-color: #fcfcfc;
+  --md-accent-bg-color--light: #fcfcfcb3;
+  --md-typeset-a-color: var(--md-primary-fg-color);
+}
+
+/* Dark scheme */
+[data-md-color-scheme="slate"] {
+  --eoc-background: #0b0f18;       /* background */
+  --eoc-foreground: #eff2f5;       /* foreground */
+  --eoc-muted: #202733;            /* muted */
+  --eoc-muted-foreground: #9ca5b1; /* muted-foreground */
+  --eoc-border: #2c3340;           /* border */
+
+  --md-default-bg-color: var(--eoc-background);
+  --md-default-fg-color: var(--eoc-foreground);
+  --md-code-bg-color: #131a25;           /* card */
+  --md-primary-fg-color: #52b5f4;        /* primary */
+  --md-primary-fg-color--light: #8acbf7;
+  --md-primary-fg-color--dark: #3786c3;  /* ring */
+  --md-primary-bg-color: #0b0f18;        /* primary-foreground */
+  --md-primary-bg-color--light: #0b0f18b3;
+  --md-accent-fg-color: #8acbf7;
+  --md-accent-fg-color--transparent: #52b5f41a;
+  --md-accent-bg-color: #0b0f18;
+  --md-accent-bg-color--light: #0b0f18b3;
+  --md-typeset-a-color: var(--md-primary-fg-color);
+}
+
+/* Footer: slate-950 background, slate-800 rule, slate-200 for titles (the
+   main page's footer headings), slate-400 for other text, white on hover,
+   in both schemes (Material sets the footer colours per scheme) */
+[data-md-color-scheme] {
+  --md-footer-bg-color: #020617;
+  --md-footer-bg-color--dark: #020617;
+  --md-footer-fg-color: #e2e8f0;
+  --md-footer-fg-color--light: #94a3b8;
+  --md-footer-fg-color--lighter: #94a3b8;
+}
+
+.md-footer-meta {
+  border-top: 0.05rem solid #1e293b;
+}
+
+.md-footer-meta a:focus,
+.md-footer-meta a:hover {
+  color: #ffffff;
+}
+
+/* Header and tabs: like the navigation bar of the main page, in the page's
+   background and text colours instead of the primary colours. Material
+   paints them with the primary colours, so these are redefined for these
+   elements only (and for the drawer title on small screens) */
+.md-header,
+.md-tabs,
+.md-nav__title[for="__drawer"] {
+  --md-primary-fg-color: var(--eoc-background);
+  --md-primary-bg-color: var(--eoc-foreground);
+  --md-primary-bg-color--light: var(--eoc-muted-foreground);
+}
+
+.md-tabs {
+  border-bottom: 0.05rem solid var(--eoc-border);
+}
+
+.md-tabs__item--active .md-tabs__link {
+  color: var(--md-typeset-a-color);
+}
+
+/* Search field in the header: the muted colour of the main page */
+@media screen and (min-width: 60em) {
+  .md-header .md-search__input {
+    background-color: var(--eoc-muted);
+    color: var(--eoc-foreground);
+  }
+
+  .md-header .md-search__input::placeholder,
+  .md-header .md-search__icon {
+    color: var(--eoc-muted-foreground);
+  }
+}
+
+/* Logo in the header: the wide logo of the main page needs more height
+   than Material's square mark */
+.md-header__button.md-logo img,
+.md-nav__button.md-logo img {
+  height: 1.8rem;
+  width: auto;
+}
+
+/* Announcement bar: the ELIXIR blue of the main page's banner, with dark
+   text (slate-950) instead of white for a readable contrast (about 8:1;
+   white has about 2.6:1) */
+.md-banner {
+  background-color: #3da9f6;
+  color: #020617;
+}
+
+/* Headings: bold and in the text colour, like those of the main page */
+.md-typeset h1 {
+  color: var(--md-default-fg-color);
+  font-weight: 700;
+}
+
+.md-typeset h2 {
+  font-weight: 600;
+}
+
 /* Day/night versions of the ELIXIR On-Cloud lockup: the image variants carry
    the classes `only-light` and `only-dark`, shown by the colour scheme */
 [data-md-color-scheme="default"] .only-dark,
-[data-md-color-scheme="slate"] .only-light {
+[data-md-color-scheme="slate"] .only-light,
+[data-md-color-scheme="default"] .md-logo img.only-dark,
+[data-md-color-scheme="slate"] .md-logo img.only-light {
   display: none;
 }
 

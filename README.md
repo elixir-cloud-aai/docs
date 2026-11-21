@@ -209,6 +209,24 @@ last_verified: 2026-11-17
 - The partial is a copy of Material's: when you upgrade Material, compare
   it with the new release's `partials/content.html`.
 
+### Design
+
+The site looks like the main page, [elixir-on.cloud][main-page] (repository
+[`elixir-cloud-aai/landing-page`][landing-page]):
+
+- Colours: the main page's colour tokens, converted to hex, in
+  [`docs/stylesheets/extra.css`](docs/stylesheets/extra.css); the header
+  and tabs use the page colours, the footer the main page's dark slate.
+  When the main page changes its colours, change them there too.
+- Fonts: Inter for text, as on the main page (`theme.font` in
+  `mkdocs.yml`).
+- Logo: the colour and white versions of the ELIXIR On-Cloud logo, by
+  colour scheme ([`overrides/partials/logo.html`](overrides/partials/logo.html)).
+  The logo links to the main page (`extra.homepage`), the tab "Home" to
+  the start page of the docs.
+- Footer: links to the main page's privacy policy and funding page and to
+  the contact address (`copyright` in `mkdocs.yml`).
+
 ## Contributing
 
 Contributions are welcome! See the organisation's [contributing
@@ -228,4 +246,6 @@ The content is licensed under [Creative Commons Zero, version 1.0][license]
 [code-of-conduct]: <https://github.com/elixir-cloud-aai/.github/blob/main/CODE_OF_CONDUCT.md>
 [contributing]: <https://github.com/elixir-cloud-aai/.github/blob/main/CONTRIBUTING.md>
 [docs]: <https://docs.elixir-on.cloud/>
+[landing-page]: <https://github.com/elixir-cloud-aai/landing-page>
 [license]: LICENSE
+[main-page]: <https://elixir-on.cloud/>

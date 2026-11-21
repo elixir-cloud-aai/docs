@@ -1,6 +1,11 @@
+# The links of the footer of the main page (`elixir-on.cloud`): privacy
+# policy, funding and contact
 copyright: >
-  Copyright &copy; ELIXIR On-Cloud –
-  <a href="#__consent">Change cookie settings</a>
+  Copyright &copy; ELIXIR On-Cloud ·
+  <a href="https://elixir-on.cloud/privacy">Privacy policy</a> ·
+  <a href="https://elixir-on.cloud/funding">Funding</a> ·
+  <a href="mailto:cloud-service@elixir-europe.org">Contact</a> ·
+  <a href="#__consent">Cookie settings</a>
 edit_uri: edit/main/docs/
 
 extra:
@@ -22,6 +27,9 @@ extra:
             form</a>.
     provider: google
     property: G-65GGNT08KH
+  # The logo in the header links back to the main page; the tab "Home"
+  # leads to the start page of the docs
+  homepage: https://elixir-on.cloud/
   # API of the Cloud Registry, read by `hooks/registry.py` to render the
   # tables of services; forks can point it to their own registry
   registry_url: https://elixir-on.cloud/ga4gh/registry/v1
@@ -150,12 +158,18 @@ site_description: >-
 site_url: !ENV [READTHEDOCS_CANONICAL_URL, "https://docs.elixir-on.cloud/"]
 theme:
   custom_dir: overrides
-  # The favicon follows the colour scheme of the browser (see the file). The
-  # header and the footer are dark in both schemes of the site, hence the white
-  # (night) version of the mark in both; the page body uses day and night
-  # versions of the lockup (`docs/stylesheets/extra.css`)
+  # The design follows the main page (`elixir-on.cloud`, repository
+  # `elixir-cloud-aai/landing-page`): its colours, its text font and its
+  # logos. The favicon follows the colour scheme of the browser (see the
+  # file). The header shows the day and night versions of the logo by the
+  # colour scheme of the site (`overrides/partials/logo.html`, instead of
+  # `logo`). Colours are set in `docs/stylesheets/extra.css`
   favicon: images/favicon.svg
-  logo: images/logo_elixir_on_cloud_mark_night.svg
+  font:
+    # The main page's text font; its code font is a stack of system fonts,
+    # not a web font, so the code font stays Material's default
+    text: Inter
+    code: Roboto Mono
   features:
     - announce.dismiss
     - content.code.copy
@@ -178,15 +192,15 @@ theme:
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: deep purple
-      accent: purple
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: deep purple
-      accent: purple
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
