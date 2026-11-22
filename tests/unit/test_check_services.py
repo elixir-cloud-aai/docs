@@ -185,7 +185,7 @@ def test_hostname(url: str, host: str) -> None:
         ("%3chost%3e.org", True),
         ("$host.org", True),
         ("*.rahtiapp.fi", True),
-        ("protes.rahtiapp.fi", False),
+        ("gateway-tes.elixir-on.cloud", False),
         ("example.org.evil.fi", False),
         ("8.8.8.8", False),
     ],

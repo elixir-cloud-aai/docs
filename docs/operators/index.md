@@ -53,6 +53,7 @@ today. Write to the admins at
 
 | Page | What it covers |
 |---|---|
+| [Central Addresses](addresses.md) | The addresses of the deployment's central services: portal, Cloud Registry, TES gateway and others. |
 | [Onboarding](onboarding.md) | The steps for a Node to join the federation. |
 | [Tutorial: Onboard a Node](node-onboarding-tutorial.md) | Step by step, from a cluster to a registered, verified TES service behind the gateway. |
 | [Tutorial: Onboard a Data Centre](data-centre-onboarding-tutorial.md) | Step by step, from a cluster to storage for tasks and a registered, verified TRS service. |

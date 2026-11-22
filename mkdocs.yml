@@ -99,6 +99,7 @@ nav:
   - Home: "index.md"
   - Architects & Operators:
     - "operators/index.md"
+    - "Central Addresses": "operators/addresses.md"
     - "Onboarding": "operators/onboarding.md"
     - "Tutorial: Onboard a Node": "operators/node-onboarding-tutorial.md"
     - "Tutorial: Onboard a Data Centre": "operators/data-centre-onboarding-tutorial.md"
