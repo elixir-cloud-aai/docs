@@ -93,14 +93,15 @@ after the image name go to `ga4gh-cli`. Mount your configuration (see
 the working directory `/work`:
 
 ```bash
-docker run --rm \
+docker run --rm --user "$(id -u):$(id -g)" \
   --volume "$HOME/.ga4gh-cli:/home/ga4gh/.ga4gh-cli:ro" \
   --volume "$PWD:/work:ro" \
   ghcr.io/ga4gh/ga4gh-cli:0.1.0 tes create task.json
 ```
 
-The container runs as the user with UID 10001, which must be able to read
-the mounted files. To pass a token in a variable (see [Log in with LS
+`--user` runs the container with your user ID instead of its own (10001),
+so that it can read your configuration file, which only you can read (see
+[Configure](#configure)). To pass a token in a variable (see [Log in with LS
 Login](#log-in-with-ls-login)), add `--env LS_LOGIN_TOKEN`. The SDK's
 [container image guide][sdk-image] has the details.
 
