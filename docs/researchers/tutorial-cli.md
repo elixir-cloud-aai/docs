@@ -11,20 +11,18 @@ the [GA4GH SDK](https://github.com/ga4gh/ga4gh-sdk), to the results of your
 first analysis on ELIXIR On-Cloud. You find services in the Cloud Registry,
 log in with an LS Login token, and count the lines, words and characters of
 a small text file twice: once as a [GA4GH TES][ga4gh-tes] task, and once as
-a [GA4GH WES][ga4gh-wes] workflow. It takes about an hour, most of it for
-building the tool.
+a [GA4GH WES][ga4gh-wes] workflow. How long it takes depends mostly on how
+long the services need to run the task and the workflow.
 
 The tutorial uses the demo files in this documentation. Each step does one
 thing and links to [Use the Command Line](cli.md), the reference of the
 tool, which explains all commands and options; this page doesn't repeat it.
 The commands are for Bash or Zsh on Linux or macOS.
 
-!!! warning "What the CLI can't do yet"
-    - **No ready-made binaries:** you build the CLI from its source code
-      ([ga4gh-sdk#91](https://github.com/ga4gh/ga4gh-sdk/issues/91)).
-
-The CLI doesn't log in itself: it sends an LS Login access token that you
-put into a variable. Step 5 shows how to get one.
+The tutorial uses [release
+0.1.0](https://github.com/ga4gh/ga4gh-sdk/releases/tag/v0.1.0) of the CLI.
+The CLI sends an LS Login access token that you put into a variable; step 5
+shows how to get one.
 
 !!! warning "Synthetic or public data only"
     The deployment is a sandbox for demos and tests. The demo file is public;
@@ -34,9 +32,9 @@ put into a variable. Step 5 shows how to get one.
 
 You need:
 
-- **Git and [Rust](https://www.rust-lang.org/tools/install)**, installed
-  with `rustup`, to build the CLI, and `curl` and
-  [`jq`](https://jqlang.org/) for the demo files and results.
+- **`curl`, `tar` and [`jq`](https://jqlang.org/),** to install the CLI
+  and for the demo files and results, and `sha256sum` (on macOS: `shasum`)
+  to check the download.
 - **An LS Login account.** See the [LS Login and registration
   guide](https://www.lifescience-ri.eu/ls-login-and-registration-guide/).
 - **Access to a TES service,** for part 1, and **to a WES service that runs
@@ -57,26 +55,41 @@ The demo files:
 
 ## 2. Install the CLI
 
-Build and install the CLI at the commit that [Use the Command
-Line](cli.md#install) describes:
+Download the CLI 0.1.0, check it and put it into `~/.local/bin` (see
+[Install](cli.md#install), which also has the container image and the build
+from source). Set `target` to the one of your computer:
+`x86_64-unknown-linux-gnu` or `aarch64-unknown-linux-gnu` on Linux,
+`x86_64-apple-darwin` on a Mac with an Intel processor, or
+`aarch64-apple-darwin` on a Mac with Apple silicon.
 
 ```bash
-git clone https://github.com/ga4gh/ga4gh-sdk.git
-cd ga4gh-sdk
-git checkout af0e021
-cargo install --path cli --locked
-cd ..
+version=0.1.0
+target=x86_64-unknown-linux-gnu
+archive="ga4gh-cli-$version-$target.tar.gz"
+base="https://github.com/ga4gh/ga4gh-sdk/releases/download/v$version"
+curl --fail --location --remote-name "$base/$archive"
+curl --fail --location --remote-name "$base/SHA256SUMS"
+grep " $archive\$" SHA256SUMS | sha256sum --check &&
+  tar -xzf "$archive" &&
+  mkdir -p ~/.local/bin &&
+  mv "ga4gh-cli-$version-$target/ga4gh-cli" ~/.local/bin/ &&
+  rm -r "$archive" SHA256SUMS "ga4gh-cli-$version-$target"
 ```
 
-**Check:**
+On macOS, write `shasum -a 256 --check` instead of `sha256sum --check`. The
+binaries aren't signed, so macOS may block the CLI until you remove its
+quarantine attribute: `xattr -d com.apple.quarantine ~/.local/bin/ga4gh-cli`.
+
+**Check:** the checksum line ends with `OK`, and
 
 ```bash
 ga4gh-cli --version
 ```
 
-The command prints the version of the CLI. If the shell doesn't find
-`ga4gh-cli`, open a new terminal, so that it reads the `PATH` that `rustup`
-set.
+prints `ga4gh-cli 0.1.0`. If the checksum line ends with `FAILED`, the
+commands after it don't run: delete the download and start again. If the shell doesn't find
+`ga4gh-cli`, add `~/.local/bin` to your `PATH`, for example with
+`export PATH="$HOME/.local/bin:$PATH"`.
 
 ## 3. Point the CLI at the Cloud Registry
 
@@ -152,9 +165,9 @@ For example, a proTES at `tes.example.org` has the API root
 
 ## 5. Log in
 
-The CLI sends a token that you put into a variable; it doesn't get one
-itself. Get an LS Login access token in one of these ways, and ask the
-operators of your services which of them they accept:
+The CLI sends a token that you put into a variable. Get an LS Login access
+token in one of these ways, and ask the operators of your services which of
+them they accept:
 
 - **With your own LS Login client,** as [Get an access
   token](../partners-and-developers/apis.md#2-get-an-access-token)
@@ -345,8 +358,9 @@ The workflow [`count-words.cwl`](tutorial-files/count-words.cwl) ran with
 `cwltool` and Docker on one computer, with
 [`count-words.json`](tutorial-files/count-words.json), and gave the result
 shown in step 11; the command of the task gave the result shown in step 8 in
-the image `alpine:3.20`. The commands and options of the CLI follow [Use
-the Command Line](cli.md), which was tested at commit `af0e021` of the SDK.
+the image `alpine:3.20`. Step 2 was run as written on Linux on x86-64.
+The commands and options of the CLI follow [Use the Command
+Line](cli.md), which was tested with release 0.1.0 of the SDK.
 The steps have not yet been run against deployed TES and WES services of
 ELIXIR On-Cloud, and not yet by someone who didn't write them. If you follow
 this tutorial, please tell us what didn't work: in the
