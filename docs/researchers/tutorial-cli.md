@@ -67,18 +67,25 @@ version=0.1.0
 target=x86_64-unknown-linux-gnu
 archive="ga4gh-cli-$version-$target.tar.gz"
 base="https://github.com/ga4gh/ga4gh-sdk/releases/download/v$version"
-curl --fail --location --remote-name "$base/$archive"
-curl --fail --location --remote-name "$base/SHA256SUMS"
-grep " $archive\$" SHA256SUMS | sha256sum --check &&
+(
+  cd "$(mktemp -d)" &&
+  curl --fail --location --remote-name "$base/$archive" &&
+  curl --fail --location --remote-name "$base/SHA256SUMS" &&
+  grep " $archive\$" SHA256SUMS > archive.sha256 &&
+  sha256sum --check archive.sha256 &&
   tar -xzf "$archive" &&
   mkdir -p ~/.local/bin &&
   mv "ga4gh-cli-$version-$target/ga4gh-cli" ~/.local/bin/ &&
-  rm -r "$archive" SHA256SUMS "ga4gh-cli-$version-$target"
+  rm -r "$PWD"
+)
 ```
 
-On macOS, write `shasum -a 256 --check` instead of `sha256sum --check`. The
-binaries aren't signed, so macOS may block the CLI until you remove its
-quarantine attribute: `xattr -d com.apple.quarantine ~/.local/bin/ga4gh-cli`.
+The commands work in a new, empty folder, which they delete at the end, and
+each runs only if the one before it succeeded. On macOS, write `shasum -a 256
+--check` instead of `sha256sum --check`. The binaries aren't signed, so macOS
+may block the CLI until you remove its quarantine attribute; check the build
+provenance of the archive first, as [Download the
+binary](cli.md#download-the-binary) describes.
 
 **Check:** the checksum line ends with `OK`, and
 
@@ -86,8 +93,8 @@ quarantine attribute: `xattr -d com.apple.quarantine ~/.local/bin/ga4gh-cli`.
 ga4gh-cli --version
 ```
 
-prints `ga4gh-cli 0.1.0`. If the checksum line ends with `FAILED`, the
-commands after it don't run: delete the download and start again. If the shell doesn't find
+prints `ga4gh-cli 0.1.0`. If a download or the checksum fails, nothing is
+installed: run the commands again. If the shell doesn't find
 `ga4gh-cli`, add `~/.local/bin` to your `PATH`, for example with
 `export PATH="$HOME/.local/bin:$PATH"`.
 

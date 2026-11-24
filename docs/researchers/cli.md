@@ -39,34 +39,40 @@ and Windows, on x86-64 and arm64, and a container image. The Python package
 
 ### Download the binary
 
-Download the archive for your system and the file `SHA256SUMS`, check the
-archive against it, unpack it and run the CLI. For Linux on x86-64:
+Download the archive for your system and the file `SHA256SUMS` into a new,
+empty folder, check the archive against its line in `SHA256SUMS`, unpack it
+and put the CLI into `~/.local/bin`. Every command runs only if the one
+before it succeeded. For Linux on x86-64:
 
 ```bash
 version=0.1.0
 target=x86_64-unknown-linux-gnu
 archive="ga4gh-cli-$version-$target.tar.gz"
 base="https://github.com/ga4gh/ga4gh-sdk/releases/download/v$version"
-curl --fail --location --remote-name "$base/$archive"
-curl --fail --location --remote-name "$base/SHA256SUMS"
-sha256sum --check --ignore-missing SHA256SUMS &&
+(
+  cd "$(mktemp -d)" &&
+  curl --fail --location --remote-name "$base/$archive" &&
+  curl --fail --location --remote-name "$base/SHA256SUMS" &&
+  grep " $archive\$" SHA256SUMS > archive.sha256 &&
+  sha256sum --check archive.sha256 &&
   tar -xzf "$archive" &&
   mkdir -p ~/.local/bin &&
   mv "ga4gh-cli-$version-$target/ga4gh-cli" ~/.local/bin/ &&
-  ~/.local/bin/ga4gh-cli --version
+  rm -r "$PWD"
+) && ~/.local/bin/ga4gh-cli --version
 ```
 
-`sha256sum` prints `OK` after the name of the archive; if it prints
-`FAILED`, the commands after it don't run: delete the download. The last
-command prints `ga4gh-cli 0.1.0`. If the shell doesn't find `ga4gh-cli`
-when you run it without its folder, add `~/.local/bin` to your `PATH`, for
-example with `export PATH="$HOME/.local/bin:$PATH"`.
+`sha256sum` prints `OK` after the name of the archive. If a download fails,
+`SHA256SUMS` has no line for the archive, or the checksum doesn't match,
+the commands after it don't run, and nothing is installed. The last command
+prints `ga4gh-cli 0.1.0`. If the shell doesn't find `ga4gh-cli` when you
+run it without its folder, add `~/.local/bin` to your `PATH`, for example
+with `export PATH="$HOME/.local/bin:$PATH"`.
 
-For another system, set `target` from the table below. On macOS, check the
-archive with `grep " $archive\$" SHA256SUMS | shasum -a 256 --check`
-instead of `sha256sum`. On Windows, download the `.zip` archive, compare its
-SHA-256 checksum with its line in `SHA256SUMS`, for example with
-`Get-FileHash` in PowerShell, and unpack it.
+For another system, set `target` from the table below. On macOS, write
+`shasum -a 256 --check` instead of `sha256sum --check`. On Windows,
+download the `.zip` archive, compare its SHA-256 checksum with its line in
+`SHA256SUMS`, for example with `Get-FileHash` in PowerShell, and unpack it.
 
 | System | `target` | Archive |
 |---|---|---|
@@ -80,9 +86,12 @@ SHA-256 checksum with its line in `SHA256SUMS`, for example with
 The Linux binaries need glibc 2.34 or newer (for example Ubuntu 22.04,
 Debian 12 or RHEL 9), OpenSSL 3 and CA certificates. The binaries aren't
 signed, so macOS may block them until you remove the quarantine attribute
-with `xattr -d com.apple.quarantine ga4gh-cli`. The SDK's
-[installation guide][sdk-install] also shows how to check the build
-provenance of the archive with the GitHub CLI.
+with `xattr -d com.apple.quarantine ~/.local/bin/ga4gh-cli`. The checksum
+only shows that the download is complete and matches the release; before
+you remove the quarantine, also check that the archive was built by the
+SDK's release workflow: with the [GitHub CLI](https://cli.github.com/), add
+the line `gh attestation verify "$archive" --repo ga4gh/ga4gh-sdk &&` after
+the checksum line (see the SDK's [installation guide][sdk-install]).
 
 ### Run the container image
 
