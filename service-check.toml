@@ -20,3 +20,5 @@ skip_hosts = [
 [unregistered]
 "https://tesk.rahtiapp.fi/ga4gh/tes/v1" = "TESK for tests at CSC, default of the TES tutorial; not registered (generic-issues#35)"
 "https://gateway-tes.elixir-on.cloud/ga4gh/tes/v1" = "registered under its old address protes.rahtiapp.fi until generic-issues#127"
+"https://poiesis.dyn.cloud.e-infra.cz/ga4gh/tes/v1" = "Poiesis of the CZ Node at CERIT-SC; registration pending (generic-issues#52)"
+"https://poiesis.rahtiapp.fi/ga4gh/tes/v1" = "Poiesis of the FI Node on Rahti; registered after its upgrade (generic-issues#21)"
