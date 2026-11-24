@@ -20,7 +20,12 @@ field, button and message; this page doesn't repeat it.
     This tutorial describes Krini 0.1.0 at <https://portal.elixir-on.cloud>,
     like the [Krini user guide](krini.md). No WES service can be selected in
     Krini yet (see [No WES service yet](krini.md#no-wes-service-yet)), so
-    for now you can follow part 1 only.
+    for now you can follow part 1 only. Tasks sent to the TES gateway of
+    the deployment, proTES, fail for now, as its only TES service requires
+    a token that proTES doesn't send yet (see
+    [proTES](../operators/services/protes.md#in-the-elixir-on-cloud)):
+    until then, part 1 works only with another TES service that you got
+    access to, chosen in step 3.
 
 !!! warning "Synthetic or public data only"
     The deployment is a sandbox for demos and tests. The demo file is public;
