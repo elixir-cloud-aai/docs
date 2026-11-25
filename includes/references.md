@@ -1,3 +1,4 @@
+[crypt4gh]: <https://crypt4gh.readthedocs.io/>
 [cwl-tes]: <https://github.com/ohsu-comp-bio/cwl-tes>
 [elixir-on-cloud]: <https://elixir-on.cloud/>
 [elixir-on-cloud-github]: <https://github.com/elixir-cloud-aai/>
@@ -19,6 +20,7 @@
 [minio]: <https://min.io/>
 [minio-deploy-openshift-template]: <https://github.com/CSCfi/Minio-OpenShift>
 [minio-docs-k8s]: <https://min.io/docs/minio/kubernetes/upstream/index.html>
+[protes]: <https://protes.readthedocs.io/en/latest/>
 [tesk]: <https://github.com/elixir-cloud-aai/TESK>
 [vsftpd]: <https://security.appspot.com/vsftpd.html>
 [vsftpd-deploy]: <https://www.digitalocean.com/community/tutorials/how-to-set-up-vsftpd-for-a-user-s-directory-on-ubuntu-20-04>

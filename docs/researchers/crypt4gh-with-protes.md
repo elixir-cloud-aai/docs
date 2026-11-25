@@ -6,11 +6,14 @@ last_verified: null
 
 This page shows how researchers can analyse Crypt4GH-encrypted sensitive
 data without opening the decrypted files themselves. A data holder encrypts
-the data with [Crypt4GH](https://crypt4gh.readthedocs.io/). The researcher
-sends a [GA4GH TES][ga4gh-tes] task to [proTES](https://github.com/elixir-cloud-aai/proTES).
-A middleware of proTES adds a step that decrypts the files inside a
-container of the [Funnel][funnel] TES service, and the task command runs on
-the decrypted files.
+the data with [Crypt4GH][crypt4gh]. The researcher sends a [GA4GH
+TES][ga4gh-tes] task to [proTES][protes]. A middleware of proTES adds a
+step that decrypts the files inside a container of the [Funnel][funnel] TES
+service, and the task commands run on the decrypted files.
+
+Unlike the tutorials of this section, this page doesn't use the live
+services of ELIXIR On-Cloud: you set up Funnel and proTES on three virtual
+machines of your own.
 
 !!! warning "Needs an unreleased proTES branch"
     The Crypt4GH middleware is a proof of concept, and no release of proTES
@@ -35,16 +38,23 @@ the decrypted files.
     environments: it needs secret keys to be sent and stores decrypted files
     on disk.
 
-!!! note "Being ported to current proTES"
-    The middleware is being ported to a plugin for current proTES:
+!!! note "Successor: the Crypt4GH plugin for current proTES"
+    The middleware's successor is the plugin
     [`tes.data.crypt4gh`](https://github.com/elixir-cloud-aai/foca-plugins/tree/dev/plugins/tes/data/crypt4gh)
-    in [foca-plugins](https://foca-plugins.readthedocs.io/en/latest/) (see
-    [foca-plugins#65](https://github.com/elixir-cloud-aai/foca-plugins/issues/65)).
-    Its first release, 0.1.0, is prepared but not published yet. Once it is
-    published, this page will target a released proTES.
+    of [foca-plugins](https://foca-plugins.readthedocs.io/en/latest/), for
+    current proTES. Its first release,
+    [0.1.0](https://github.com/elixir-cloud-aai/foca-plugins/releases/tag/foca-plugin-tes-data-crypt4gh-v0.1.0),
+    came out on 21 November 2026 as a pre-release. The proTES of ELIXIR
+    On-Cloud doesn't run it yet
+    ([generic-issues#120](https://github.com/elixir-cloud-aai/generic-issues/issues/120)).
+    Once it does, this page will be rewritten for the plugin and the
+    deployed proTES
+    ([docs#177](https://github.com/elixir-cloud-aai/docs/issues/177)).
 
 !!! note "Tested versions"
-    The original tutorial (December 2025, updated July 2026) records no
+    This page goes back to a tutorial that its authors added to this hub in
+    December 2025 and updated in July 2026
+    ([#36](https://github.com/elixir-cloud-aai/docs/pull/36)). It records no
     released versions. Its authors used:
 
     | Product | Version |
@@ -72,7 +82,7 @@ the decrypted files.
    that decrypts them with the keys in the task.
 4. Funnel runs the decrypt executor and then the executors of the
    researcher on the decrypted files, all in containers.
-5. The results go to a storage that the researcher can read.
+5. The results go to storage that the researcher can read.
 
 The researcher can repeat the analysis with other parameters at any time,
 without the data holder.
@@ -93,9 +103,10 @@ without the data holder.
 
 ### 1. Install Funnel on the server and the worker
 
-Install Funnel on both machines. See the [Funnel docs](https://calypr.org/tools/funnel/)
-and the [releases](https://github.com/calypr/funnel/releases) of
-[Funnel](https://github.com/calypr/funnel).
+Install Funnel on both machines. See the [Funnel
+docs](https://calypr.org/tools/funnel/) and the
+[releases](https://github.com/calypr/funnel/releases) of
+[Funnel][funnel].
 
 ### 2. Configure and start the Funnel server
 
@@ -133,17 +144,17 @@ funnel server run --config server-config.yaml &
 
 ### 3. Configure and start the Funnel worker
 
-On the worker machine, create `worker-config.yaml`. Replace `XXX` with the
-IP address of the server (the internal one, if both are in the same
-network):
+On the worker machine, create `worker-config.yaml`. Replace `<server-ip>`
+with the IP address of the server (the internal one, if both are in the
+same network):
 
 ```yaml
 Server:
-  HostName: XXX
+  HostName: <server-ip>
   RPCPort: "9090"
 
 RPCClient:
-  ServerAddress: XXX:9090
+  ServerAddress: <server-ip>:9090
 
 Worker:
   WorkDir: "/tmp/funnel-work"
@@ -198,7 +209,8 @@ The random middleware is the fallback for tasks without Crypt4GH inputs.
 
 2. In `pro_tes/config.yaml`, set `custom.tes.service_list` to the address
    of your Funnel server, e.g., `http://<server-ip>:8000`. The branch has an
-   address of the authors' network there.
+   address of the authors' network there (`http://192.168.0.91:8000`).
+   The next step builds the edited file into the image.
 3. Build and start proTES with its Docker Compose file, as the README of
    the branch describes:
 
@@ -212,13 +224,22 @@ The random middleware is the fallback for tasks without Crypt4GH inputs.
 proTES then serves its TES API on port 8080 of the machine (see
 `docker-compose.yaml`).
 
-## Run the tasks
+## Write the tasks
 
-The three tasks run one after the other. Each is a TES task in a JSON file.
+Each task is a TES task in a JSON file. Run them in order; skip task 1 if
+you already have Crypt4GH keys. In this setup, all files are in
+`/tmp/funnel-storage` on the Funnel machines (`file://` URLs). With real
+data, the data holder's and the researcher's files would be in separate
+storage, for example in different S3 buckets.
 
-### Task 1: Generate Crypt4GH Key Pairs
+### Task 1: Generate key pairs
 
-This task generates cryptographic key pairs for both the data holder and researcher. This step is independent of the following steps and may have happened a while ago. Your private keys may already be in a secure place. If you have crypt4gh keys, feel free to skip this step.
+This task creates a key pair for the data holder and one for the
+researcher. In practice, each party creates its keys once, on its own
+computer, and keeps the private key safe. The task writes unencrypted
+private keys to the Funnel storage, which is fine for this demo only: for
+real data, never create keys in a task (see [Keep your keys
+safe](#keep-your-keys-safe)).
 
 Create a file named `task1_keygen.json`:
 
@@ -230,35 +251,35 @@ Create a file named `task1_keygen.json`:
   "outputs": [
     {
       "name": "data_holder_sk",
-      "description": "Data holder secret key",
+      "description": "Data holder private key",
       "url": "file:///tmp/funnel-storage/keys/data_holder/data_holder.sec",
       "path": "/outputs/keys/data_holder/data_holder.sec",
       "type": "FILE"
     },
     {
       "name": "data_holder_pk",
-      "description": "data_holder public key",
+      "description": "Data holder public key",
       "url": "file:///tmp/funnel-storage/keys/data_holder/data_holder.pub",
       "path": "/outputs/keys/data_holder/data_holder.pub",
       "type": "FILE"
     },
     {
       "name": "researcher_sk",
-      "description": "researcher secret key",
+      "description": "Researcher private key",
       "url": "file:///tmp/funnel-storage/keys/researcher/researcher.sec",
       "path": "/outputs/keys/researcher/researcher.sec",
       "type": "FILE"
     },
     {
       "name": "researcher_pk",
-      "description": "researcher public key",
+      "description": "Researcher public key",
       "url": "file:///tmp/funnel-storage/keys/researcher/researcher.pub",
       "path": "/outputs/keys/researcher/researcher.pub",
       "type": "FILE"
     },
     {
       "name": "researcher_pk_copy",
-      "description": "Copy of researcher public key",
+      "description": "Copy of the researcher public key",
       "url": "file:///tmp/funnel-storage/keys/data_holder/researcher.pub",
       "path": "/outputs/keys/data_holder/researcher.pub",
       "type": "FILE"
@@ -283,16 +304,22 @@ Create a file named `task1_keygen.json`:
 }
 ```
 
-**Key Details:**
+What the task does:
 
-- Generates two key pairs: one for the data holder and one for the researcher
-- Keys are generated without encryption (`--nocrypt`) for demonstration purposes
-- The researcher's public key is copied to the data holder's directory for use during encryption
-- All keys are exported to local storage via TES outputs
+- It creates two key pairs, one for the data holder and one for the
+  researcher.
+- It doesn't encrypt the private keys (`--nocrypt`), for the demo only.
+- It copies the researcher's public key to the data holder's directory,
+  for the encryption in task 2.
+- It exports all keys to the Funnel storage as TES outputs.
 
-### Task 2: Encrypt a File
+### Task 2: Encrypt a file
 
-This task retrieves a file, encrypts it using Crypt4GH keys, and stores both the encrypted file in a distinct location. Create a file named `task2_encrypt_file.json`:
+This task downloads an image, writes its size in bytes to a text file, and
+encrypts that text file with the data holder's private key and the
+researcher's public key. It stores the plain text file in `raw/` and the
+encrypted file in `encrypted/`. Create a file named
+`task2_encrypt_file.json`:
 
 ```json
 {
@@ -301,14 +328,14 @@ This task retrieves a file, encrypts it using Crypt4GH keys, and stores both the
   "inputs": [
     {
       "name": "data_holder_sk",
-      "description": "data_holder secret key",
+      "description": "Data holder private key",
       "url": "file:///tmp/funnel-storage/keys/data_holder/data_holder.sec",
       "path": "/inputs/keys/data_holder/data_holder.sec",
       "type": "FILE"
     },
     {
       "name": "researcher_pk",
-      "description": "researcher public key",
+      "description": "Researcher public key",
       "url": "file:///tmp/funnel-storage/keys/researcher/researcher.pub",
       "path": "/inputs/keys/researcher/researcher.pub",
       "type": "FILE"
@@ -349,21 +376,20 @@ This task retrieves a file, encrypts it using Crypt4GH keys, and stores both the
 }
 ```
 
-**Key Details:**
+What the task does:
 
-- Downloads a sample file from a URL
-- Records the original file size
-- Takes the data holder's private key and researcher's public key as inputs
-- Encrypts the file using Crypt4GH, producing a `.c4gh` encrypted file
-- Stores the encrypted file
+- It downloads a sample image and writes its size to a text file.
+- It takes the data holder's private key and the researcher's public key
+  as inputs.
+- It encrypts the size file with Crypt4GH, into a `.c4gh` file that only
+  the researcher's private key decrypts.
+- It exports the size file and the encrypted file.
 
-### Task 3: Decrypt and Process File
+### Task 3: Decrypt the file and process it
 
-This task decrypts the encrypted file using the researcher's private key and processes it.
-
-**Note:** The different paths indicate isolated storage paths that do not necessarily see each other. For example, distinct S3 buckets.
-
-Create a file named `task3_decrypt_and_write_size.json`:
+This task computes the MD5 checksum of the decrypted file. The task itself
+contains no decryption step: proTES finds the input that ends in `.c4gh`
+and adds one. Create a file named `task3_decrypt_and_write_size.json`:
 
 ```json
 {
@@ -380,7 +406,7 @@ Create a file named `task3_decrypt_and_write_size.json`:
     },
     {
       "name": "researcher_sk",
-      "description": "researcher secret key",
+      "description": "Researcher private key",
       "url": "file:///tmp/funnel-storage/keys/researcher/researcher.sec",
       "path": "/inputs/keys/researcher/researcher.sec",
       "type": "FILE"
@@ -414,12 +440,21 @@ Create a file named `task3_decrypt_and_write_size.json`:
 }
 ```
 
-**Key Details:**
+What the task does:
 
-- Takes the encrypted `.c4gh` file and researcher's private key as inputs
-- The proTES middleware automatically decrypts the file during task execution
-- Computes an MD5 checksum of the decrypted data for verification
-- Stores the checksum in the output directory
+- It takes the encrypted `.c4gh` file and the researcher's private key as
+  inputs.
+- The middleware of proTES adds a first executor that decrypts the inputs
+  into a volume of its own and copies the decrypted files into the
+  directory of each output, here `/outputs/decrypted`. The decrypted file
+  loses its extension `.c4gh`, so the command reads
+  `/outputs/decrypted/united_kingdom_logo_size.txt`, a path that the task
+  itself doesn't declare.
+- It computes the MD5 checksum of the decrypted file and exports only the
+  checksum: Funnel uploads only the declared outputs, not the decrypted
+  copy next to them.
+- The volume `/outputs/test` isn't used by the command; the task works
+  without it.
 
 ## Submit the tasks
 
@@ -432,10 +467,11 @@ curl -X POST http://localhost:8080/ga4gh/tes/v1/tasks \
   -d @task1_keygen.json
 ```
 
-Use `task2_encrypt_file.json` and `task3_decrypt_and_write_size.json` in the
-same way. `localhost:8080` is for local tests only. For a proTES on another machine,
-use its `https://` address, so that tokens and keys are not sent unencrypted. If your
-proTES requires access tokens (see its [access
+Use `task2_encrypt_file.json` and `task3_decrypt_and_write_size.json` in
+the same way. This setup serves proTES over plain HTTP on port 8080, so
+send the tasks from the proTES machine itself (`localhost`), or put proTES
+behind a reverse proxy with TLS before you send tokens or keys over the
+network. If your proTES requires access tokens (see its [access
 control](https://protes.readthedocs.io/en/v0.3.0/access-control/)), add an
 `Authorization: Bearer` header to every request. Each submission returns a
 task ID. Use it to watch the task:
@@ -452,7 +488,9 @@ curl http://localhost:8080/ga4gh/tes/v1/tasks/<task-id>
   proTES, and read the logs of the proTES container (`docker logs`) while you
   submit a task. The encrypted files must have the extension `.c4gh`.
 - **Task details.** Ask the Funnel server:
-  `curl http://<server-ip>:8000/v1/tasks/<task-id>`.
+  `curl http://<server-ip>:8000/v1/tasks/<funnel-task-id>`. Funnel's task
+  ID isn't the ID that proTES returned: list Funnel's tasks with
+  `curl http://<server-ip>:8000/v1/tasks` to find it.
 
 ## Keep your keys safe
 
@@ -462,10 +500,11 @@ curl http://localhost:8080/ga4gh/tes/v1/tasks/<task-id>
 - Use signed URLs or a key management system to send keys to the TES service.
 - Use TLS for all endpoints outside tests.
 
-## More information
+## Where to go next
 
-- [Funnel](https://github.com/calypr/funnel)
-- [proTES](https://protes.readthedocs.io/en/v0.3.0/)
+- [Funnel][funnel]
+- [proTES][protes]
+- [Crypt4GH plugin for current proTES](https://github.com/elixir-cloud-aai/foca-plugins/tree/dev/plugins/tes/data/crypt4gh)
 - [Crypt4GH middleware](https://github.com/elixir-cloud-aai/protes-middleware-crypt4gh) (archived) <!-- historical -->
-- [Crypt4GH](https://crypt4gh.readthedocs.io/)
+- [Crypt4GH][crypt4gh]
 - [GA4GH TES][ga4gh-tes]
