@@ -226,8 +226,10 @@ proTES then serves its TES API on port 8080 of the machine (see
 
 ## Write the tasks
 
-Each task is a TES task in a JSON file. Run them in order; skip task 1 if
-you already have Crypt4GH keys. In this setup, all files are in
+Each task is a TES task in a JSON file. Run them in order. If you already
+have Crypt4GH keys, skip task 1, and put your keys at the paths that tasks
+2 and 3 read (`/tmp/funnel-storage/keys/...`) or change the `url` of
+their key inputs. In this setup, all files are in
 `/tmp/funnel-storage` on the Funnel machines (`file://` URLs). With real
 data, the data holder's and the researcher's files would be in separate
 storage, for example in different S3 buckets.
@@ -309,8 +311,9 @@ What the task does:
 - It creates two key pairs, one for the data holder and one for the
   researcher.
 - It doesn't encrypt the private keys (`--nocrypt`), for the demo only.
-- It copies the researcher's public key to the data holder's directory,
-  for the encryption in task 2.
+- It puts a copy of the researcher's public key in the data holder's
+  directory, next to the data holder's keys. Task 2 reads the original in
+  the researcher's directory.
 - It exports all keys to the Funnel storage as TES outputs.
 
 ### Task 2: Encrypt a file
@@ -318,7 +321,11 @@ What the task does:
 This task downloads an image, writes its size in bytes to a text file, and
 encrypts that text file with the data holder's private key and the
 researcher's public key. It stores the plain text file in `raw/` and the
-encrypted file in `encrypted/`. Create a file named
+encrypted file in `encrypted/`. The data holder runs this task, not the
+researcher, because it needs the data holder's private key; with real
+data, the data holder encrypts the files in a trusted environment of its
+own and never passes its private key to a task that researchers can
+write or change. Create a file named
 `task2_encrypt_file.json`:
 
 ```json
@@ -381,8 +388,10 @@ What the task does:
 - It downloads a sample image and writes its size to a text file.
 - It takes the data holder's private key and the researcher's public key
   as inputs.
-- It encrypts the size file with Crypt4GH, into a `.c4gh` file that only
-  the researcher's private key decrypts.
+- It encrypts the size file with Crypt4GH, into a `.c4gh` file for the
+  researcher. The researcher's private key decrypts it, and so does the
+  data holder's, because Crypt4GH derives the key from the sender's and
+  the recipient's key pairs.
 - It exports the size file and the encrypted file.
 
 ### Task 3: Decrypt the file and process it
