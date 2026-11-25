@@ -5,8 +5,8 @@ with [LS Login](../operators/ls-login.md), for the chain of ELIXIR On-Cloud
 services from a front end through a WES and the proTES gateway to the TES
 nodes: each service exchanges the token that it received for one that is only
 good for the next service. It tests the design proposed in [proTES issue
-#391](https://github.com/elixir-cloud-aai/proTES/issues/391), with a small
-client, gateway and node as stand-ins for the real services.
+#391][protes-391], a proposal that isn't decided yet, with a small client,
+gateway and node as stand-ins for the real services.
 
 !!! warning "Local mock only"
     So far, the testbed has run against a local mock of LS Login only. The
@@ -34,8 +34,10 @@ client, gateway and node as stand-ins for the real services.
     docker compose run --rm e2e
     ```
 
-2. Check the output. It ends with `N/N checks passed`, with the same number
-   twice.
+2. Check the output. After the build, in under a minute, it ends with a
+   line like `N/N checks passed in S s`, with the same number `N` twice. If
+   a check fails, `FAILED:` and the failed checks follow, and the command
+   exits with status 1.
 3. Remove the containers:
 
     ```sh
@@ -49,7 +51,10 @@ The repository's CI runs the same scenarios on every change.
 The run goes through the scenarios of the [tests][docs-tests]: one sign-in,
 then one token per hop up to the node; requests that must be refused, and
 which service refuses them; groups and entitlements; token lifetimes and
-refresh; and what a node can tell about the path of a request.
+refresh; and what a node can tell about the path of a request. It also runs
+the commands of the testbed's docs and scans all output for tokens and
+secrets. The section `MOCK GAP` lists what the mock lets through when the
+testbed's own checks are off.
 
 ## Where to go next
 
@@ -64,4 +69,5 @@ refresh; and what a node can tell about the path of a request.
 [docs-limits]: <https://token-exchange-flow-testbed.readthedocs.io/en/latest/testbed/limits/>
 [docs-tests]: <https://token-exchange-flow-testbed.readthedocs.io/en/latest/tests/>
 [docs-use-case]: <https://token-exchange-flow-testbed.readthedocs.io/en/latest/background/use-case/>
+[protes-391]: <https://github.com/elixir-cloud-aai/proTES/issues/391>
 [repo]: <https://github.com/elixir-cloud-aai/token-exchange-flow-testbed>
