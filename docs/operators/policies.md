@@ -42,7 +42,9 @@ written down yet.
 
 ## Access control for compute
 
-These rules apply to the TES and WES services of a Node.
+These rules apply to the TES and WES services of a Node. This page says
+"tasks" for both: the tasks of a TES service and the runs of a WES
+service.
 
 - **Only members of the LS Login group `elixir:ECP_CLN:EOC-Compute` may
   create tasks.** LS Login releases the membership as the
@@ -64,9 +66,10 @@ These rules apply to the TES and WES services of a Node.
   client's own client ID. A listed client stands in for the
   `EOC-Compute` group when it creates tasks and, as their creator, owns
   them: it may get, list and cancel its own tasks, and nothing beyond, no
-  other users' tasks and no admin rights. Ask the
-  [admins][elixir-on-cloud-email] for the client IDs to list (see [Get
-  added behind the
+  other users' tasks and no admin rights. The client ID of the gateway
+  is on its [service page](services/protes.md#in-the-elixir-on-cloud);
+  ask the [admins][elixir-on-cloud-email] for any other client IDs to
+  list (see [Get added behind the
   gateway](node-onboarding-tutorial.md#7-get-added-behind-the-gateway)).
 
 How far each TES product can enforce these rules today, and how to
@@ -141,6 +144,9 @@ for products whose service info can't be set yet.
   TESK and TRS-Filer (see [Install TESK](node-onboarding-tutorial.md#install-tesk)
   and [Download and check the
   chart](data-centre-onboarding-tutorial.md#download-and-check-the-chart)).
+- You **should** scan the images of your services for known
+  vulnerabilities, and upgrade when a scan finds a critical or high
+  vulnerability that a fix exists for.
 - Everyone who may create tasks on a TES service can run any image with
   any command on your cluster: read the security notes in the docs of your
   product, e.g., the [security implications][tesk-api-claim-security] of
@@ -179,13 +185,17 @@ for products whose service info can't be set yet.
 - Write to the admins at [cloud-service@elixir-europe.org][elixir-on-cloud-email]
   before you start, and tell them about each new service: they answer your
   questions and verify your entry.
+- When you join, you **should** give the admins a security contact: an
+  e-mail address at which they can reach you about security problems of
+  your services.
 - Give your users a place to get support: the `contactUrl` of your service
   info.
 - Ask questions in the [Q&A forum][elixir-on-cloud-forum].
 
 ## Onboarding steps
 
-1. Read this page, and write to the [admins][elixir-on-cloud-email].
+1. Read this page, and write to the [admins][elixir-on-cloud-email],
+   with a security contact.
 2. Follow [Onboarding](onboarding.md), or step by step [Tutorial: Onboard a
    Node](node-onboarding-tutorial.md) for compute and [Tutorial: Onboard a
    Data Centre](data-centre-onboarding-tutorial.md) for storage, tools and

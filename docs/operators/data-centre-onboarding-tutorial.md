@@ -33,11 +33,12 @@ hosting provider.
 | [TRS-Filer][trsfiler-docs] (Helm chart) | 0.5.0 | TRS service, with a MongoDB database |
 | [Cloud Registry][cr-docs] | 1.0.0rc2 | Registry of the services |
 
-!!! warning "Requirements will follow"
-    Data nodes may join the federation, but their requirements are not
-    written down yet (see [Who can join](index.md#who-can-join)). What the
-    admins check
-    before they verify a service is in [What the admins
+!!! warning "Requirements for data nodes"
+    Data nodes may join the federation (see [Who can
+    join](index.md#who-can-join)). The requirements for every service of
+    the federation are in [Policies and Requirements](policies.md);
+    requirements specific to data nodes are not written down yet. What the
+    admins check before they verify a service is in [What the admins
     check](using-cloud-registry.md#what-the-admins-check). Write to
     [cloud-service@elixir-europe.org][elixir-on-cloud-email] before you
     start. The steps below have not yet been tested by an operator who
