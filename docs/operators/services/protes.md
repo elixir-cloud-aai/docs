@@ -37,7 +37,7 @@ As of November 2026:
 |---|---|
 | Address | TES API at `https://gateway-tes.elixir-on.cloud/ga4gh/tes/v1` (the host itself has no page); the old address `protes.rahtiapp.fi` keeps working |
 | Version | proTES 0.6.0 |
-| Access | LS Login access tokens of members of the group `ECP_CLN:EOC-Compute` or `ECP_CLN:ADMIN`, issued to a client that it accepts, such as Krini's (see [Researchers](../../researchers/index.md#before-you-start)) |
+| Access | LS Login access tokens of members of the group `ECP_CLN:EOC-Compute`, issued to a client that it accepts, such as Krini's (see [Researchers](../../researchers/index.md#before-you-start)) |
 | LS Login client | client ID `7c0c1fc0-e8ca-47d6-a9b2-bdc843961146`, issuer `https://login.aai.lifescience-ri.eu/oidc/`: a TES service behind proTES lists this client ID and accepts it as audience (see [Access control for compute](../policies.md#access-control-for-compute)) |
 | Environment | `test`: its service info calls it "proTES sandbox (BioHackathon 2026)" |
 | TES services | one, listed in its configuration: the TESK for tests at CSC (`csc-tesk-noauth.rahtiapp.fi`). Since 21 November 2026, that TESK requires LS Login tokens, and proTES doesn't send one of its own yet, so tasks sent to proTES fail until [generic-issues#111][gi-111] is done |
@@ -64,16 +64,16 @@ roles may do):
 | Audience | the LS Login clients of Krini and of the Cloud Registry UI |
 | Groups | read from LS Login's userinfo endpoint, claim `eduperson_entitlement` |
 | Role `user` | `urn:geant:lifescience-ri.eu:group:elixir:ECP_CLN:EOC-Compute#aai.lifescience-ri.eu`: create tasks, list their own, list and read the plugins |
-| Role `admin` | `urn:geant:lifescience-ri.eu:group:elixir:ECP_CLN:ADMIN#aai.lifescience-ri.eu`: the permissions API (`/admin/access-control/permissions`, on the public address) and the provenance of all tasks; three added rules (`admins-create-list-tasks`, `admins-list-plugins`, `admins-get-plugins`) give it the rights of `user` too |
+| Role `admin` | `urn:geant:lifescience-ri.eu:group:elixir:ECP_CLN:ADMIN#aai.lifescience-ri.eu`: the permissions API (`/admin/access-control/permissions`, on the public address) and the provenance of all tasks; three added rules (`admins-create-list-tasks`, `admins-list-plugins`, `admins-get-plugins`) give it the rights of `user` too. Only members of `ECP_CLN:EOC-Compute` may create tasks (see [Access control for compute](../policies.md#access-control-for-compute)), so the rule `admins-create-list-tasks` is to be removed: admins who run tasks join `ECP_CLN:EOC-Compute` |
 | Other tokens | valid tokens without either group get `403 Forbidden` on tasks and plugins; the service info is public |
 | Own tasks | only the user who created a task can read and cancel it; admins can read the provenance of any task, not the task |
 | TES services | the TESK for tests at CSC, without authentication (`auth: none`), at its old address `https://csc-tesk-noauth.rahtiapp.fi`, which answers `401` without a token since 21 November 2026 |
 | Plugins | none configured (the service info lists no capabilities) |
 
 LS Login releases only the groups assigned to the client's facility, so a
-new client that should reach proTES needs `ECP_CLN:EOC-Compute` and
-`ECP_CLN:ADMIN` assigned to its facility and its client ID added to the
-audience (see [LS Login](../ls-login.md)).
+new client that should reach proTES needs `ECP_CLN:EOC-Compute` (and
+`ECP_CLN:ADMIN`, for the role `admin`) assigned to its facility and its
+client ID added to the audience (see [LS Login](../ls-login.md)).
 
 The mapping matches the subgroup values, not the parent group `ECP_CLN`:
 members of a subgroup carry the parent value only if the parent group is

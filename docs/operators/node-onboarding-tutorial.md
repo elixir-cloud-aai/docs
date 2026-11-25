@@ -62,9 +62,9 @@ You need:
   token](../partners-and-developers/apis.md#2-get-an-access-token)). The
   client must be allowed the scope `eduperson_entitlement`, which releases
   the groups of a user. For the tests, your account must be a member of the
-  LS Login group `ECP_CLN` or one of its subgroups (see [step
-  3](#3-enable-ls-login-and-ecp_cln-access)): ask the
-  [admins][elixir-on-cloud-email].
+  LS Login group `ECP_CLN:EOC-Compute` (see [step
+  3](#3-enable-ls-login-and-ecp_cln-access) and [Apply for compute
+  access](../researchers/index.md#apply-for-compute-access)).
 
 ## 2. Deploy a TES service
 
@@ -75,11 +75,11 @@ today:
 |---|---|---|---|
 | Runs on | Kubernetes, OpenShift | Kubernetes 1.29+ | HPC, HTC (e.g., Slurm) |
 | Validates LS Login tokens | yes, with gaps (see [step 3](#3-enable-ls-login-and-ecp_cln-access)) | yes (OIDC issuer and audience) | yes (OIDC issuer and audience) |
-| Access by membership in `ECP_CLN` | by a claim of the user info | no, any valid token ([generic-issues#21][gi-21]) | no, any valid token ([generic-issues#20][gi-20]) |
+| Access by membership in `ECP_CLN:EOC-Compute` | by a claim of the user info | no, any valid token ([generic-issues#21][gi-21]) | no, any valid token ([generic-issues#20][gi-20]) |
 | Service info for the registry | set in the chart's values: import | fixed by the code: manual entry ([JaeAeich/poiesis#112][poiesis-112]) | fixed by the code: manual entry ([calypr/funnel#1493][funnel-1493]) |
 
-**Poiesis and Funnel can't enforce the `ECP_CLN` policy yet:** they accept
-every valid token of the provider, so anyone with an LS Login account who
+**Poiesis and Funnel can't enforce the `ECP_CLN:EOC-Compute` policy
+yet:** they accept every valid token of the provider, so anyone with an LS Login account who
 gets such a token could run tasks on your cluster. Ask the
 [admins][elixir-on-cloud-email] before you join with one of them.
 
@@ -190,14 +190,18 @@ curl https://tes.example.org/ga4gh/tes/v1/service-info
 
 ## 3. Enable LS Login and ECP_CLN access
 
-**The policy of the ELIXIR On-Cloud:** users of a Node's TES service must be
-members of the LS Login group `ECP_CLN` or of one of its subgroups. LS Login
-releases group memberships as values of the claim `eduperson_entitlement`.
+**The policy of the ELIXIR On-Cloud:** only members of the LS Login group
+`ECP_CLN:EOC-Compute` may create tasks on a Node's TES service; the parent
+group `ECP_CLN`, its other subgroups and `ECP_CLN:ADMIN` don't let users
+create tasks (see [Access control for
+compute](policies.md#access-control-for-compute)).
+LS Login releases group memberships as values of the claim
+`eduperson_entitlement`; the value of the group is
+`urn:geant:lifescience-ri.eu:group:elixir:ECP_CLN:EOC-Compute#aai.lifescience-ri.eu`.
 The values are recorded in [generic-issues#46][gi-46]: LS Login releases
 them in the user info only, not in the access token, and only those of the
 groups assigned to the client that issued the token. Ask the
-[admins][elixir-on-cloud-email] which values your service must accept
-rather than guessing them.
+[admins][elixir-on-cloud-email] if your service needs other values.
 
 **Keep `GET /service-info` public.** The registry can only import and sync
 service info that answers without a token (see [Using the Cloud
@@ -210,8 +214,7 @@ except `GET /service-info`, which stays public by default
 (`auth.serviceInfoPublic`). Until the group model of TESK has been checked
 with the groups of `ECP_CLN` (see the gaps below), authorise users by a
 claim of the user info (see
-[Authorisation by a claim][tesk-claim]). Add to `my-values.yaml`, with the
-values that the admins give you:
+[Authorisation by a claim][tesk-claim]). Add to `my-values.yaml`:
 
 ```yaml
 auth:
@@ -222,11 +225,11 @@ auth:
     enabled: true
     name: eduperson_entitlement
     values:
-      - <the ECP_CLN value(s) from the admins>
+      - "urn:geant:lifescience-ri.eu:group:elixir:ECP_CLN:EOC-Compute#aai.lifescience-ri.eu"
 ```
 
-Users with one of the values may create tasks, which belong to them only,
-and list, get and cancel their own tasks. Everyone with one of the values
+Users with the value may create tasks, which belong to them only, and
+list, get and cancel their own tasks. Everyone with the value
 can run any image with any command on your cluster: read the [security
 implications][tesk-api-claim-security] in the docs of tesk-api. Set these
 values before the first installation (see [step 2](#install-tesk)); to
@@ -261,8 +264,8 @@ only their own tasks.
 
 !!! warning "Gap"
     Poiesis accepts every valid token of the issuer and audience: it can't
-    yet limit access to members of `ECP_CLN`. This is tracked in
-    [generic-issues#21][gi-21].
+    yet limit access to members of `ECP_CLN:EOC-Compute`. This is tracked
+    in [generic-issues#21][gi-21].
 
 ### Funnel
 
@@ -275,7 +278,7 @@ their own tasks (see [OAuth2][funnel-oauth2]). Ask the
 
 !!! warning "Gap"
     Funnel accepts every valid token of the provider: it can't yet limit
-    access to members of `ECP_CLN`. This is tracked in
+    access to members of `ECP_CLN:EOC-Compute`. This is tracked in
     [generic-issues#20][gi-20].
 
 ## 4. Check it with a test task

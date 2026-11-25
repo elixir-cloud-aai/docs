@@ -21,11 +21,6 @@ written down yet.
 
 --8<-- "includes/scope.md"
 
-!!! info "Other pages may still describe earlier rules"
-    Some pages of these docs still describe earlier access rules, e.g., that
-    members of `ECP_CLN`, its subgroups or `ECP_CLN:ADMIN` may run tasks.
-    Where they differ from this page, follow this page.
-
 ## Authentication
 
 - Your service **must** require [LS Login](ls-login.md) access tokens for
