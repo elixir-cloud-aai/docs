@@ -15,13 +15,21 @@ steps.
 
 The requirements apply to every service that a Node runs in the
 federation: TES and WES services of compute Nodes, and the storage and TRS
-services of data centres (see [Who can join](index.md#who-can-join)).
+services of data centres (see [Who can join](index.md#who-can-join)),
+except where a section names the services it applies to.
 Requirements specific to data nodes, e.g., for DRS services, are not
 written down yet.
 
 --8<-- "includes/scope.md"
 
 ## Authentication
+
+These rules apply to the TES and WES services of a Node. For the storage
+and TRS services of data centres, requirements are not written down yet:
+follow [Tutorial: Onboard a Data
+Centre](data-centre-onboarding-tutorial.md), e.g., [Restrict
+writes](data-centre-onboarding-tutorial.md#restrict-writes) of a
+TRS-Filer, which has no authentication yet.
 
 - Your service **must** require [LS Login](ls-login.md) access tokens for
   every endpoint except `GET /service-info`: no anonymous access. The
@@ -41,13 +49,14 @@ These rules apply to the TES and WES services of a Node. This page says
 "tasks" for both: the tasks of a TES service and the runs of a WES
 service.
 
-- **Only members of the LS Login group `elixir:ECP_CLN:EOC-Compute` may
-  create tasks.** LS Login releases the membership as the
+- **Of the users, only members of the LS Login group
+  `elixir:ECP_CLN:EOC-Compute` may create tasks.** LS Login releases the membership as the
   `eduperson_entitlement` value
   `urn:geant:lifescience-ri.eu:group:elixir:ECP_CLN:EOC-Compute#aai.lifescience-ri.eu`.
   The group is required only to create tasks. The parent group `ECP_CLN`
-  grants nothing. A token without the group gets `403 Forbidden` when it
-  creates a task. Researchers apply for the group as described in [Compute
+  grants nothing. A user's token without the group gets `403 Forbidden`
+  when it creates a task. Listed service clients are the only exception
+  (see below). Researchers apply for the group as described in [Compute
   access](ls-login.md#compute-access).
 - **The creator of a task is its sole owner**, identified by the issuer
   and the subject of the token. The owner may use all other operations on
@@ -61,7 +70,9 @@ service.
   client's own client ID. A listed client stands in for the
   `EOC-Compute` group when it creates tasks and, as their creator, owns
   them: it may get, list and cancel its own tasks, and nothing beyond, no
-  other users' tasks and no admin rights. The client ID of the gateway
+  other users' tasks and no admin rights. To your service, all tasks that
+  the gateway creates belong to the gateway; the gateway itself keeps
+  apart which of its users created which task. The client ID of the gateway
   is on its [service page](services/protes.md#in-the-elixir-on-cloud);
   ask the [admins][elixir-on-cloud-email] for any other client IDs to
   list (see [Get added behind the
@@ -190,7 +201,8 @@ for products whose service info can't be set yet.
 ## Onboarding steps
 
 1. Read this page, and write to the [admins][elixir-on-cloud-email],
-   with a security contact.
+   ideally with a security contact (recommended, see [Support and
+   contact](#support-and-contact)).
 2. Follow [Onboarding](onboarding.md), or step by step [Tutorial: Onboard a
    Node](node-onboarding-tutorial.md) for compute and [Tutorial: Onboard a
    Data Centre](data-centre-onboarding-tutorial.md) for storage, tools and
