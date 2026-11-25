@@ -1,5 +1,5 @@
 ---
-last_verified: 2026-11-17
+last_verified: 2026-11-25
 ---
 
 # TESK
@@ -23,14 +23,17 @@ upgrade](../using-cloud-registry.md#after-a-deployment-or-an-upgrade)).
 
 ## Notes for the deployment
 
-- TESK has been tested with Kubernetes, OpenShift and Minikube.
+- TESK runs on Kubernetes and OpenShift (see [OpenShift and other
+  restricted
+  clusters](https://tesk.readthedocs.io/en/latest/deployment/#openshift-and-other-restricted-clusters)).
 - The cluster needs a default storage class (or the chart's
   `storageClass`). TESK uses persistent volume claims as temporary storage
   for the files of a task; from chart 0.3.0 on, the TESK docs say that
   `ReadWriteOnce` is enough (see
   [Requirements](https://tesk.readthedocs.io/en/latest/deployment/#requirements)).
-  A `ReadWriteMany` volume is needed only to share files with a workflow
-  engine (`transfer`).
+  A `ReadWriteMany` volume is needed only for the shared file system
+  backend (`transfer`, for `file:` URLs; see [Shared file
+  system](https://tesk.readthedocs.io/en/latest/deployment/#shared-file-system)).
 - From chart 0.3.0, set the service info in the chart's values
   (`serviceInfo`), so that the registry can import and sync it (see
   [Prepare Your Service Info](../service-info.md#tesk)).
