@@ -72,8 +72,8 @@ their lengths):
 - [ ] `id`: unique and stable, in reverse domain notation, e.g.,
   `org.example.tes`, not the default of your product. The import needs it,
   and sync checks that it stays the same.
-- [ ] `name`: the name of your instance, following the
-  [naming scheme](#names-and-organizations), e.g., "TESK (MyUni, UK)".
+- [ ] `name`: the name of your service, following the
+  [recommended naming](#names-and-organizations), e.g., "TESK".
 - [ ] `description`: what the service offers, and to whom.
 - [ ] `type`: `group`, `artifact` and `version` of one of the [registered
   types](#the-rules-of-this-deployment), e.g., `org.ga4gh`, `tes`, `1.1.0`,
@@ -99,39 +99,32 @@ that aren't on this list (e.g., `createdAt` or `storage`).
 
 ## Names and organizations
 
-Users find services in the registry and in clients by their names, so
-every instance follows one scheme:
+Users find services in the registry and in clients by their names. We
+recommend the following, so that entries look alike; it is a
+recommendation, not a rule, and the registry doesn't enforce it: you may
+name your service and your organization as you like.
 
-```text
-<Implementation> (<Host institution short name>, <Country code>)
-```
+**Services of a Node:** `name` is the name of the implementation only, as
+its project writes it, e.g., `TESK`, `Poiesis` or `Funnel`. `organization`
+is the organization that actually hosts the service, with its name and URL
+as it writes them. For example:
 
-- **Implementation:** the name of the product, as its project writes it,
-  e.g., `TESK`, `Poiesis` or `Funnel`.
-- **Host institution short name:** the short name that your institution
-  uses for itself, e.g., `CSC` or `CERIT-SC`.
-- **Country code:** the two-letter code of the host's country, in capitals,
-  e.g., `FI`, `CZ` or `UK`.
+| Service | `name` | `organization` |
+|---|---|---|
+| TESK at CSC in Finland | `TESK` | `CSC – IT Center for Science`, `https://www.csc.fi` |
+| TESK at CERIT-SC in the Czech Republic | `TESK` | `CERIT Scientific Cloud`, `https://www.cerit-sc.cz/` |
+| TESK at MyUni in the United Kingdom | `TESK` | `My University`, `https://example.org/` |
 
-For example:
+Don't repeat in `name` what other fields already say: the host is in
+`organization`, and `environment` says whether it is a test service, so
+leave out the host, its country, "test" and the name of the cluster. Say
+more in `description`, e.g., the cluster and who can use the service.
 
-| Service | `name` |
-|---|---|
-| TESK at CSC in Finland | `TESK (CSC, FI)` |
-| TESK at CERIT-SC in the Czech Republic | `TESK (CERIT-SC, CZ)` |
-| Poiesis at CERIT-SC in the Czech Republic | `Poiesis (CERIT-SC, CZ)` |
-| TESK at MyUni in the United Kingdom | `TESK (MyUni, UK)` |
-
-Don't put "ELIXIR On-Cloud", "test" or the name of the cluster in the name:
-`organization` says who hosts the service, and `environment` says whether
-it is a test service. Say more in `description`, e.g., the cluster and who
-can use the service.
-
-**`organization` is the host organization:** for a service that runs at
-your institution, the name and URL of your institution, as it writes them,
-e.g., `CSC – IT Center for Science` and `https://csc.fi/`. Only the central
-services of the ELIXIR On-Cloud, such as the TES Gateway and the Tool
-Registry, carry `ELIXIR On-Cloud` and `https://elixir-on.cloud/`.
+**Central services of the ELIXIR On-Cloud**, such as the Service Registry,
+the Tool Registry and the TES Gateway, keep names that start with
+"ELIXIR On-Cloud" and carry `ELIXIR On-Cloud` and
+`https://elixir-on.cloud/` as `organization`, although the ELIXIR On-Cloud
+doesn't host them itself.
 
 ## Setting it per product
 
@@ -144,7 +137,7 @@ chart sets `type` and `version` itself:
 ```yaml title="my-values.yaml"
 serviceInfo:
   id: org.example.tes
-  name: TESK (MyUni, UK)
+  name: TESK
   description: TES of MyUni for the members of its research groups
   organization:
     name: My University
@@ -255,8 +248,8 @@ service][cr-ui-registering] in the UI's user guide):
 - **Organization Name** and **Organization URL:** those of the
   organization that hosts your service, not of the product (see [Names and
   organizations](#names-and-organizations)).
-- **Service Name:** following the [naming
-  scheme](#names-and-organizations).
+- **Service Name:** following the [recommended
+  naming](#names-and-organizations).
 - **Service Version**, **Contact URL**, **Documentation URL** and
   **Description:** as in the checklist.
 
