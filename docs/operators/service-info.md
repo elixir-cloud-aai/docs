@@ -72,7 +72,8 @@ their lengths):
 - [ ] `id`: unique and stable, in reverse domain notation, e.g.,
   `org.example.tes`, not the default of your product. The import needs it,
   and sync checks that it stays the same.
-- [ ] `name`: a descriptive name, e.g., "Example TES".
+- [ ] `name`: the name of your instance, following the
+  [naming scheme](#names-and-organizations), e.g., "TESK (MyUni, UK)".
 - [ ] `description`: what the service offers, and to whom.
 - [ ] `type`: `group`, `artifact` and `version` of one of the [registered
   types](#the-rules-of-this-deployment), e.g., `org.ga4gh`, `tes`, `1.1.0`,
@@ -81,8 +82,9 @@ their lengths):
   case variants such as `TES` aren't added. If your service implements an
   API, or a version of it, that isn't registered yet, ask the
   [admins][elixir-on-cloud-email] to add it before you import.
-- [ ] `organization`: the `name` and `url` of your Node, and no other
-  fields.
+- [ ] `organization`: the `name` and `url` of the organization that hosts
+  your service (see [Names and organizations](#names-and-organizations)),
+  and no other fields.
 - [ ] `contactUrl`: where users get support, an HTTP(S) or `mailto:` URL,
   e.g., `mailto:tes@example.org`.
 - [ ] `documentationUrl`: documentation for the users of your service.
@@ -95,6 +97,42 @@ The import needs `id`, `name`, `type`, `organization` and `version`. It
 reads and checks all the fields above, `environment` too, and ignores fields
 that aren't on this list (e.g., `createdAt` or `storage`).
 
+## Names and organizations
+
+Users find services in the registry and in clients by their names, so
+every instance follows one scheme:
+
+```text
+<Implementation> (<Host institution short name>, <Country code>)
+```
+
+- **Implementation:** the name of the product, as its project writes it,
+  e.g., `TESK`, `Poiesis` or `Funnel`.
+- **Host institution short name:** the short name that your institution
+  uses for itself, e.g., `CSC` or `CERIT-SC`.
+- **Country code:** the two-letter code of the host's country, in capitals,
+  e.g., `FI`, `CZ` or `UK`.
+
+For example:
+
+| Service | `name` |
+|---|---|
+| TESK at CSC in Finland | `TESK (CSC, FI)` |
+| TESK at CERIT-SC in the Czech Republic | `TESK (CERIT-SC, CZ)` |
+| Poiesis at CERIT-SC in the Czech Republic | `Poiesis (CERIT-SC, CZ)` |
+| TESK at MyUni in the United Kingdom | `TESK (MyUni, UK)` |
+
+Don't put "ELIXIR On-Cloud", "test" or the name of the cluster in the name:
+`organization` says who hosts the service, and `environment` says whether
+it is a test service. Say more in `description`, e.g., the cluster and who
+can use the service.
+
+**`organization` is the host organization:** for a service that runs at
+your institution, the name and URL of your institution, as it writes them,
+e.g., `CSC – IT Center for Science` and `https://csc.fi/`. Only the central
+services of the ELIXIR On-Cloud, such as the TES Gateway and the Tool
+Registry, carry `ELIXIR On-Cloud` and `https://elixir-on.cloud/`.
+
 ## Setting it per product
 
 ### TESK
@@ -106,10 +144,10 @@ chart sets `type` and `version` itself:
 ```yaml title="my-values.yaml"
 serviceInfo:
   id: org.example.tes
-  name: Example TES
-  description: TES of Example for the members of its research groups
+  name: TESK (MyUni, UK)
+  description: TES of MyUni for the members of its research groups
   organization:
-    name: Example
+    name: My University
     url: https://example.org/
   contactUrl: mailto:tes@example.org
   documentationUrl: https://example.org/tes/
@@ -214,10 +252,13 @@ service][cr-ui-registering] in the UI's user guide):
 - **Service Type:** the registered type that your service implements, e.g.,
   `org.ga4gh · tes · 1.1.0`.
 - **Environment:** `prod` or `test`.
-- **Organization Name** and **Organization URL:** those of your Node, not
-  of the product.
-- **Service Name**, **Service Version**, **Contact URL**, **Documentation
-  URL** and **Description:** as in the checklist.
+- **Organization Name** and **Organization URL:** those of the
+  organization that hosts your service, not of the product (see [Names and
+  organizations](#names-and-organizations)).
+- **Service Name:** following the [naming
+  scheme](#names-and-organizations).
+- **Service Version**, **Contact URL**, **Documentation URL** and
+  **Description:** as in the checklist.
 
 Leave sync off: with Funnel and TESP API, the first sync would fail, and with
 Poiesis, it would replace your values with those of the project. Once your
