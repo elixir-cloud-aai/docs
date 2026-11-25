@@ -468,10 +468,11 @@ What the task does:
 ## Submit the tasks
 
 Send each task to proTES. Wait until a task is complete before you send the
-next one:
+next one. Each submission returns the ID of the new task, as
+`{"id": "..."}`:
 
 ```bash
-curl -X POST http://localhost:8080/ga4gh/tes/v1/tasks \
+curl -X POST "http://localhost:8080/ga4gh/tes/v1/tasks" \
   -H "Content-Type: application/json" \
   -d @task1_keygen.json
 ```
@@ -482,11 +483,13 @@ send the tasks from the proTES machine itself (`localhost`), or put proTES
 behind a reverse proxy with TLS before you send tokens or keys over the
 network. If your proTES requires access tokens (see its [access
 control](https://protes.readthedocs.io/en/v0.3.0/access-control/)), add an
-`Authorization: Bearer` header to every request. Each submission returns a
-task ID. Use it to watch the task:
+`Authorization: Bearer` header to every request. To watch a task, set
+`TASK_ID` to the `id` that its submission returned, and ask proTES for the
+task:
 
 ```bash
-curl http://localhost:8080/ga4gh/tes/v1/tasks/<task-id>
+TASK_ID="..."  # the id that the submission returned
+curl "http://localhost:8080/ga4gh/tes/v1/tasks/$TASK_ID"
 ```
 
 ## Troubleshooting
@@ -496,10 +499,17 @@ curl http://localhost:8080/ga4gh/tes/v1/tasks/<task-id>
 - **A file is not decrypted.** Check the configuration of the middleware in
   proTES, and read the logs of the proTES container (`docker logs`) while you
   submit a task. The encrypted files must have the extension `.c4gh`.
-- **Task details.** Ask the Funnel server:
-  `curl http://<server-ip>:8000/v1/tasks/<funnel-task-id>`. Funnel's task
-  ID isn't the ID that proTES returned: list Funnel's tasks with
-  `curl http://<server-ip>:8000/v1/tasks` to find it.
+- **Task details.** Ask the Funnel server. Funnel's task ID isn't the ID
+  that proTES returned, so list Funnel's tasks first, then set `SERVER_IP`
+  to the IP address of the Funnel server and `FUNNEL_TASK_ID` to the ID
+  from the list:
+
+    ```bash
+    SERVER_IP="..."       # the IP address of the Funnel server
+    curl "http://$SERVER_IP:8000/v1/tasks"
+    FUNNEL_TASK_ID="..."  # the id of the task in the list
+    curl "http://$SERVER_IP:8000/v1/tasks/$FUNNEL_TASK_ID"
+    ```
 
 ## Keep your keys safe
 

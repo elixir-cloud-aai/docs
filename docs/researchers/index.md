@@ -19,7 +19,7 @@ ELIXIR Nodes, and keep sensitive data under the control of its owner.
 | [Tutorial: Your First Run in Krini](tutorial-krini.md) | Log in to Krini, run a task and a workflow on demo data, and read the results, step by step. For now, the task part only. | A web browser, an LS Login account, and compute access. |
 | [Tutorial: Your First Run from the Command Line](tutorial-cli.md) | Install `ga4gh-cli`, find services, log in with a token, run a task and a workflow on demo data, and read the results, step by step. | `curl` on Linux or macOS, an LS Login account, and access to a TES and a WES service. |
 | [Run Workflows Across Nodes](federated-workflows.md) | Run a Snakemake workflow on the TES services of several Nodes, through the proTES gateway. | A Python environment on your computer, and access to proTES or other TES services. |
-| [Crypt4GH with proTES](crypt4gh-with-protes.md) | Process Crypt4GH-encrypted files in a secure container. Needs an unreleased proTES branch until the Crypt4GH plugin for current proTES is released. | Docker and three virtual machines. |
+| [Crypt4GH with proTES](crypt4gh-with-protes.md) | Process Crypt4GH-encrypted files that proTES decrypts inside the task's container. Needs an unreleased proTES branch until the deployment runs the Crypt4GH plugin for current proTES (0.1.0, a pre-release, not deployed yet). | Docker and three virtual machines. |
 | [Run Interactive Services on TES](../tutorials/tes-services/interactive_services_tes.md) | Run RStudio, JupyterLab or Atlas with OMOP demo data as TES tasks, and open them in your browser. Synthetic data only. | A virtual machine with a public host name and an open HTTPS port, and a TES service. |
 
 ## Before you start
