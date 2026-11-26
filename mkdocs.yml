@@ -118,6 +118,7 @@ nav:
       - "proWES": "operators/services/prowes.md"
       - "TESK": "operators/services/tesk.md"
       - "TRS-Filer": "operators/services/trsfiler.md"
+      - "WESkit": "operators/services/weskit.md"
   - Partners and Developers:
     - "partners-and-developers/index.md"
     - "GA4GH Standards": "partners-and-developers/ga4gh-standards.md"
