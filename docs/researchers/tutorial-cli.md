@@ -45,7 +45,8 @@ The Cloud Registry lists the TES and WES services of the deployment (step
 TES gateway of the deployment, proTES, accepts the tokens of members of the
 LS Login group `ECP_CLN:EOC-Compute` (see [Apply for compute
 access](index.md#apply-for-compute-access)). As of 26 November 2026, no
-WES service in the registry runs CWL, so part 2 can't be followed yet. To
+WES service in the registry runs CWL: for part 2, you need one that you
+got access to elsewhere. To
 ask for services that you can use, write to
 [cloud-service@elixir-europe.org][elixir-on-cloud-email] and say that you
 want to follow this tutorial.
