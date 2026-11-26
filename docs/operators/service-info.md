@@ -179,6 +179,11 @@ are resolved.
 | [Poiesis](services/poiesis.md) 0.2.0 | `id: org.ga4gh.poiesis` and the project's organization and contacts, no `environment` | can pass, but describes the project, not your Node | [JaeAeich/poiesis#112][poiesis-112] |
 | [TESP API][tesp-api] 0.2.0 | `id: fi.muni.cz.tesp`, `environment: dev` | refused (`environment`) | [CESNET/tesp-api#62][tesp-api-62] |
 
+The default branch of Poiesis, which has no release yet, sets the service
+info with the Helm values `serviceInfo.*` (see
+[Poiesis](services/poiesis.md#notes-for-the-deployment)): if you run it,
+import it with sync (see [Check before you import](#check-before-you-import)).
+
 ## Check before you import
 
 Check the endpoint without a token, and without following redirects, with
@@ -254,7 +259,7 @@ service][cr-ui-registering] in the UI's user guide):
   **Description:** as in the checklist.
 
 Leave sync off: with Funnel and TESP API, the first sync would fail, and with
-Poiesis, it would replace your values with those of the project. Once your
+Poiesis 0.2.0, it would replace your values with those of the project. Once your
 product lets you set the service info, set it, and turn sync on in the
 details of the entry (**Turn sync on**; see [Syncing
 services][cr-ui-syncing]).
