@@ -20,12 +20,17 @@ except where a section names the services it applies to.
 Requirements specific to data nodes, e.g., for DRS services, are not
 written down yet.
 
+!!! danger "An early-stage sandbox, not for production"
+    The ELIXIR On-Cloud is at an early stage and not for production use.
+    It MUST NOT be used for personal, sensitive or controlled-access data:
+    it is a sandbox for demos and tests with synthetic or public data (see
+    [Data](#data)). Its security is still being improved.
+
 --8<-- "includes/scope.md"
 
-!!! info "Other pages may still describe earlier rules"
-    Some pages of these docs still describe earlier access rules, e.g., that
-    members of `ECP_CLN`, its subgroups or `ECP_CLN:ADMIN` may run tasks.
-    Where they differ from this page, follow this page.
+!!! info "If other pages differ"
+    If another page of these docs describes other rules than this page,
+    e.g., other groups that may run jobs, follow this page.
 
 ## Authentication
 
