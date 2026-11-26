@@ -202,7 +202,7 @@ cd ~/eoc_services
 # RStudio: show the TES request
 ./tes-hub/tes-service.sh rstudio-tesk print
 
-# token expired (after about 4 hours, 401 in .state/watch.log): set a new token as in
+# token expired (a Krini token after 1 hour, 401 in .state/watch.log): set a new token as in
 # "Set the access token", then run up again, which gives the keep-alive loop the new token
 ./omop-tesk/omop-tesk-fi.sh up
 ./tes-hub/tes-service.sh rstudio-tesk up

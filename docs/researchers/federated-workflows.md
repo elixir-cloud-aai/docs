@@ -58,8 +58,10 @@ You need:
   or others that you may use;
 - an S3 bucket that the TES services can write to, and its credentials. The
   workflow writes its results there. Snakemake sends the S3 credentials
-  with each task, so the gateway and every TES service that runs a task
-  can read them: use credentials for this bucket only.
+  with each task, in the environment of its container, so the gateway,
+  every TES service that runs a task and the code of the task can read
+  them: run only workflow code that you trust, with credentials for this
+  bucket only.
 
 Then follow the README of the [repository][elixir-cloud-demo-smk]: install
 the Conda environment, create the files `.tes_instances` and `.env` as its
