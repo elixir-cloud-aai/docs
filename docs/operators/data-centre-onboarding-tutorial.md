@@ -41,8 +41,11 @@ hosting provider.
     admins check before they verify a service is in [What the admins
     check](using-cloud-registry.md#what-the-admins-check). Write to
     [cloud-service@elixir-europe.org][elixir-on-cloud-email] before you
-    start. The steps below have not yet been tested by an operator who
-    didn't write them: please report what doesn't work.
+    start. A reader who didn't write the steps below ran step 3 on a local
+    test cluster, without an Ingress controller. The restriction of writes
+    at a real Ingress controller and the steps that need the registry or
+    the admins haven't been tested that way yet: please report what
+    doesn't work.
 
 ## 1. Prerequisites
 
@@ -69,9 +72,10 @@ You need:
   deployment accepts `https` URLs only, and TRS-Filer advertises
   `https://<host name>` in its responses.
 - **A way to restrict writes.** TRS-Filer 0.5.0 has no authentication
-  (see [step 3](#restrict-writes)): your Ingress controller, router or a
-  proxy in front of the cluster must allow `POST`, `PUT` and `DELETE` only
-  from trusted clients.
+  (see [step 3](#restrict-writes)): your Ingress controller or a proxy in
+  front of the cluster must allow `POST`, `PUT` and `DELETE` only from
+  trusted clients. On OpenShift, this needs a proxy in front of the
+  router, which can only restrict clients, for all methods.
 - **LS Login.** An [LS Login](ls-login.md) account, to log in to the Cloud
   Registry.
 
@@ -175,12 +179,32 @@ unpacked chart, as described in [Configuration][trsfiler-configuration]:
             environment: prod
     ```
 
-2. In `trs-filer/templates/trs-filer-deploy.yaml`, append the overlay to
-   `FOCA_CONFIG_OVERLAY` and mount it, as shown in
-   [Configuration][trsfiler-configuration].
+2. In `trs-filer/templates/trs-filer-deploy.yaml`, append the overlay's
+   path to `FOCA_CONFIG_OVERLAY`, mount it there, and add its volume (see
+   [Configuration][trsfiler-configuration]):
+
+    ```yaml
+              - name: FOCA_CONFIG_OVERLAY
+                value: /etc/trs-filer/config.yaml:/etc/trs-filer/local.yaml
+    # ...
+            volumeMounts:
+            # ...
+            - mountPath: /etc/trs-filer/local.yaml
+              name: config-local
+              subPath: config.yaml
+    # ...
+          volumes:
+          # ...
+          - configMap:
+              name: app-config-local-{{ .Values.trs_filer.appName }}
+            name: config-local
+    ```
 
 Keep your copy of the chart, e.g., in version control: you need it for
-every upgrade, until the chart takes the service info as a value.
+every upgrade, until the chart takes the service info as a value. Files
+mounted with `subPath` aren't updated in running pods: after changing the
+overlay, upgrade the release and restart the app (`kubectl rollout restart
+deploy/trs-filer -n trs`).
 
 ### Restrict writes
 
@@ -192,12 +216,13 @@ default branch and come with the next release
 deployment](services/trsfiler.md#in-the-elixir-on-cloud) runs such a
 development build. Until then:
 
-- Let your Ingress controller, router or a proxy in front of the cluster
-  allow only `GET`, `HEAD` and `OPTIONS` from the public, and the other
-  methods only from trusted clients. [Ingress and
-  Route][trsfiler-ingress] has examples for ingress-nginx and the
-  OpenShift router; with other controllers or the Gateway API, use their
-  means.
+- Let your Ingress controller or a proxy in front of the cluster allow
+  only `GET`, `HEAD` and `OPTIONS` from the public, and the other methods
+  only from trusted clients. [Ingress and Route][trsfiler-ingress] has an
+  example for ingress-nginx; with other controllers or the Gateway API,
+  use their means. The OpenShift router can only allow clients, for all
+  methods, which would make the service info private too: on OpenShift,
+  restrict writes at a proxy in front of the router.
 - Pods in the cluster that reach the app's Service directly bypass the
   restriction. On a cluster shared with workloads that you don't trust,
   let only the Ingress controller or router connect to the app
@@ -243,7 +268,10 @@ kill %1  # stop the port forward
 ```
 
 The pods of TRS-Filer and MongoDB should be running, and the service info
-should show your values, with the type `org.ga4gh` / `trs`.
+should show your values, with the type `org.ga4gh` / `trs`. If local port
+8080 is taken, the port forward fails, and `curl` reaches whatever listens
+there: use another local port, e.g., `18080:8080` and
+`http://localhost:18080`.
 
 ### Expose the API
 
@@ -257,6 +285,7 @@ trs_filer:
     className: nginx
     https:
       enabled: true
+      # The name of your ClusterIssuer
       issuer: letsencrypt-prod
     # Required: the restriction of writes for your Ingress controller,
     # e.g., the annotations of the example in "Ingress and Route"
@@ -264,9 +293,13 @@ trs_filer:
 ```
 
 On OpenShift, keep the Ingress disabled and enable the Route instead
-(`trs_filer.route.enabled: true`), with the restriction in
-`trs_filer.route.annotations` (see [Ingress and Route][trsfiler-ingress]).
-If a proxy in front of the cluster restricts writes, configure it first.
+(`trs_filer.route.enabled: true`). The OpenShift router can't restrict
+methods, only clients, for all methods (see [Ingress and
+Route][trsfiler-ingress]): an allow list in `trs_filer.route.annotations`
+would also make the service info private, and the registry can't import
+it in [step 4](#4-register-the-service). So on OpenShift, restrict writes
+at a proxy in front of the router. If a proxy in front of the cluster
+restricts writes, configure it first.
 Then upgrade the release, and check from an address that isn't trusted
 that the service info is public and writes are refused:
 
