@@ -38,6 +38,7 @@ As of November 2026:
 | Address | TES API at `https://gateway-tes.elixir-on.cloud/ga4gh/tes/v1` (the host itself has no page); the old address `protes.rahtiapp.fi` keeps working |
 | Version | proTES 0.6.0 |
 | Access | LS Login access tokens of members of the group `ECP_CLN:EOC-Compute` or `ECP_CLN:ADMIN`, issued to a client that it accepts, such as Krini's (see [Researchers](../../researchers/index.md#before-you-start)) |
+| LS Login client | client ID `7c0c1fc0-e8ca-47d6-a9b2-bdc843961146`, issuer `https://login.aai.lifescience-ri.eu/oidc/`: a TES service behind proTES lists this client ID and accepts it as audience (see [Access control for compute](../policies.md#access-control-for-compute)) |
 | Environment | `test`: its service info calls it "proTES sandbox (BioHackathon 2026)" |
 | TES services | one, listed in its configuration: the TESK for tests at CSC (`csc-tesk-noauth.rahtiapp.fi`). Since 21 November 2026, that TESK requires LS Login tokens, and proTES doesn't send one of its own yet, so tasks sent to proTES fail until [generic-issues#111][gi-111] is done |
 | Discovery in the Cloud Registry | off |
@@ -80,7 +81,8 @@ assigned to the facility of the token's client, too
 ([generic-issues#46][gi-46]). Members of other `ECP_CLN` subgroups get no
 role.
 
-proTES doesn't use a client of its own yet. The TESK at CSC requires LS
+proTES has an LS Login client of its own (client ID above), but doesn't
+send its tokens yet. The TESK at CSC requires LS
 Login tokens since 21 November 2026, at its new address
 `https://tesk.rahtiapp.fi` (the old address requires them too, until it is
 removed). Once proTES calls it with its own LS Login token, the entry here
