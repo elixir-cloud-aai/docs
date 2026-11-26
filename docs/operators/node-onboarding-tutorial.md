@@ -46,15 +46,15 @@ You need:
   and [Helm](https://helm.sh/) 3. TESK needs access to one namespace only
   (see [Requirements][tesk-requirements]); Poiesis needs Kubernetes 1.29 or
   later and a PostgreSQL database (see [Prerequisites][poiesis-prereq]). For
-  Funnel, an HPC or HTC cluster, e.g., with Slurm (see
+  Funnel, an HPC or HTC cluster, for example, with Slurm (see
   [Funnel](services/funnel.md)).
-- **A namespace** of its own for the TES service, e.g., `tesk`.
+- **A namespace** of its own for the TES service, for example, `tesk`.
 - **Storage.** A default storage class (TESK creates a temporary volume
   claim for each task with inputs or outputs; `ReadWriteOnce` is enough),
-  and a storage backend for the inputs and outputs of tasks, e.g., S3 or FTP
+  and a storage backend for the inputs and outputs of tasks, for example, S3 or FTP
   (see [Deploy storage](onboarding.md#2-deploy-storage)).
 - **Ingress and HTTPS.** An Ingress controller (or OpenShift Routes), a host
-  name that points to it, and a TLS certificate, e.g., from Let's Encrypt
+  name that points to it, and a TLS certificate, for example, from Let's Encrypt
   with cert-manager. The Cloud Registry of this deployment accepts `https`
   URLs only, and the gateway uses only TES services at public addresses
   that answer without redirects.
@@ -75,10 +75,10 @@ today:
 
 | | TESK | Poiesis | Funnel |
 |---|---|---|---|
-| Runs on | Kubernetes, OpenShift | Kubernetes 1.29+ | HPC, HTC (e.g., Slurm) |
+| Runs on | Kubernetes, OpenShift | Kubernetes 1.29+ | HPC, HTC (for example, Slurm) |
 | Validates LS Login tokens | yes, with gaps (see [step 3](#3-enable-ls-login-and-ecp_cln-access)) | yes (OIDC issuer and audience) | yes (OIDC issuer and audience) |
 | Access by membership in `ECP_CLN:EOC-Compute` | by a claim of the user info | no, any valid token ([generic-issues#21][gi-21]) | no, any valid token ([generic-issues#20][gi-20]) |
-| Service info for the registry | set in the chart's values: import | fixed by the code: manual entry ([JaeAeich/poiesis#112][poiesis-112]) | fixed by the code: manual entry ([calypr/funnel#1493][funnel-1493]) |
+| Service info for the registry | set in the chart's values: import | fixed by the code: manual entry ([JaeAeich/poiesis#112][poiesis-112]) | fixed by the code in 0.12.3: manual entry ([calypr/funnel#1493][funnel-1493], fixed by [calypr/funnel#1495][funnel-1495], not released yet) |
 
 **Poiesis and Funnel can't enforce the `ECP_CLN:EOC-Compute` policy
 yet:** they accept every valid token of the provider, so anyone with an LS Login account who
@@ -134,12 +134,12 @@ ingress:
 
 On OpenShift, set `ingress.enabled: false` instead: the chart then creates
 a Route for `hostName`. OpenShift, and other clusters that reject pods
-asking for the `RuntimeDefault` seccomp profile (e.g., CSC Rahti), need a
-few more values, e.g., `tesk.podSecurityContext.seccompProfile: null`: see
+asking for the `RuntimeDefault` seccomp profile (for example, CSC Rahti), need a
+few more values, for example, `tesk.podSecurityContext.seccompProfile: null`: see
 [OpenShift and other restricted clusters][tesk-restricted].
 
 Set up the storage backend of your Node as described in [Storage
-backends][tesk-storage] (e.g., `storage: s3` and the files in
+backends][tesk-storage] (for example, `storage: s3` and the files in
 `tesk/s3-config/` of the unpacked chart).
 
 Set the service info in `my-values.yaml`, under `serviceInfo`, before
@@ -177,7 +177,7 @@ set them yet, don't install until you can: `ingress.enabled: false` doesn't
 keep TESK private on OpenShift, where it creates a Route.
 
 Install the chart into a namespace of its own. `secrets.yaml` holds
-credentials, e.g., of FTP: leave out `-f secrets.yaml` if you need none.
+credentials, for example, of FTP: leave out `-f secrets.yaml` if you need none.
 
 ```bash
 helm upgrade --install tesk ./tesk \
@@ -198,7 +198,7 @@ kill %1  # stop the port forward
 
 The service info should show your values. If local port 8080 is taken, the
 port forward fails, and `curl` reaches whatever listens there: use another
-local port, e.g., `18080:8080` and `http://localhost:18080`.
+local port, for example, `18080:8080` and `http://localhost:18080`.
 
 Then check that the service info is reachable from outside, without a
 token:
@@ -324,14 +324,15 @@ cat > hello.json <<'EOF'
 }
 EOF
 read -rs TOKEN   # paste the token; it is not shown or saved in the history
-printf 'Authorization: Bearer %s\n' "$TOKEN" | curl -X POST "${TES}/tasks" \
+ID=$(printf 'Authorization: Bearer %s\n' "$TOKEN" | curl -fsS -X POST "${TES}/tasks" \
     -H 'Content-Type: application/json' -H @- \
-    -d @hello.json
-printf 'Authorization: Bearer %s\n' "$TOKEN" | curl "${TES}/tasks/<id>?view=BASIC" -H @-
+    -d @hello.json | jq -r '.id // empty')
+echo "${ID:?no task ID}"
+printf 'Authorization: Bearer %s\n' "$TOKEN" | curl -fsS "${TES}/tasks/${ID}?view=BASIC" -H @-
 ```
 
-The first request returns the ID of the new task. Repeat the second one
-with that ID until the state is `COMPLETE`. The task runs the image
+The first request returns the ID of the new task (it needs `jq`). Repeat
+the last one until the state is `COMPLETE`. The task runs the image
 `alpine`, which the cluster must be able to pull. Poiesis and Funnel
 implement the same API; [Deploying Poiesis][poiesis-deploy] has a similar
 example.
@@ -361,7 +362,7 @@ In short:
    described in [Check before you
    import](service-info.md#check-before-you-import).
 2. Log in to the [Cloud Registry][elixir-cloud-registry] with LS Login.
-3. Import the service info of your service, e.g.,
+3. Import the service info of your service, for example,
    `https://tes.example.org/ga4gh/tes/v1/service-info`, check the values,
    and register them, with **Keep this service in sync with its service
    info** ticked. If the values are wrong, correct the service info and
@@ -379,7 +380,9 @@ reasons](using-cloud-registry.md#out-of-sync-reasons).
 
 !!! warning "Gap: Poiesis and Funnel"
     The service info of Poiesis and Funnel can't be set yet
-    ([JaeAeich/poiesis#112][poiesis-112], [calypr/funnel#1493][funnel-1493]):
+    ([JaeAeich/poiesis#112][poiesis-112]; Funnel 0.12.3,
+    [calypr/funnel#1493][funnel-1493], fixed by
+    [calypr/funnel#1495][funnel-1495] but not released yet):
     Funnel's has the environment `development`, which this deployment
     refuses, and Poiesis's describes the project, not your Node. Register
     them by hand, with sync off, as described in [Manual entry, the
@@ -393,7 +396,7 @@ reasons](using-cloud-registry.md#out-of-sync-reasons).
 Write to [cloud-service@elixir-europe.org][elixir-on-cloud-email] with the
 address of your entry, and ask for its verification. Only admins can verify
 services; you can't verify your own. What they check is up to this
-deployment, e.g., that the service accepts tokens of LS Login (see
+deployment, for example, that the service accepts tokens of LS Login (see
 [Verified services][cr-verified]).
 
 Verification is kept when sync updates the entry, but changing the URL or
@@ -466,7 +469,7 @@ TESK, as described in [Deployment][sidecar-deployment]:
       --from-literal=access-token="$(openssl rand -hex 32)"
     ```
 
-3. Write the values into a file of their own, e.g., `sidecar-values.yaml`,
+3. Write the values into a file of their own, for example, `sidecar-values.yaml`,
    not into the `my-values.yaml` of TESK. `tesk-api` is the Deployment of
    TESK for the release `tesk`:
 
@@ -487,7 +490,7 @@ TESK, as described in [Deployment][sidecar-deployment]:
     ```
 
     On clusters that reject pods asking for the `RuntimeDefault` seccomp
-    profile (e.g., CSC Rahti), add `podSecurityContext: {seccompProfile:
+    profile (for example, CSC Rahti), add `podSecurityContext: {seccompProfile:
     null}`. To roll out only higher versions, and only tags of a pattern,
     set `refuseDowngrades` and `allowedTags` (see [Refusing
     downgrades][sidecar-downgrades]).
@@ -537,6 +540,7 @@ follow [Tutorial: Onboard a Data Centre](data-centre-onboarding-tutorial.md).
 [cr-docs]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/>
 [cr-verified]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/api/#verified-services>
 [funnel-1493]: <https://github.com/calypr/funnel/issues/1493>
+[funnel-1495]: <https://github.com/calypr/funnel/pull/1495>
 [funnel-oauth2]: <https://github.com/calypr/funnel/blob/v0.12.3/docs/security/oauth2.md>
 [funnel-slurm]: <https://github.com/calypr/funnel/blob/v0.12.3/docs/compute/slurm.md>
 [gi-20]: <https://github.com/elixir-cloud-aai/generic-issues/issues/20>

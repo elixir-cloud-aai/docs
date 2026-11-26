@@ -37,23 +37,23 @@ As of November 2026:
 |---|---|
 | Address | TES API at `https://gateway-tes.elixir-on.cloud/ga4gh/tes/v1` (the host itself has no page); the old address `protes.rahtiapp.fi` keeps working |
 | Version | proTES 0.6.0 |
-| Access | LS Login access tokens of members of the group `ECP_CLN:EOC-Compute`, issued to a client that it accepts, such as Krini's (see [Researchers](../../researchers/index.md#before-you-start)). Until the rule `admins-create-list-tasks` is removed from its configuration, members of `ECP_CLN:ADMIN` can create tasks too (see the role `admin` below) |
+| Access | LS Login access tokens of members of the group `ECP_CLN:EOC-Compute`, issued to a client that it accepts, such as Krini's (see [Researchers](../../researchers/index.md#before-you-start)). Members of `ECP_CLN:ADMIN` can't create tasks: admins who run tasks join `ECP_CLN:EOC-Compute` (see the role `admin` below) |
 | LS Login client | client ID `7c0c1fc0-e8ca-47d6-a9b2-bdc843961146`, issuer `https://login.aai.lifescience-ri.eu/oidc/`: a TES service behind proTES lists this client ID and accepts it as audience (see [Access control for compute](../policies.md#access-control-for-compute)) |
 | Environment | `test`; its service info calls it "ELIXIR On-Cloud TES Gateway" |
-| TES services | listed in its configuration and in the `backends` of its service info: the TESK for tests at CSC (`https://tesk.rahtiapp.fi`), which proTES calls with an LS Login token of its own client since 26 November 2026 ([generic-issues#111][gi-111]), and the TESK of CERIT-SC (`https://tesk.dyn.cloud.e-infra.cz`) |
+| TES services | listed in its configuration and in the `backends` of its service info: the TESK of the FI Node, at CSC (`https://tesk.rahtiapp.fi`), and the TESK of the CZ Node, at CERIT-SC (`https://tesk.dyn.cloud.e-infra.cz`); proTES calls both with an LS Login token of its own client since 26 November 2026 ([generic-issues#111][gi-111]) |
 | Discovery in the Cloud Registry | off |
 
 A Node's TES service is added to the configuration when its admins ask for
 it and the service requires LS Login tokens (see [Get added behind the
 gateway](../node-onboarding-tutorial.md#7-get-added-behind-the-gateway)).
-The TESK of CERIT-SC (CZ) is the first Node's TES service in the list.
 The service info of proTES (`GET /ga4gh/tes/v1/service-info`) lists the TES
 services that it uses.
 
 ### Configuration
 
 The effective configuration of the ELIXIR On-Cloud's proTES, as of
-18 November 2026, and of 26 November 2026 for its TES services (see
+18 November 2026, of 25 November 2026 for the role `admin`, and of
+26 November 2026 for its TES services (see
 [Access control in the proTES docs](https://protes.readthedocs.io/en/v0.6.0/access-control/) for what the
 roles may do):
 
@@ -64,10 +64,10 @@ roles may do):
 | Audience | the LS Login clients of Krini and of the Cloud Registry UI |
 | Groups | read from LS Login's userinfo endpoint, claim `eduperson_entitlement` |
 | Role `user` | `urn:geant:lifescience-ri.eu:group:elixir:ECP_CLN:EOC-Compute#aai.lifescience-ri.eu`: create tasks, list their own, list and read the plugins |
-| Role `admin` | `urn:geant:lifescience-ri.eu:group:elixir:ECP_CLN:ADMIN#aai.lifescience-ri.eu`: the permissions API (`/admin/access-control/permissions`, on the public address) and the provenance of all tasks; three added rules (`admins-create-list-tasks`, `admins-list-plugins`, `admins-get-plugins`) give it the rights of `user` too. Only members of `ECP_CLN:EOC-Compute` may create tasks (see [Access control for compute](../policies.md#access-control-for-compute)), so the rule `admins-create-list-tasks` is to be removed: admins who run tasks join `ECP_CLN:EOC-Compute` |
+| Role `admin` | `urn:geant:lifescience-ri.eu:group:elixir:ECP_CLN:ADMIN#aai.lifescience-ri.eu`: the permissions API (`/admin/access-control/permissions`, on the public address) and the provenance of all tasks. Since 25 November 2026, no added rule gives it the rights of `user`: only members of `ECP_CLN:EOC-Compute` may create tasks (see [Access control for compute](../policies.md#access-control-for-compute)), so admins who run tasks join `ECP_CLN:EOC-Compute` |
 | Other tokens | valid tokens without either group get `403 Forbidden` on tasks and plugins; the service info is public |
 | Own tasks | only the user who created a task can read and cancel it; admins can read the provenance of any task, not the task |
-| TES services | since 26 November 2026: the TESK for tests at CSC at `https://tesk.rahtiapp.fi`, with `auth: client_credentials` (a token of proTES' own LS Login client, client ID above), and the TESK of CERIT-SC at `https://tesk.dyn.cloud.e-infra.cz` |
+| TES services | since 26 November 2026: the TESK of the FI Node at `https://tesk.rahtiapp.fi` and the TESK of the CZ Node at `https://tesk.dyn.cloud.e-infra.cz`, both with `auth: client_credentials` (a token of proTES' own LS Login client, client ID above) |
 | Plugins | none configured (the service info lists no capabilities) |
 
 LS Login releases only the groups assigned to the client's facility, so a
@@ -83,8 +83,10 @@ role.
 
 proTES has an LS Login client of its own (client ID above). Since
 26 November 2026, it sends a token of that client (OAuth 2.0 client
-credentials) to the TESK at CSC, which requires LS Login tokens since
-21 November 2026 ([generic-issues#111][gi-111]).
+credentials) to both TESKs, which require LS Login tokens
+([generic-issues#111][gi-111], [generic-issues#138][gi-138]).
+
+[gi-138]: <https://github.com/elixir-cloud-aai/generic-issues/issues/138>
 
 [gi-46]: <https://github.com/elixir-cloud-aai/generic-issues/issues/46>
 [gi-111]: <https://github.com/elixir-cloud-aai/generic-issues/issues/111>

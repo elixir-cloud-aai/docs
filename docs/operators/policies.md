@@ -22,7 +22,7 @@ The requirements apply to every service that a Node runs in the
 federation: TES and WES services of compute Nodes, and the storage and TRS
 services of data centres (see [Who can join](index.md#who-can-join)),
 except where a section names the services it applies to.
-Requirements specific to data nodes, e.g., for DRS services, are not
+Requirements specific to data nodes, for example, for DRS services, are not
 written down yet.
 
 !!! danger "An early-stage sandbox, not for production"
@@ -35,7 +35,7 @@ written down yet.
 
 !!! info "If other pages differ"
     If another page of these docs describes other rules than this page,
-    e.g., other groups that can run jobs, follow this page.
+    for example, other groups that can run jobs, follow this page.
 
 ## Authentication
 
@@ -133,7 +133,7 @@ Your service MUST enforce these rules:
   list (see [Get added behind the
   gateway](node-onboarding-tutorial.md#7-get-added-behind-the-gateway)).
   Service clients might stay supported after the move to token exchange, for
-  tests, e.g., automated end-to-end smoke tests across the federation.
+  tests, for example, automated end-to-end smoke tests across the federation.
 
 How far each TES product can enforce these rules today, and how to
 configure it, is in [Enable LS Login and ECP_CLN
@@ -143,7 +143,7 @@ them, you MUST ask the [admins][elixir-on-cloud-email].
 
 ## Registry entry
 
-- Each GA4GH API service that your Node offers to the federation, e.g.,
+- Each GA4GH API service that your Node offers to the federation, for example,
   TES, WES or TRS services, MUST be registered in the [Cloud
   Registry][elixir-cloud-registry].
 - You SHOULD **register by importing the service's service info, and keep
@@ -183,15 +183,15 @@ deployment](service-info.md#the-rules-of-this-deployment)). In short:
     - stable: it stays the same across upgrades and moves of your service;
       sync checks that it doesn't change;
     - in reverse domain notation of a domain that your organisation
-      controls, followed by a name for the service, e.g., `org.example.tes`
+      controls, followed by a name for the service, for example, `org.example.tes`
       for a TES service of `example.org`;
-    - not the default of your product (e.g., `org.ga4gh.funnel`), which
+    - not the default of your product (for example, `org.ga4gh.funnel`), which
       every installation of the product reports;
 - `organization` names your Node, not the product's project;
 - `environment` is `prod` for a production service or `test` for a test
-  service; the registry refuses any other value, e.g., `dev`;
+  service; the registry refuses any other value, for example, `dev`;
 - `type` is one of the types that the admins registered, with `group`,
-  `artifact` and `version` written exactly as registered, e.g., `tes`, not
+  `artifact` and `version` written exactly as registered, for example, `tes`, not
   `TES` (see [The rules of this
   deployment](service-info.md#the-rules-of-this-deployment) and the
   [checklist](service-info.md#checklist));
@@ -215,7 +215,7 @@ for products whose service info can't be set yet.
 
 - Secrets, such as client secrets and storage credentials, MUST NOT be
   kept in repositories or in values files that you commit: pass them at
-  deploy time, e.g., from a secret store (see [LS Login](ls-login.md)).
+  deploy time, for example, from a secret store (see [LS Login](ls-login.md)).
 - Before you install a release, you SHOULD check that its release
   workflow built and signed it, as the tutorials show for the charts of
   TESK and TRS-Filer (see [Install TESK](node-onboarding-tutorial.md#install-tesk)
@@ -226,11 +226,11 @@ for products whose service info can't be set yet.
   vulnerability that a fix exists for.
 - Everyone who can create tasks on a TES service can run any image with
   any command on your cluster: you SHOULD read the security notes in the
-  docs of your product, e.g., the [security implications][tesk-api-claim-security] of
+  docs of your product, for example, the [security implications][tesk-api-claim-security] of
   tesk-api.
 - A TRS-Filer 0.5.0 or earlier, which has no authentication, MUST be
   set up so that only trusted clients can write (`POST`, `PUT`, `DELETE`),
-  e.g., by your Ingress controller or a proxy (see [Restrict
+  for example, by your Ingress controller or a proxy (see [Restrict
   writes](data-centre-onboarding-tutorial.md#restrict-writes)). From 0.6.0,
   TRS-Filer requires access tokens for writes itself (see
   [Authentication](#authentication)).
@@ -241,7 +241,7 @@ for products whose service info can't be set yet.
 ## Upgrades
 
 - You SHOULD upgrade your services with the upgrade notes of each
-  product, e.g., those of [TESK][tesk-upgrading], and MUST end each
+  product, for example, those of [TESK][tesk-upgrading], and MUST end each
   upgrade with the [registry step](#registry-entry) above.
 - You MAY install [Pubgrade-Sidecar][sidecar-docs], which rolls out new
   releases of a service when the central Pubgrade notifies it. Install it
@@ -255,7 +255,7 @@ for products whose service info can't be set yet.
 - **The ELIXIR On-Cloud is a sandbox for demos and tests with synthetic or
   public data.** Your services MUST NOT hold personal or other sensitive
   data for the federation: in jobs, inputs, outputs, tools or workflows.
-- For the background of working with sensitive data, i.e., legal
+- For the background of working with sensitive data, that is, legal
   frameworks, Secure Processing Environments (SPEs) and the ways to reach
   data, see [Sensitive Data](../partners-and-developers/sensitive-data.md).
   For analyses of encrypted files through the gateway, see [Crypt4GH with

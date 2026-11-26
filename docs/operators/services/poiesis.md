@@ -40,7 +40,7 @@ upgrade](../using-cloud-registry.md#after-a-deployment-or-an-upgrade)).
   also supports FTP(S) (see [Storage
   protocols][poiesis-storage] in its docs). A deployment lists the
   protocols it supports in the field `storage` of its service info. A
-  Node with Poiesis needs an S3 server, e.g., MinIO (see [Deploy
+  Node with Poiesis needs an S3 server, for example, MinIO (see [Deploy
   storage](../onboarding.md#2-deploy-storage)).
 - Poiesis validates access tokens of OIDC issuers: 0.2.0 of one, under
   `auth.oidc.*`, without checking the groups of a user. The default branch
@@ -56,7 +56,7 @@ upgrade](../using-cloud-registry.md#after-a-deployment-or-an-upgrade)).
   carries its owner's claims as of minting, until it expires (see [API
   keys][poiesis-api-keys] in its docs). We use them for smoke tests.
 - We recommend `name: Poiesis` and the organization that hosts the
-  service, e.g., `CSC – IT Center for Science` (see [Names and
+  service, for example, `CSC – IT Center for Science` (see [Names and
   organizations](../service-info.md#names-and-organizations)).
 
 ## In the ELIXIR On-Cloud

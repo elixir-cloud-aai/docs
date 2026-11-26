@@ -7,7 +7,7 @@ last_verified: null
 [WESkit](https://gitlab.com/one-touch-pipeline/weskit/api) is a [GA4GH
 WES][ga4gh-wes] service. It runs Snakemake and Nextflow workflows on its
 host or on a cluster, such as Slurm or LSF, and logs users in with OpenID
-Connect, e.g., LS Login.
+Connect, for example, LS Login.
 
 ## Role in the deployment
 
@@ -49,14 +49,14 @@ fields (see the [checklist](../service-info.md#checklist)):
 
 | Field | Template or default | Set it to | Why |
 |---|---|---|---|
-| `id` | `org.weskit.service` | your host in reverse domain notation, e.g., `org.example.weskit` | The same for every deployment that keeps it; sync pins it. |
+| `id` | `org.weskit.service` | your host in reverse domain notation, for example, `org.example.weskit` | The same for every deployment that keeps it; sync pins it. |
 | `name` | `WESkit` | keep it | We recommend the name of the implementation only: no host, country, "test" or cluster names, which other fields say (see [Names and organizations](../service-info.md#names-and-organizations)). |
 | `description` | empty | what the service offers, to whom, and which data it may hold | Users choose services by it. |
-| `organization` | `Organization`, `https://example.org` | the name and URL of the institution that hosts the service, as it writes them, e.g., `My University`, `https://example.org/` | The registry lists the host of each service. |
+| `organization` | `Organization`, `https://example.org` | the name and URL of the institution that hosts the service, as it writes them, for example, `My University`, `https://example.org/` | The registry lists the host of each service. |
 | `type` | `org.ga4gh`, `wes`, `1.1.0` | keep it | The registry's types are a controlled, case-sensitive vocabulary. WESkit implements WES 1.1.0. |
-| `version` | `dev-4.1.0` | the WESkit version that you run, e.g., `1.0.0` | Change it with every upgrade, so that sync shows it. |
+| `version` | `dev-4.1.0` | the WESkit version that you run, for example, `1.0.0` | Change it with every upgrade, so that sync shows it. |
 | `environment` | `unknown` (not in the template) | `prod` or `test` | The registry refuses other values. |
-| `contact_url` | `mailto:your@email.de` | your support address, e.g., `mailto:wes@example.org` | Shown in the registry and clients. |
+| `contact_url` | `mailto:your@email.de` | your support address, for example, `mailto:wes@example.org` | Shown in the registry and clients. |
 | `documentation_url` | WESkit's wiki | the page for the users of your instance | It should say how to get access. |
 | `auth_instructions_url` | `https://somewhere.org` | the page that says how to get an access token | A field of WES; clients show it. |
 
@@ -67,7 +67,7 @@ engine parameters from its code and config, not from
 
 Then check the endpoint as in [Check before you
 import](../service-info.md#check-before-you-import), with the base URL of
-WESkit, e.g., `https://wes.example.org/ga4gh/wes/v1`. If a web portal
+WESkit, for example, `https://wes.example.org/ga4gh/wes/v1`. If a web portal
 redirects the old address of your instance to a new one, register the new
 one: the import follows no redirects.
 
@@ -84,7 +84,7 @@ only members of the LS Login group `elixir:ECP_CLN:EOC-Compute` can create
 jobs: anyone with a valid token for its audience can start runs. Before
 you register it, write to the
 [admins][elixir-on-cloud-email] about how your instance meets that rule,
-e.g., with a proxy in front of it that checks the group.
+for example, with a proxy in front of it that checks the group.
 
 ## WESkit at BIH
 

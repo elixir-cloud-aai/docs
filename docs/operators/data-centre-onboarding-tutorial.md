@@ -18,7 +18,7 @@ What a data centre can offer today, and what is planned:
 
 | Offer | Product | Status |
 |---|---|---|
-| Storage for the inputs and outputs of tasks | an S3 or FTP server, e.g., [MinIO][minio] or [vsftpd][vsftpd] | available: see [step 2](#2-offer-storage-for-tasks) |
+| Storage for the inputs and outputs of tasks | an S3 or FTP server, for example, [MinIO][minio] or [vsftpd][vsftpd] | available: see [step 2](#2-offer-storage-for-tasks) |
 | Tools and workflows, through the TRS API | [TRS-Filer](services/trsfiler.md) 0.5.0 | available; 0.5.0 has no authentication, so writes are restricted in front of it (tokens for writes come with 0.6.0): see [step 3](#3-deploy-trs-filer) |
 | Data objects, through the [DRS API][ga4gh-drs] | [DRS-Filer](services/drsfiler.md) | being revived, no release yet: not covered here yet |
 
@@ -52,7 +52,7 @@ hosting provider.
 You need:
 
 - **A cluster.** A Kubernetes or OpenShift cluster, a namespace of your
-  own for TRS-Filer, e.g., `trs`, and the right to create the chart's
+  own for TRS-Filer, for example, `trs`, and the right to create the chart's
   objects in it: Deployments, Services, ConfigMaps, Secrets,
   PersistentVolumeClaims, Jobs, ServiceAccounts, Roles, RoleBindings,
   NetworkPolicies, and Ingresses or OpenShift Routes (the chart's
@@ -67,8 +67,8 @@ You need:
   persistent volume claim (1 GiB by default, see
   [Persistence][trsfiler-persistence]).
 - **Ingress and HTTPS.** An Ingress controller (or OpenShift Routes), a host
-  name that points to it, e.g., `trs.example.org`, and a TLS certificate,
-  e.g., from Let's Encrypt with cert-manager. The Cloud Registry of this
+  name that points to it, for example, `trs.example.org`, and a TLS certificate,
+  for example, from Let's Encrypt with cert-manager. The Cloud Registry of this
   deployment accepts `https` URLs only, and TRS-Filer advertises
   `https://<host name>` in its responses.
 - **A way to restrict writes.** TRS-Filer 0.5.0 has no authentication;
@@ -92,7 +92,7 @@ their outputs to, S3 or FTP servers. To offer storage:
    which TES services may use it, and agree how their operators get the
    credentials. Never send credentials by plain email.
 3. The operators of those TES services configure them with your server and
-   credentials, e.g., the `storage` value of the [TESK chart][tesk-storage].
+   credentials, for example, the `storage` value of the [TESK chart][tesk-storage].
 
 !!! note "Storage servers and the registry"
     Storage servers aren't registered in the Cloud Registry: there is no
@@ -108,7 +108,7 @@ in full; this is the path for a data centre of the federation.
 ### Create the namespace and the database credentials
 
 MongoDB requires credentials, which the chart reads from a Secret that you
-create first (see [Authentication][trsfiler-mongodb-auth]), e.g., with
+create first (see [Authentication][trsfiler-mongodb-auth]), for example, with
 random passwords:
 
 ```bash
@@ -201,7 +201,7 @@ unpacked chart, as described in [Configuration][trsfiler-configuration]:
             name: config-local
     ```
 
-Keep your copy of the chart, e.g., in version control: you need it for
+Keep your copy of the chart, for example, in version control: you need it for
 every upgrade, until the chart takes the service info as a value. Files
 mounted with `subPath` aren't updated in running pods: after changing the
 overlay, upgrade the release and restart the app (`kubectl rollout restart
@@ -272,12 +272,12 @@ kill %1  # stop the port forward
 The pods of TRS-Filer and MongoDB should be running, and the service info
 should show your values, with the type `org.ga4gh` / `trs`. If local port
 8080 is taken, the port forward fails, and `curl` reaches whatever listens
-there: use another local port, e.g., `18080:8080` and
+there: use another local port, for example, `18080:8080` and
 `http://localhost:18080`.
 
 ### Expose the API
 
-Add the Ingress, with your restriction of writes, to `my-values.yaml`, e.g.,
+Add the Ingress, with your restriction of writes, to `my-values.yaml`, for example,
 with a certificate of cert-manager:
 
 ```yaml
@@ -355,7 +355,7 @@ Researchers then find them through the TRS API of your service.
 
 ## 7. Keep the registry entry up to date
 
-End every upgrade, move or change of TRS-Filer, e.g., with `helm upgrade`,
+End every upgrade, move or change of TRS-Filer, for example, with `helm upgrade`,
 with this step: **update the service's Cloud Registry entry, or check that
 sync did.** With sync on, check that the entry shows the new version,
 labelled `synced`; after a new URL or API type, ask the
