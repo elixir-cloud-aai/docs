@@ -14,7 +14,7 @@ Connect, e.g., LS Login.
 WESkit is a WES service for Nodes that offer workflow runs, not only
 tasks. It is the workflow service of SPE4HD, the secure processing
 environment (SPE) of ELIXIR Compute WP3, at the Berlin Institute of Health
-at Charité (see [WESkit (BIH, DE)](#weskit-bih-de) below). After you deploy
+at Charité (see [WESkit at BIH](#weskit-at-bih) below). After you deploy
 it, register it in the [Cloud Registry][elixir-cloud-registry] with a WES
 type (see [Onboarding](../onboarding.md)). End every upgrade or change of
 it by checking that sync updated its entry (see [After a deployment or an
@@ -50,9 +50,9 @@ fields (see the [checklist](../service-info.md#checklist)):
 | Field | Template or default | Set it to | Why |
 |---|---|---|---|
 | `id` | `org.weskit.service` | your host in reverse domain notation, e.g., `org.example.weskit` | The same for every deployment that keeps it; sync pins it. |
-| `name` | `WESkit` | `WESkit (<Host institution short name>, <Country code>)`, e.g., `WESkit (MyUni, UK)` | The naming scheme of the deployment; no "ELIXIR On-Cloud", "test" or cluster names. |
+| `name` | `WESkit` | keep it | We recommend the name of the implementation only: no host, country, "test" or cluster names, which other fields say (see [Names and organizations](../service-info.md#names-and-organizations)). |
 | `description` | empty | what the service offers, to whom, and which data it may hold | Users choose services by it. |
-| `organization` | `Organization`, `https://example.org` | the name and URL of your institution, as it writes them | The registry lists the host of each service. |
+| `organization` | `Organization`, `https://example.org` | the name and URL of the institution that hosts the service, as it writes them, e.g., `My University`, `https://example.org/` | The registry lists the host of each service. |
 | `type` | `org.ga4gh`, `wes`, `1.1.0` | keep it | The registry's types are a controlled, case-sensitive vocabulary. WESkit implements WES 1.1.0. |
 | `version` | `dev-4.1.0` | the WESkit version that you run, e.g., `1.0.0` | Change it with every upgrade, so that sync shows it. |
 | `environment` | `unknown` (not in the template) | `prod` or `test` | The registry refuses other values. |
@@ -81,13 +81,12 @@ runs, and shows each user only their own runs. It checks the token's
 signature, issuer and audience, not the user's groups: who may use your
 instance is up to how you register and run it at LS Login.
 
-## WESkit (BIH, DE)
+## WESkit at BIH
 
 !!! warning "Being set up"
-    This instance is being prepared as a service of the ELIXIR On-Cloud. Its
-    service info and registry entry are being aligned with the scheme
-    above, and its access process isn't documented yet. Until then, write
-    to [cloud-service@elixir-europe.org][elixir-on-cloud-email].
+    This instance is being prepared as a service of the ELIXIR On-Cloud.
+    Its access process isn't documented yet. Until then, write to
+    [cloud-service@elixir-europe.org][elixir-on-cloud-email].
 
 The Berlin Institute of Health at Charité (BIH) runs WESkit as the
 workflow service of SPE4HD, the reference SPE of ELIXIR Compute WP3
@@ -95,10 +94,10 @@ workflow service of SPE4HD, the reference SPE of ELIXIR Compute WP3
 
 | | |
 |---|---|
-| Name | WESkit (BIH, DE) |
+| Name | WESkit |
 | Host organization | Berlin Institute of Health at Charité (BIH) |
 | Address | [weskit.bihealth.org](https://weskit.bihealth.org/), the web portal; the WES API is at `/ga4gh/wes/v1` on the same host. `spe4hd.weskit.bihealth.org` redirects to it. |
 | Login | LS Login |
 | Data | Simulated data only: the portal says "Do not upload real or personal data". |
 | Access | Not documented yet (see above). |
-| Registry | Its current entry is among the [deployed services](index.md#deployed-services); it is to be registered again, by import with sync, once the service info follows the scheme above. |
+| Registry | Among the [deployed services](index.md#deployed-services); as of 26 November 2026, its entry has the name and organization of its service info. |
