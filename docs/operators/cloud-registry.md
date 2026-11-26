@@ -950,8 +950,8 @@ The front end takes the allowed environments and URL schemes of services
 from the registry's service info (see [Registry][cr-ui-registry-settings]):
 don't set `NEXT_PUBLIC_SERVICE_ENVIRONMENTS` or
 `NEXT_PUBLIC_SERVICE_URL_SCHEMES`, which it ignores, with a warning on
-start. Nor does it read `LS_LOGIN_URL` or `OIDC_*` (see the registry's [upgrade
-notes from 0.6.0][cr-upgrading-0.6.0]).
+start. Nor does it read `LS_LOGIN_URL` or `OIDC_*` (see the UI's [upgrade notes on login
+providers][cr-ui-upgrading-login]).
 
 The branding settings are optional, and their defaults are the ELIXIR
 On-Cloud logos and the title "Cloud Registry". Logos given as paths must be
@@ -1505,8 +1505,8 @@ policy is `Retain`.
 [cr-server]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/deployment/#server>
 [cr-service-url-schemes]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/configuration/#service-url-schemes>
 [cr-ui-verifying-images]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/operator-guide/deployment/#verifying-images>
+[cr-ui-upgrading-login]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/operator-guide/upgrading/#login-providers-instead-of-ls_login_url-and-oidc_>
 [cr-upgrading]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/upgrading/>
-[cr-upgrading-0.6.0]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/upgrading/#from-060>
 [cr-replicas]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/deployment/#replicas>
 [cr-services-per-user]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/configuration/#services-per-user>
 [cr-invitations]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/access-control/#invitations>

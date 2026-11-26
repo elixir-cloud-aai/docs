@@ -266,9 +266,10 @@ chart](https://github.com/CSCfi/helm-charts/tree/main/charts/hedgedoc).
 
 You can turn on LS Login in the MinIO console (OIDC settings) or with
 environment variables (see the [MinIO
-docs](https://min.io/docs/minio/linux/operations/external-iam/configure-openid-external-identity-management.html)):
+docs](https://min.io/docs/minio/linux/operations/external-iam/configure-openid-external-identity-management.html)),
+here in Bash:
 
-```sh
+```bash
 export MINIO_IDENTITY_OPENID_CONFIG_URL="https://login.aai.lifescience-ri.eu/oidc/.well-known/openid-configuration"
 read -r MINIO_IDENTITY_OPENID_CLIENT_ID       # paste the client ID of your LS Login service
 read -rs MINIO_IDENTITY_OPENID_CLIENT_SECRET  # paste its secret; not shown, not in the history
@@ -323,8 +324,8 @@ members may create jobs, that is, TES tasks and WES workflow runs (see
 [Access control for compute](policies.md#access-control-for-compute)).
 proTES maps it to its `user` role, and `ECP_CLN:ADMIN` to `admin`, which
 is for administration, not for running jobs: admins who run jobs join
-`ECP_CLN:EOC-Compute` too. The deployed proTES still lets `admin` create
-tasks until a rule of its configuration is removed (see
+`ECP_CLN:EOC-Compute` too; the deployed proTES lets `admin` create no
+tasks since 25 November 2026 (see
 [proTES](services/protes.md#in-the-elixir-on-cloud)). Researchers apply with
 the group's application form in Perun (see [Apply for compute
 access](../researchers/index.md#apply-for-compute-access)); the members of

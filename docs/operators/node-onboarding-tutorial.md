@@ -326,7 +326,7 @@ EOF
 read -rs TOKEN   # paste the token; it is not shown or saved in the history
 ID=$(printf 'Authorization: Bearer %s\n' "$TOKEN" | curl -fsS -X POST "${TES}/tasks" \
     -H 'Content-Type: application/json' -H @- \
-    -d @hello.json | jq -r .id)
+    -d @hello.json | jq -r '.id // empty')
 echo "${ID:?no task ID}"
 printf 'Authorization: Bearer %s\n' "$TOKEN" | curl -fsS "${TES}/tasks/${ID}?view=BASIC" -H @-
 ```
