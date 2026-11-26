@@ -113,22 +113,24 @@ join with a product that can't enforce them.
 
 - Register each GA4GH API service that your Node offers to the federation,
   e.g., TES, WES or TRS services, in the [Cloud
-  Registry][elixir-cloud-registry]. The registry lists GA4GH API services,
-  not infrastructure such as [Pubgrade][pubgrade] or its sidecars.
+  Registry][elixir-cloud-registry].
 - **Register by importing the service's service info, and keep sync on**,
   so that the entry follows your service. Enter the values by hand only as
   the [fallback](service-info.md#manual-entry-the-fallback). See [Using
   the Cloud Registry](using-cloud-registry.md#registering-a-service).
 - **The entry is yours.** Whoever registers a service owns its entry and
-  is responsible for it: keeping it correct, and correcting it. The admins
-  don't edit other operators' entries.
+  is responsible for keeping it up to date. The admins don't edit other
+  operators' entries.
 - **End every upgrade, move or change of your service by updating its
   entry, or by checking that sync did** (see [After a deployment or an
   upgrade](using-cloud-registry.md#after-a-deployment-or-an-upgrade)).
-- Ask the [admins][elixir-on-cloud-email] to verify your entry, and again
-  after you changed its URL or API type, which removes the verification.
-  What they check is in [What the admins
-  check](using-cloud-registry.md#what-the-admins-check).
+- If your service is to be part of the federation, ask the
+  [admins][elixir-on-cloud-email] to verify your entry, and again after you
+  changed its URL or API type, which removes the verification. What they
+  check is in [What the admins
+  check](using-cloud-registry.md#what-the-admins-check). Don't ask for the
+  verification of a service that you register only for tests, or that
+  isn't to join the federation yet: its entry stays unverified.
 
 ## Service info
 
@@ -242,7 +244,6 @@ for products whose service info can't be set yet.
 
 [ga4gh-service-info]: <https://github.com/ga4gh-discovery/ga4gh-service-info>
 [ls-login-terms]: <https://www.lifescience-ri.eu/terms-of-use-for-service-providers/>
-[pubgrade]: <https://github.com/elixir-cloud-aai/Pubgrade>
 [security-policy]: <https://github.com/elixir-cloud-aai/.github/blob/main/SECURITY.md>
 [sidecar-docs]: <https://pubgrade.readthedocs.io/en/latest/sidecar/>
 [tesk-api-claim-security]: <https://tesk.readthedocs.io/en/latest/tesk-api/access-control/#security-implications>
