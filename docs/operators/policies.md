@@ -7,7 +7,7 @@ last_verified: null
 ## Synopsis
 
 This page collects what the operator of a service in the ELIXIR On-Cloud
-must and should do: how users log in, who may run tasks, how services are
+must and should do: how users log in, who may run jobs, how services are
 registered and described, how they are secured and upgraded, which data
 they may hold, and whom to contact. **Must** marks a requirement, **should**
 a recommendation. Each section links to the page with the details and the
@@ -51,33 +51,33 @@ TRS-Filer, which has no authentication yet.
 ## Access control for compute
 
 These rules apply to the TES and WES services of a Node. This page says
-"tasks" for both: the tasks of a TES service and the runs of a WES
+"jobs" for both: the tasks of a TES service and the workflow runs of a WES
 service.
 
 - **Of the users, only members of the LS Login group
-  `elixir:ECP_CLN:EOC-Compute` may create tasks.** LS Login releases the membership as the
+  `elixir:ECP_CLN:EOC-Compute` may create jobs.** LS Login releases the membership as the
   `eduperson_entitlement` value
   `urn:geant:lifescience-ri.eu:group:elixir:ECP_CLN:EOC-Compute#aai.lifescience-ri.eu`.
-  The group is required only to create tasks. The parent group `ECP_CLN`
+  The group is required only to create jobs. The parent group `ECP_CLN`
   grants nothing. A user's token without the group gets `403 Forbidden`
-  when it creates a task. Listed service clients are the only exception
+  when it creates a job. Listed service clients are the only exception
   (see below). Researchers apply for the group as described in [Compute
   access](ls-login.md#compute-access).
-- **The creator of a task is its sole owner**, identified by the issuer
+- **The creator of a job is its sole owner**, identified by the issuer
   and the subject of the token. The owner may use all other operations on
-  their own tasks (get, list, cancel), also after their membership in the
+  their own jobs (get, list, cancel), also after their membership in the
   group was revoked.
-- **Listing tasks shows only the caller's own tasks.** There is no admin
-  view of other users' tasks, not even a list.
+- **Listing jobs shows only the caller's own jobs.** There is no admin
+  view of other users' jobs, not even a list.
 - **Service clients**, such as the [gateway](services/protes.md): your
   service recognises a service client by the issuer and its `client_id`,
   from an explicit allow list, and accepts as audience (`aud`) that
   client's own client ID. A listed client stands in for the
-  `EOC-Compute` group when it creates tasks and, as their creator, owns
-  them: it may get, list and cancel its own tasks, and nothing beyond, no
-  other users' tasks and no admin rights. To your service, all tasks that
+  `EOC-Compute` group when it creates jobs and, as their creator, owns
+  them: it may get, list and cancel its own jobs, and nothing beyond, no
+  other users' jobs and no admin rights. To your service, all jobs that
   the gateway creates belong to the gateway; the gateway itself keeps
-  apart which of its users created which task. The client ID of the gateway
+  apart which of its users created which job. The client ID of the gateway
   is on its [service page](services/protes.md#in-the-elixir-on-cloud);
   ask the [admins][elixir-on-cloud-email] for any other client IDs to
   list (see [Get added behind the
@@ -183,7 +183,7 @@ for products whose service info can't be set yet.
 
 - **The ELIXIR On-Cloud is a sandbox for demos and tests with synthetic or
   public data, not for personal or other sensitive data.** This applies to
-  the tasks, inputs, outputs, tools and workflows that your services hold
+  the jobs, inputs, outputs, tools and workflows that your services hold
   for the federation.
 - For the background of working with sensitive data, i.e., legal
   frameworks, Secure Processing Environments (SPEs) and the ways to reach
