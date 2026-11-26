@@ -33,7 +33,7 @@ You need:
 
 - **An LS Login account.** See [Before you start](krini.md#before-you-start)
   in the user guide.
-- **Compute access,** i.e., membership in the LS Login group
+- **Compute access,** that is, membership in the LS Login group
   `ECP_CLN:EOC-Compute`, for part 1: Krini offers the task form to its
   members, and the TES gateway of the deployment, proTES, accepts their
   tokens (see [Before you start](krini.md#before-you-start)).
@@ -195,7 +195,7 @@ run](krini.md#read-the-details-and-outputs-of-a-run)).
 
 **Result:** the outputs of the run list the file `counts.txt` with its
 address. Where the file is, and how you download it, depends on the service,
-e.g., in a bucket of its object storage. Its content is the same as in step
+for example, in a bucket of its object storage. Its content is the same as in step
 5, without the file name:
 
 ```text

@@ -130,8 +130,8 @@ nav:
     - "researchers/index.md"
     - "Use Krini": "researchers/krini.md"
     - "Use the Command Line": "researchers/cli.md"
-    - "Tutorial: First Run in Krini": "researchers/tutorial-krini.md"
-    - "Tutorial: First Run from the CLI": "researchers/tutorial-cli.md"
+    - "Tutorial: Your First Run in Krini": "researchers/tutorial-krini.md"
+    - "Tutorial: Your First Run from the Command Line": "researchers/tutorial-cli.md"
     - "Run Workflows Across Nodes": "researchers/federated-workflows.md"
     - "Crypt4GH with proTES": "researchers/crypt4gh-with-protes.md"
     - Run Interactive Services on TES:

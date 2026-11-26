@@ -156,7 +156,7 @@ operators gave you.
 Then add a `TES` and a `WES` section to `~/.ga4gh-cli/config.json` in a text
 editor. `base_path` is the root of the API of the service (see
 [Configure](cli.md#configure)): copy the `URL` from the list as it is, and
-add the path of the API only if the `URL` ends before it, e.g.,
+add the path of the API only if the `URL` ends before it, for example,
 `/ga4gh/tes/v1` for a TES service. The `URL` of proTES is its API root
 already. Your file then looks like this, with proTES as the TES service,
 and the API root of your WES service instead of `<WES API ROOT>`:
@@ -253,10 +253,11 @@ printf '%s\n' '{
   ]
 }' > count-words-task.json
 TASK_ID=$(ga4gh-cli tes create count-words-task.json)
-echo "$TASK_ID"
+echo "${TASK_ID:?no task ID, see Check for errors}"
 ```
 
-**Check:** the CLI prints the ID of the new task. If it ends with an error,
+**Check:** the CLI prints the ID of the new task. If it ends with an error
+(and `echo` says `no task ID`),
 see [Check for errors](cli.md#check-for-errors) before you send the task
 again.
 
@@ -336,7 +337,7 @@ ga4gh-cli wes get "$RUN_ID" | jq '.outputs'
 ```
 
 **Result:** `outputs` lists the file `counts.txt` with its address. Where
-the file is, and how you download it, depends on the service, e.g., in a
+the file is, and how you download it, depends on the service, for example, in a
 bucket of its object storage. Its content is the same as in step 8, without
 the file name:
 
@@ -365,7 +366,7 @@ The configuration file holds no token, so you can keep it for next time.
 
 ## Where to go next
 
-- All commands and options, e.g., to find workflows in WorkflowHub or to
+- All commands and options, for example, to find workflows in WorkflowHub or to
   attach files to a run: [Use the Command Line](cli.md).
 - Do the same in your browser: [Tutorial: Your First Run in
   Krini](tutorial-krini.md).
