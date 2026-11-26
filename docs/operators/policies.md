@@ -54,6 +54,23 @@ These rules apply to the TES and WES services of a Node. This page says
 "jobs" for both: the tasks of a TES service and the workflow runs of a WES
 service.
 
+**Why these rules.** Later on, users may run jobs on sensitive or
+controlled-access data. A job's inputs, outputs, logs, and even the fact
+that a user ran it, can then be private information. The rules make sure
+that such information doesn't leak to other users by mistake, and that a
+malicious actor who gains admin rights can't read it either: each job is
+visible to its creator only, and there is no admin view of other users'
+jobs.
+
+**Why service clients.** A gateway such as [proTES](services/protes.md)
+sends jobs to the Nodes on behalf of its users. Eventually the gateway is
+to pass each user's identity on to the Node with OAuth 2.0 token exchange
+(RFC 8693), so that the Node sees, and checks, the user who created a job.
+Token exchange with LS Login is still being tested (see [Token Exchange
+Testbed](../demos/token-exchange-testbed.md)). Until it works, the gateway
+authenticates at the Nodes with a token of its own (client credentials),
+and the Nodes list it as a service client (see below).
+
 - **Of the users, only members of the LS Login group
   `elixir:ECP_CLN:EOC-Compute` may create jobs.** LS Login releases the membership as the
   `eduperson_entitlement` value
@@ -66,7 +83,8 @@ service.
 - **The creator of a job is its sole owner**, identified by the issuer
   and the subject of the token. The owner may use all other operations on
   their own jobs (get, list, cancel), also after their membership in the
-  group was revoked.
+  group was revoked. They still need a valid LS Login access token for
+  these, as for every endpoint (see [Authentication](#authentication)).
 - **Listing jobs shows only the caller's own jobs.** There is no admin
   view of other users' jobs, not even a list.
 - **Service clients**, such as the [gateway](services/protes.md): your
@@ -82,6 +100,8 @@ service.
   ask the [admins][elixir-on-cloud-email] for any other client IDs to
   list (see [Get added behind the
   gateway](node-onboarding-tutorial.md#7-get-added-behind-the-gateway)).
+  Service clients may stay supported after the move to token exchange, for
+  tests, e.g., automated end-to-end smoke tests across the federation.
 
 How far each TES product can enforce these rules today, and how to
 configure it, is in [Enable LS Login and ECP_CLN
