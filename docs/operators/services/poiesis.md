@@ -1,5 +1,5 @@
 ---
-last_verified: 2026-11-17
+last_verified: 2026-11-26
 ---
 
 # Poiesis
@@ -46,20 +46,27 @@ upgrade](../using-cloud-registry.md#after-a-deployment-or-an-upgrade)).
   `auth.oidc.*`, without checking the groups of a user. The default branch
   takes several issuers (`auth.issuers[]`), each with a rule for a claim
   such as the groups (`requiredClaim`), and can ask a decision service
-  (OpenID AuthZEN, `authz.decisionService.*`), such as tes-authz. The check
-  for the LS Login group `ECP_CLN:EOC-Compute`, which the policy of the
-  federation requires, is tracked in [generic-issues#21][gi-21]: since
-  21 November 2026, the FI Poiesis checks the groups of LS Login tokens
-  through tes-authz.
+  (OpenID AuthZEN, `authz.decisionService.*`), such as tes-authz. The
+  policy of the federation lets only members of the LS Login group
+  `ECP_CLN:EOC-Compute` run jobs: list that group alone in the rule. The
+  check on our deployments is tracked in [generic-issues#21][gi-21].
+- The default branch can also issue API keys (`poi_…`) for clients that
+  can't refresh access tokens (`auth.apiKeys.*`; the issuer's
+  `keyMinting` lists the clients whose tokens may mint them). A key
+  carries its owner's claims as of minting, until it expires (see [API
+  keys][poiesis-api-keys] in its docs). We use them for smoke tests.
+- We recommend `name: Poiesis` and the organization that hosts the
+  service, e.g., `CSC – IT Center for Science` (see [Names and
+  organizations](../service-info.md#names-and-organizations)).
 
 ## In the ELIXIR On-Cloud
 
-As of 24 November 2026, where and how Poiesis runs may change:
+As of 26 November 2026, where and how Poiesis runs may change:
 
 | Node | TES API | Status |
 |---|---|---|
-| Czech Republic (CZ), at CERIT-SC | `https://poiesis.dyn.cloud.e-infra.cz/ga4gh/tes/v1` | answers: service info with the ID `cz.e-infra.cloud.dyn.poiesis`, environment `test`; tasks only with an access token; not behind the gateway, not in the registry yet |
-| Finland (FI), on Rahti at CSC | `https://poiesis.rahtiapp.fi/ga4gh/tes/v1` | answers: the project's default service info (ID `org.ga4gh.poiesis`); tasks only with an access token; not behind the gateway, not in the registry |
+| Czech Republic (CZ), at CERIT-SC | `https://poiesis.dyn.cloud.e-infra.cz/ga4gh/tes/v1` | default branch; service info with the ID `cz.e-infra.cloud.dyn.poiesis`, environment `test`; jobs only with an access token; not behind the gateway, not in the registry yet |
+| Finland (FI), on Rahti at CSC | `https://poiesis.rahtiapp.fi/ga4gh/tes/v1` | default branch at `fc72419` since 26 November 2026; service info with the ID `fi.rahtiapp.poiesis`, name `Poiesis`, organization `CSC – IT Center for Science`, environment `test`; LS Login tokens of `ECP_CLN:EOC-Compute` members only, checked through tes-authz; API keys on; not behind the gateway, not in the registry yet |
 
 Poiesis joins the TES services of the [gateway](protes.md) once
 [generic-issues#21][gi-21] is done. Find the
@@ -67,5 +74,6 @@ current entries in the [Cloud Registry][elixir-cloud-registry].
 
 [poiesis-020-auth]: <https://github.com/JaeAeich/poiesis/blob/v0.2.0/docs/app/docs/deploy/authentication.md>
 [poiesis-020-deploy]: <https://github.com/JaeAeich/poiesis/blob/v0.2.0/docs/app/docs/deploy/deploying-poiesis.md>
+[poiesis-api-keys]: <https://poiesis.jaeaeich.com/docs/concepts/api-keys.html>
 [poiesis-storage]: <https://poiesis.jaeaeich.com/docs/start/what-is-poiesis.html#storage-protocols>
 [gi-21]: <https://github.com/elixir-cloud-aai/generic-issues/issues/21>
