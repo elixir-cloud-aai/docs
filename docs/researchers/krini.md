@@ -27,7 +27,7 @@ there takes you to the portal address.
 | Log in and out | [LS Login](#log-in) | No other login provider. |
 | Run a task | [A form for TES tasks](#run-a-task), with your token | Only with [compute access](#before-you-start). |
 | Follow your tasks | [A list of tasks, and the details of each](#follow-your-tasks) | What a service lists depends on the service. |
-| Run a workflow | [A form for WES runs](#run-a-workflow) | No WES service can be selected yet: [none is reachable](#no-wes-service-yet). |
+| Run a workflow | [A form for WES runs](#run-a-workflow) | Two WES services are listed; none runs CWL yet (see [Which WES services you can use](#which-wes-services-you-can-use)). |
 | Follow your workflow runs | [A list of runs, and the details of each](#follow-your-workflow-runs) | As above. |
 | Use your token elsewhere | [Copy your access token](#copy-your-access-token) | Only while you are logged in. |
 
@@ -209,15 +209,20 @@ The states of a task:
 A WES service runs a whole workflow, e.g., in CWL, Nextflow, Snakemake or
 WDL, depending on the service. See [GA4GH WES][ga4gh-wes].
 
-### No WES service yet
+### Which WES services you can use
 
-As of November 2026, there is no WES service that you can select in
-Krini: the only WES service in the Cloud Registry is registered with the
-address of its service info instead of its API, so Krini leaves it out.
-Until a WES service is registered and reachable, the steps below can't be
-followed at the portal. To run workflows now, let a workflow engine send
-their tasks to a TES service (see [Run Workflows Across
-Nodes](federated-workflows.md)).
+As of 26 November 2026, Krini lists two WES services from the Cloud
+Registry. Both require a token; ask their operators whether they accept
+yours (see [Before you start](#before-you-start)):
+
+| Service | Workflow types | From Krini |
+|---|---|---|
+| **Conquest**, at CERIT-SC (CZ) | Nextflow (`NFL`, `DSL2`), Snakemake (`SMK`), WDL | Allows requests from the portal. |
+| **WESkit**, at the Berlin Institute of Health (BIH) | Nextflow (`NFL`), Snakemake (`SMK`) | Doesn't allow requests from the portal (CORS) yet, so its lists and forms fail in Krini. |
+
+Neither runs CWL yet. To run workflows on TES services now, you can also
+let a workflow engine send their tasks to a TES service (see [Run Workflows
+Across Nodes](federated-workflows.md)).
 
 ### Submit a run
 

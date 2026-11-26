@@ -18,9 +18,10 @@ field, button and message; this page doesn't repeat it.
 
 !!! note "Krini 0.1.0, part 2 not possible yet"
     This tutorial describes Krini 0.1.0 at <https://portal.elixir-on.cloud>,
-    like the [Krini user guide](krini.md). No WES service can be selected in
-    Krini yet (see [No WES service yet](krini.md#no-wes-service-yet)), so
-    for now you can follow part 1 only.
+    like the [Krini user guide](krini.md). None of the WES services in
+    Krini runs CWL yet (see [Which WES services you can
+    use](krini.md#which-wes-services-you-can-use)), so for now you can
+    follow part 1 only.
 
 !!! warning "Synthetic or public data only"
     The deployment is a sandbox for demos and tests. The demo file is public;
@@ -133,9 +134,9 @@ The numbers change if the file changes. If the state is `EXECUTOR_ERROR` or
 ## Part 2: Run a workflow
 
 !!! warning "Not possible at the portal yet"
-    No WES service can be selected in Krini yet (see [No WES service
-    yet](krini.md#no-wes-service-yet)). The steps below are for when one
-    is registered.
+    None of the WES services in Krini runs CWL yet (see [Which WES
+    services you can use](krini.md#which-wes-services-you-can-use)). The
+    steps below are for when one does.
 
 A WES service runs a whole workflow. Here, the workflow is
 [`count-words.cwl`](tutorial-files/count-words.cwl), which does the same as
