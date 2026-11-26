@@ -40,8 +40,14 @@ You need:
 - **Access to a TES service,** for part 1, and **to a WES service that runs
   CWL `v1.0`,** for part 2, and the information which LS Login tokens they accept.
 
-The deployment doesn't publish the addresses of all its services for
-researchers yet. To ask for services that you can use, write to
+The Cloud Registry lists the TES and WES services of the deployment (step
+4), but a listed service doesn't always accept your token. For part 1, the
+TES gateway of the deployment, proTES, accepts the tokens of members of the
+LS Login group `ECP_CLN:EOC-Compute` (see [Apply for compute
+access](index.md#apply-for-compute-access)). As of 26 November 2026, no
+WES service in the registry runs CWL: for part 2, you need one that you
+got access to elsewhere. To
+ask for services that you can use, write to
 [cloud-service@elixir-europe.org][elixir-on-cloud-email] and say that you
 want to follow this tutorial.
 
@@ -126,8 +132,14 @@ ga4gh-cli registry list --type tes
 ga4gh-cli registry list --type wes
 ```
 
-**Check:** the TES and WES services that you got access to are in the lists,
-with their `URL`s. If a service isn't listed, use the address that its
+**Check:** the TES list has the TES gateway of the deployment, proTES:
+
+```text
+ZNJ5SN  org.ga4gh:tes:1.1.0    https://gateway-tes.elixir-on.cloud/ga4gh/tes/v1
+```
+
+The lists also have the other TES and WES services, with their `URL`s. If a
+service that you got access to isn't listed, use the address that its
 operators gave you.
 
 !!! warning "Send your token only to services that you trust"
@@ -145,8 +157,9 @@ Then add a `TES` and a `WES` section to `~/.ga4gh-cli/config.json` in a text
 editor. `base_path` is the root of the API of the service (see
 [Configure](cli.md#configure)): copy the `URL` from the list as it is, and
 add the path of the API only if the `URL` ends before it, e.g.,
-`/ga4gh/tes/v1` for proTES. Your file then looks like this, with these API
-roots instead of `<TES API ROOT>` and `<WES API ROOT>`:
+`/ga4gh/tes/v1` for a TES service. The `URL` of proTES is its API root
+already. Your file then looks like this, with proTES as the TES service,
+and the API root of your WES service instead of `<WES API ROOT>`:
 
 ```json
 {
@@ -154,7 +167,7 @@ roots instead of `<TES API ROOT>` and `<WES API ROOT>`:
     "base_path": "https://elixir-on.cloud/ga4gh/registry/v1"
   },
   "TES": {
-    "base_path": "<TES API ROOT>",
+    "base_path": "https://gateway-tes.elixir-on.cloud/ga4gh/tes/v1",
     "oauth_access_token_env": "LS_LOGIN_TOKEN"
   },
   "WES": {
@@ -164,11 +177,9 @@ roots instead of `<TES API ROOT>` and `<WES API ROOT>`:
 }
 ```
 
-For example, a proTES at `tes.example.org` has the API root
-`https://tes.example.org/ga4gh/tes/v1`.
-
 `oauth_access_token_env` tells the CLI to send the token in the variable
 `LS_LOGIN_TOKEN`. Leave it out for a service that doesn't need a token.
+Without a WES service for part 2, leave out the `WES` section.
 
 ## 5. Log in
 
@@ -200,7 +211,8 @@ ga4gh-cli wes list
 
 The commands list your tasks and runs, or none. `401 Unauthorized` means
 that the token expired or that the service doesn't accept it: get a new one,
-or ask the operators.
+or ask the operators. Without a `WES` section, `ga4gh-cli wes list` ends
+with `Configuration file must contain a 'WES' object`: skip it.
 
 ## Part 1: Run a task
 
@@ -285,9 +297,10 @@ output in the logs; then the result is `null`.
 
 A WES service runs a whole workflow. Here, the workflow is
 [`count-words.cwl`](tutorial-files/count-words.cwl), which does the same as
-the task, and writes the result to the file `counts.txt`. Check with the
-operators of your WES service that it runs CWL `v1.0`. If no WES service
-that you can use runs it, stop after part 1 and ask the operators for
+the task, and writes the result to the file `counts.txt`. As of
+26 November 2026, none of the WES services in the Cloud Registry runs CWL.
+Check with the operators of your WES service that it runs CWL `v1.0`. If
+no WES service that you can use runs it, stop after part 1 and ask the operators for
 access to one that does: the steps below work only with CWL `v1.0`.
 
 ### 9. Start the workflow

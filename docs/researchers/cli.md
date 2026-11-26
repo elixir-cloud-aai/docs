@@ -296,12 +296,13 @@ The [Cloud Registry](../operators/using-cloud-registry.md) lists the services
 of ELIXIR On-Cloud. Anyone can read it without a token, so the `registry`
 commands work with the configuration above.
 
-!!! info "Few services are listed yet"
-    The deployment doesn't publish the addresses of all its TES, DRS and WES
-    services for researchers yet (see [Researchers: Start
-    Here](index.md#before-you-start)). Until then, the list is short. Write
-    to [cloud-service@elixir-europe.org][elixir-on-cloud-email] to ask for
-    services that you can use.
+!!! info "Listed doesn't mean that you have access"
+    A service in the registry doesn't always accept your token. The TES
+    gateway of the deployment, proTES, accepts the tokens of members of
+    `ECP_CLN:EOC-Compute` (see [Researchers: Start
+    Here](index.md#before-you-start)). For other services, write to
+    [cloud-service@elixir-europe.org][elixir-on-cloud-email] to ask for
+    access.
 
 List all services:
 
@@ -309,10 +310,14 @@ List all services:
 ga4gh-cli registry list
 ```
 
+The output has one line per service, for example (as of 26 November 2026,
+the registry lists eleven services):
+
 ```text
 ID      TYPE                              URL
-GC6ZQG  org.ga4gh:tes:unknown             https://spe4hd.tes.bihealth.org/ga4gh/tes/v1
 J0LBQG  org.ga4gh:service-registry:1.0.0  https://elixir-on.cloud/ga4gh/registry/v1
+EJW598  org.ga4gh:trs:2.0.2               https://trs-filer.rahtiapp.fi/ga4gh/trs/v2
+ZNJ5SN  org.ga4gh:tes:1.1.0               https://gateway-tes.elixir-on.cloud/ga4gh/tes/v1
 ```
 
 List only the services of one API, by the artifact of their type (`tes`,
@@ -326,7 +331,7 @@ Show all details of one service, such as its description and operator, by its
 ID, as JSON:
 
 ```bash
-ga4gh-cli registry get GC6ZQG
+ga4gh-cli registry get ZNJ5SN
 ```
 
 List the API types that the registry knows, one `group:artifact:version` per
@@ -687,21 +692,18 @@ its `--help` output and the SDK's docs, and ran it on one computer:
   a wrong token, it ended with `401 Unauthorized`.
 - **Cloud Registry of ELIXIR On-Cloud, without a token:** `registry list`,
   `registry list --type tes`, `registry get` and `registry types` gave the
-  output shown above with an earlier build of the CLI (commit `af0e021`).
-  When we tested 0.1.0, the registry didn't answer, so we didn't run them
-  again; their code in 0.1.0 differs from that build only in an error
-  message for invalid answers.
+  output shown above with release 0.1.0 on 26 November 2026.
 
 We did not run the container image, and did not run the CLI with an LS
 Login token against a deployed TES or WES service of ELIXIR On-Cloud yet.
 
 ## Where to go next
 
-- The SDK's [docs for 0.1.0](https://ga4gh-sdk.readthedocs.io/en/v0.1.0/):
-  installation and quick start with a local Funnel, the CLI (all commands),
-  configuration, authentication and the Rust library. Its
-  [latest docs](https://ga4gh-sdk.readthedocs.io/en/latest/) describe the
-  development version, which can be ahead of this page.
+- The SDK's [docs for 0.1.0](https://github.com/ga4gh/ga4gh-sdk/tree/v0.1.0/docs),
+  in its repository: installation and quick start with a local Funnel, the
+  CLI (all commands), configuration, authentication and the Rust library.
+  Its [latest docs](https://ga4gh-sdk.readthedocs.io/en/latest/) describe
+  the development version, which can be ahead of this page.
 - The [release notes of 0.1.0][sdk-release].
 - How to find services and get a token without the CLI: [Using the
   APIs](../partners-and-developers/apis.md).
