@@ -144,13 +144,24 @@ deployment](service-info.md#the-rules-of-this-deployment)). In short:
 
 - the endpoint answers without a token, without redirects, at an `https`
   URL with a valid certificate and public addresses only;
-- `id` is unique and stable, in reverse domain notation, not the default
-  of your product;
+- `id` identifies your service in the registry:
+    - unique: no other entry in the registry has it; the import refuses an
+      `id` that is taken;
+    - stable: it stays the same across upgrades and moves of your service;
+      sync checks that it doesn't change;
+    - in reverse domain notation of a domain that your organisation
+      controls, followed by a name for the service, e.g., `org.example.tes`
+      for a TES service of `example.org`;
+    - not the default of your product (e.g., `org.ga4gh.funnel`), which
+      every installation of the product reports;
 - `organization` names your Node, not the product's project;
 - `environment` is `prod` for a production service or `test` for a test
-  service;
-- `type` is one of the registered types, exactly as registered: types are
-  compared as written;
+  service; the registry refuses any other value, e.g., `dev`;
+- `type` is one of the types that the admins registered, with `group`,
+  `artifact` and `version` written exactly as registered, e.g., `tes`, not
+  `TES` (see [The rules of this
+  deployment](service-info.md#the-rules-of-this-deployment) and the
+  [checklist](service-info.md#checklist));
 - `contactUrl` says where users get support.
 
 Go through the [checklist](service-info.md#checklist) before you register,
@@ -161,8 +172,8 @@ for products whose service info can't be set yet.
 
 - Your services **must** answer at `https` URLs with a valid certificate
   for the host: the Cloud Registry accepts `https` URLs only.
-- The services of a Node keep the Node's addresses: names under
-  `elixir-on.cloud` are for central services only (see [Central
+- Your services can use any address of your own, but not names under
+  `elixir-on.cloud`: those are for central services only (see [Central
   Addresses](addresses.md)).
 - An FTP server for the files of tasks **must** require FTP over TLS
   (FTPS; see [vsftpd (FTP)](onboarding.md#vsftpd-ftp)).
