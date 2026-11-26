@@ -16,14 +16,16 @@ You need:
 
 - a Kubernetes cluster, or an HPC or HTC cluster with Slurm or OpenPBS
 - an LS Login account (see [LS Login](ls-login.md))
-- an HTTPS host name for your TES service
+- an HTTPS host name for your TES or WES service
 
 A compute Node runs at least one TES or WES service that requires LS Login
 access tokens, and registers it in the Cloud Registry (see [Who can
 join](index.md#who-can-join)). These steps cover a TES service. For a WES
 service, e.g., [WESkit](services/weskit.md),
 deploy it with the docs of its product and connect it to LS Login, then
-register it as in [step 3](#3-register-your-tes-service), with a WES type;
+register it as in [step 3](#3-register-your-tes-service), with the base URL
+of its WES API (e.g., `https://wes.example.org/ga4gh/wes/v1`) and the WES
+type instead of the TES ones;
 the ELIXIR On-Cloud has no WES gateway yet ([proWES](services/prowes.md)
 is being revived). Write to
 [cloud-service@elixir-europe.org][elixir-on-cloud-email] before you start:

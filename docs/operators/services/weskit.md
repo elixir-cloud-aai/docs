@@ -78,8 +78,13 @@ Set `login.enabled: true` and the `jwt` options of the config file as in
 with the issuer and keys of LS Login and your service's client (see [LS
 Login](../ls-login.md)). WESkit then requires a token for every endpoint of
 runs, and shows each user only their own runs. It checks the token's
-signature, issuer and audience, not the user's groups: who may use your
-instance is up to how you register and run it at LS Login.
+signature, issuer and audience, not the user's groups. So on its own,
+WESkit doesn't enforce the rule of the [policies](../policies.md) that
+only members of the LS Login group `elixir:ECP_CLN:EOC-Compute` can create
+jobs: anyone with a valid token for its audience can start runs. Before
+you register it, write to the
+[admins][elixir-on-cloud-email] about how your instance meets that rule,
+e.g., with a proxy in front of it that checks the group.
 
 ## WESkit at BIH
 
