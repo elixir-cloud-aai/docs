@@ -61,7 +61,7 @@ membership.
 
 LS Login keeps its users, groups and services in Perun:
 
-- A **virtual organisation** (VO) holds groups, e.g., `example_vo` with
+- A **virtual organisation** (VO) holds groups, for example, `example_vo` with
   the group `example_group`.
 - A **facility** represents a client (a registered service) in Perun.
 - A **resource** connects a facility with a VO. Groups of the VO are
@@ -82,7 +82,7 @@ Cloud Registry) see the groups of that client; they don't need the groups
 on a facility of their own. A client that only gets tokens for a service
 itself (client credentials), with no users, needs no groups.
 
-Assign only the groups that the services map to roles, e.g.,
+Assign only the groups that the services map to roles, for example,
 `example_vo:example_group:admins` for admins, not every group of the VO.
 
 With [token exchange](../demos/token-exchange-testbed.md), the LS Login
@@ -270,11 +270,12 @@ docs](https://min.io/docs/minio/linux/operations/external-iam/configure-openid-e
 
 ```sh
 export MINIO_IDENTITY_OPENID_CONFIG_URL="https://login.aai.lifescience-ri.eu/oidc/.well-known/openid-configuration"
-export MINIO_IDENTITY_OPENID_CLIENT_ID="<ID of the LS Login service>"
-export MINIO_IDENTITY_OPENID_CLIENT_SECRET="<Secret of the LS Login service>"
-export MINIO_IDENTITY_OPENID_DISPLAY_NAME="<Label of the login button, e.g., LS Login>"
-export MINIO_IDENTITY_OPENID_SCOPES="<Scopes to request, e.g., openid,email,profile>"
-export MINIO_IDENTITY_OPENID_ROLE_POLICY="<Policy for LS Login users, e.g., readonly>"
+read -r MINIO_IDENTITY_OPENID_CLIENT_ID       # paste the client ID of your LS Login service
+read -rs MINIO_IDENTITY_OPENID_CLIENT_SECRET  # paste its secret; not shown, not in the history
+export MINIO_IDENTITY_OPENID_CLIENT_ID MINIO_IDENTITY_OPENID_CLIENT_SECRET
+export MINIO_IDENTITY_OPENID_DISPLAY_NAME="LS Login"          # label of the login button
+export MINIO_IDENTITY_OPENID_SCOPES="openid,email,profile"    # scopes to request
+export MINIO_IDENTITY_OPENID_ROLE_POLICY="readonly"           # policy for LS Login users
 export MINIO_IDENTITY_OPENID_CLAIM_USERINFO="on"
 ```
 
@@ -318,7 +319,7 @@ claim, read access to the bucket `sensitive`:
 
 Researchers get access to the compute services of the deployment, such as
 proTES, through the LS Login group `ECP_CLN:EOC-Compute`: only its
-members may create jobs, i.e., TES tasks and WES workflow runs (see
+members may create jobs, that is, TES tasks and WES workflow runs (see
 [Access control for compute](policies.md#access-control-for-compute)).
 proTES maps it to its `user` role, and `ECP_CLN:ADMIN` to `admin`, which
 is for administration, not for running jobs: admins who run jobs join
