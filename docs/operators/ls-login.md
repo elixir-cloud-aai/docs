@@ -318,11 +318,11 @@ claim, read access to the bucket `sensitive`:
 
 Researchers get access to the compute services of the deployment, such as
 proTES, through the LS Login group `ECP_CLN:EOC-Compute`: only its
-members may create tasks (see [Access control for
-compute](policies.md#access-control-for-compute)). proTES maps it to its
-`user` role, and `ECP_CLN:ADMIN` to `admin`, which is for administration,
-not for running tasks: admins who run tasks join `ECP_CLN:EOC-Compute`
-too. Researchers apply with
+members may create jobs, i.e., TES tasks and WES workflow runs (see
+[Access control for compute](policies.md#access-control-for-compute)).
+proTES maps it to its `user` role, and `ECP_CLN:ADMIN` to `admin`, which
+is for administration, not for running jobs: admins who run jobs join
+`ECP_CLN:EOC-Compute` too. Researchers apply with
 the group's application form in Perun (see [Apply for compute
 access](../researchers/index.md#apply-for-compute-access)); the members of
 `ECP_CLN:ADMIN` approve or reject the applications.
