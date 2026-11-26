@@ -31,7 +31,7 @@ As of November 2026:
 | What | Value |
 |---|---|
 | Address | <https://trs-filer.rahtiapp.fi/ga4gh/trs/v2> |
-| Version | A development build after the release 0.5.0, with TRS 2.0.2 (0.5.0 reports TRS 2.0.1 and has no authentication); its service info gives the exact version |
+| Version | A development build after the release 0.5.0, with TRS 2.0.2 and tokens for writes, as in the next release, 0.6.0 (0.5.0 reports TRS 2.0.1 and has no authentication); its service info gives the exact version |
 | Environment | `test` |
 | Reads | public, without a token |
 | Writes | with LS Login access tokens, under the same access rules as the [Cloud Registry](../using-cloud-registry.md) |

@@ -19,8 +19,8 @@ What a data centre can offer today, and what is planned:
 | Offer | Product | Status |
 |---|---|---|
 | Storage for the inputs and outputs of tasks | an S3 or FTP server, e.g., [MinIO][minio] or [vsftpd][vsftpd] | available: see [step 2](#2-offer-storage-for-tasks) |
-| Tools and workflows, through the TRS API | [TRS-Filer](services/trsfiler.md) 0.5.0 | available, without authentication of writes: see [step 3](#3-deploy-trs-filer) |
-| Data objects, through the [DRS API][ga4gh-drs] | [DRS-Filer](services/drsfiler.md) | being revived: not covered here yet |
+| Tools and workflows, through the TRS API | [TRS-Filer](services/trsfiler.md) 0.5.0 | available; 0.5.0 has no authentication, so writes are restricted in front of it (tokens for writes come with 0.6.0): see [step 3](#3-deploy-trs-filer) |
+| Data objects, through the [DRS API][ga4gh-drs] | [DRS-Filer](services/drsfiler.md) | being revived, no release yet: not covered here yet |
 
 The commands and values on this page come from the docs of each product,
 at the versions in the table below. For anything else, follow the linked
@@ -71,7 +71,8 @@ You need:
   e.g., from Let's Encrypt with cert-manager. The Cloud Registry of this
   deployment accepts `https` URLs only, and TRS-Filer advertises
   `https://<host name>` in its responses.
-- **A way to restrict writes.** TRS-Filer 0.5.0 has no authentication
+- **A way to restrict writes.** TRS-Filer 0.5.0 has no authentication;
+  tokens for writes come with 0.6.0
   (see [step 3](#restrict-writes)): your Ingress controller or a proxy in
   front of the cluster must allow `POST`, `PUT` and `DELETE` only from
   trusted clients. On OpenShift, this needs a proxy in front of the
@@ -210,11 +211,12 @@ deploy/trs-filer -n trs`).
 
 TRS-Filer 0.5.0 has no authentication: anyone who reaches the API can
 register, replace and delete tools (see [Access
-control][trsfiler-access-control]). Tokens for writes are on TRS-Filer's
-default branch and come with the next release
-([trs-filer#7][trsfiler-7]); the [TRS-Filer of the
-deployment](services/trsfiler.md#in-the-elixir-on-cloud) runs such a
-development build. Until then:
+control][trsfiler-access-control]). From 0.6.0, the next release,
+TRS-Filer requires access tokens for all writes itself
+([trs-filer#7][trsfiler-7]; see its [access
+control][trsfiler-access-control-latest] page on the default branch); the
+[TRS-Filer of the deployment](services/trsfiler.md#in-the-elixir-on-cloud)
+already runs such a development build. With 0.5.0:
 
 - Let your Ingress controller or a proxy in front of the cluster allow
   only `GET`, `HEAD` and `OPTIONS` from the public, and the other methods
@@ -362,8 +364,8 @@ or an upgrade](using-cloud-registry.md#after-a-deployment-or-an-upgrade).
 
 ## Planned
 
-These are on TRS-Filer's default branch and come with its next release;
-this tutorial will then move to that release.
+These are on TRS-Filer's default branch and come with its next release,
+0.6.0; this tutorial will then move to that release.
 
 - **Writes with tokens** in TRS-Filer ([trs-filer#7][trsfiler-7]), which
   replace the restriction of writes at the Ingress controller or proxy.
@@ -375,6 +377,7 @@ this tutorial will then move to that release.
 [trsfiler-7]: <https://github.com/elixir-cloud-aai/trs-filer/issues/7>
 [trsfiler-135]: <https://github.com/elixir-cloud-aai/trs-filer/issues/135>
 [trsfiler-access-control]: <https://trs-filer.readthedocs.io/en/v0.5.0/access-control/>
+[trsfiler-access-control-latest]: <https://trs-filer.readthedocs.io/en/latest/access-control/>
 [trsfiler-configuration]: <https://trs-filer.readthedocs.io/en/v0.5.0/deployment/#configuration>
 [trsfiler-deployment]: <https://trs-filer.readthedocs.io/en/v0.5.0/deployment/>
 [trsfiler-docs]: <https://trs-filer.readthedocs.io/en/v0.5.0/>
