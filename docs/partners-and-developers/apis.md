@@ -81,8 +81,7 @@ These services of the deployment accept LS Login access tokens:
 | Cloud Registry | writes; reads are public |
 | [WESkit](https://gitlab.com/one-touch-pipeline/weskit/documentation) at the Berlin Institute of Health (BIH) | as its operators set it up |
 
-Find their addresses in the Cloud Registry (step 1). proTES and TRS-Filer
-aren't registered yet: their pages give their addresses.
+Find their addresses in the Cloud Registry (step 1).
 
 !!! note "Your client ID must be accepted by the service"
     A service accepts tokens only for the client IDs on its

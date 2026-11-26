@@ -11,12 +11,9 @@ Registry, log in with an LS Login token, send tasks to a [GA4GH
 TES][ga4gh-tes] service such as the proTES gateway, run workflows on a [GA4GH
 WES][ga4gh-wes] service, find workflows in a [GA4GH TRS][ga4gh-trs] registry
 such as WorkflowHub, and look up objects in a [GA4GH DRS][ga4gh-drs] service.
-The tool is at an early stage and has no releases yet. This page describes
-what it does today and what is planned. For the full reference, see the
-[SDK's own docs](#where-to-go-next).
-
-!!! warning "What the CLI can't do yet"
-    - **No ready-made binaries:** you build the CLI from its source code.
+This page describes [release 0.1.0][sdk-release], the first release of the
+SDK. It is a prerelease: commands and options may still change before 1.0.
+For the full reference, see the [SDK's own docs](#where-to-go-next).
 
 ## What works now
 
@@ -36,24 +33,106 @@ guide](https://github.com/ga4gh/ga4gh-sdk/blob/main/docs/workflow-contracts.md))
 
 ## Install
 
-The project publishes no binaries or packages, so you build the CLI from its
-source code. You need Git and [Rust](https://www.rust-lang.org/tools/install),
-installed with `rustup`. The repository pins the version of Rust that it
-needs, and `rustup` installs it on the first build.
+[Release 0.1.0][sdk-release] has a ready-made `ga4gh-cli` for Linux, macOS
+and Windows, on x86-64 and arm64, and a container image. The Python package
+`ga4gh-sdk` on PyPI holds only the library, not the CLI.
+
+### Download the binary
+
+Download the archive for your system and the file `SHA256SUMS` into a new,
+empty folder, check the archive against its line in `SHA256SUMS`, unpack it
+and put the CLI into `~/.local/bin`. Every command runs only if the one
+before it succeeded. For Linux on x86-64:
+
+```bash
+version=0.1.0
+target=x86_64-unknown-linux-gnu
+archive="ga4gh-cli-$version-$target.tar.gz"
+base="https://github.com/ga4gh/ga4gh-sdk/releases/download/v$version"
+(
+  cd "$(mktemp -d)" &&
+  curl --fail --location --remote-name "$base/$archive" &&
+  curl --fail --location --remote-name "$base/SHA256SUMS" &&
+  grep " $archive\$" SHA256SUMS > archive.sha256 &&
+  sha256sum --check archive.sha256 &&
+  tar -xzf "$archive" &&
+  mkdir -p ~/.local/bin &&
+  mv "ga4gh-cli-$version-$target/ga4gh-cli" ~/.local/bin/ &&
+  rm -r "$PWD"
+) && ~/.local/bin/ga4gh-cli --version
+```
+
+`sha256sum` prints `OK` after the name of the archive. If a download fails,
+`SHA256SUMS` has no line for the archive, or the checksum doesn't match,
+the commands after it don't run, and nothing is installed. The last command
+prints `ga4gh-cli 0.1.0`. If the shell doesn't find `ga4gh-cli` when you
+run it without its folder, add `~/.local/bin` to your `PATH`, for example
+with `export PATH="$HOME/.local/bin:$PATH"`.
+
+For another system, set `target` from the table below. On macOS, write
+`shasum -a 256 --check` instead of `sha256sum --check`. On Windows,
+download the `.zip` archive, compare its SHA-256 checksum with its line in
+`SHA256SUMS`, for example with `Get-FileHash` in PowerShell, and unpack it.
+
+| System | `target` | Archive |
+|---|---|---|
+| Linux, x86-64 | `x86_64-unknown-linux-gnu` | `.tar.gz` |
+| Linux, arm64 | `aarch64-unknown-linux-gnu` | `.tar.gz` |
+| macOS, Intel | `x86_64-apple-darwin` | `.tar.gz` |
+| macOS, Apple silicon | `aarch64-apple-darwin` | `.tar.gz` |
+| Windows, x86-64 | `x86_64-pc-windows-msvc` | `.zip`, with `ga4gh-cli.exe` |
+| Windows, arm64 | `aarch64-pc-windows-msvc` | `.zip`, with `ga4gh-cli.exe` |
+
+The Linux binaries need glibc 2.34 or newer (for example Ubuntu 22.04,
+Debian 12 or RHEL 9), OpenSSL 3 and CA certificates. The binaries aren't
+signed, so macOS may block them until you remove the quarantine attribute
+with `xattr -d com.apple.quarantine ~/.local/bin/ga4gh-cli`. The checksum
+only shows that the download is complete and matches the release; before
+you remove the quarantine, also check that the archive was built by the
+SDK's release workflow: with the [GitHub CLI](https://cli.github.com/), add
+the line `gh attestation verify "$archive" --repo ga4gh/ga4gh-sdk &&` after
+the checksum line (see the SDK's [installation guide][sdk-install]).
+
+### Run the container image
+
+With Docker, run the CLI from the image `ghcr.io/ga4gh/ga4gh-cli:0.1.0`, for
+`linux/amd64` and `linux/arm64`; pulling it needs no login. The arguments
+after the image name go to `ga4gh-cli`. Mount your configuration (see
+[Configure](#configure)) read-only, and the folder with your task files as
+the working directory `/work`:
+
+```bash
+docker run --rm --user "$(id -u):$(id -g)" \
+  --volume "$HOME/.ga4gh-cli:/home/ga4gh/.ga4gh-cli:ro" \
+  --volume "$PWD:/work:ro" \
+  ghcr.io/ga4gh/ga4gh-cli:0.1.0 tes create task.json
+```
+
+`--user` runs the container with your user ID instead of its own (10001),
+so that it can read your configuration file, which only you can read (see
+[Configure](#configure)). To pass a token in a variable (see [Log in with LS
+Login](#log-in-with-ls-login)), add `--env LS_LOGIN_TOKEN`. The SDK's
+[container image guide][sdk-image] has the details.
+
+### Build from source
+
+On other systems, build the CLI from its source code. You need Git and
+[Rust](https://www.rust-lang.org/tools/install), installed with `rustup`. The
+repository pins the version of Rust that it needs, and `rustup` installs it
+on the first build. On Linux, you also need the OpenSSL development files and
+`pkg-config` (`libssl-dev pkg-config` on Debian and Ubuntu).
 
 ```bash
 git clone https://github.com/ga4gh/ga4gh-sdk.git
 cd ga4gh-sdk
-git checkout af0e021   # the commit that this page describes
+git checkout v0.1.0   # the release that this page describes
 cargo install --path cli --locked
 ga4gh-cli --version
 ```
 
 `cargo install` puts the program `ga4gh-cli` into `~/.cargo/bin`, which
 `rustup` adds to your `PATH`. Without `git checkout`, you get the latest
-version, which can differ from this page. See
-[Installation](https://github.com/ga4gh/ga4gh-sdk#installation) in the SDK's
-README.
+version, which can differ from this page.
 
 ## Configure
 
@@ -167,8 +246,10 @@ checks the service (`service-info`).
 1. **Get an access token** as [Using the
    APIs](../partners-and-developers/apis.md#2-get-an-access-token)
    describes, and ask the operators of the service which LS Login clients it
-   accepts. The CLI doesn't log in itself: it sends the token that you give
-   it.
+   accepts. The CLI sends the token that you give it. (Version 0.1.0 can
+   also log in itself, with `ga4gh-cli login` and the OpenID Connect device
+   flow; this page doesn't cover that yet, see [What this page doesn't
+   cover](#what-this-page-doesnt-cover).)
 2. **Put the token into a variable** in the terminal where you use the CLI.
    The token isn't shown and isn't saved in the history of the shell:
 
@@ -215,12 +296,13 @@ The [Cloud Registry](../operators/using-cloud-registry.md) lists the services
 of ELIXIR On-Cloud. Anyone can read it without a token, so the `registry`
 commands work with the configuration above.
 
-!!! info "Few services are listed yet"
-    The deployment doesn't publish the addresses of all its TES, DRS and WES
-    services for researchers yet (see [Researchers: Start
-    Here](index.md#before-you-start)). Until then, the list is short. Write
-    to [cloud-service@elixir-europe.org][elixir-on-cloud-email] to ask for
-    services that you can use.
+!!! info "Listed doesn't mean that you have access"
+    A service in the registry doesn't always accept your token. The TES
+    gateway of the deployment, proTES, accepts the tokens of members of
+    `ECP_CLN:EOC-Compute` (see [Researchers: Start
+    Here](index.md#before-you-start)). For other services, write to
+    [cloud-service@elixir-europe.org][elixir-on-cloud-email] to ask for
+    access.
 
 List all services:
 
@@ -228,10 +310,14 @@ List all services:
 ga4gh-cli registry list
 ```
 
+The output has one line per service, for example (as of 26 November 2026,
+the registry lists eleven services):
+
 ```text
 ID      TYPE                              URL
-GC6ZQG  org.ga4gh:tes:unknown             https://spe4hd.tes.bihealth.org/ga4gh/tes/v1
 J0LBQG  org.ga4gh:service-registry:1.0.0  https://elixir-on.cloud/ga4gh/registry/v1
+EJW598  org.ga4gh:trs:2.0.2               https://trs-filer.rahtiapp.fi/ga4gh/trs/v2
+ZNJ5SN  org.ga4gh:tes:1.1.0               https://gateway-tes.elixir-on.cloud/ga4gh/tes/v1
 ```
 
 List only the services of one API, by the artifact of their type (`tes`,
@@ -245,7 +331,7 @@ Show all details of one service, such as its description and operator, by its
 ID, as JSON:
 
 ```bash
-ga4gh-cli registry get GC6ZQG
+ga4gh-cli registry get ZNJ5SN
 ```
 
 List the API types that the registry knows, one `group:artifact:version` per
@@ -576,53 +662,58 @@ end with the exit code `1` on errors and `2` on missing arguments, like the
     This doesn't send the headers of the answer; add them if the service
     returns any.
 
-## What's coming
+## What this page doesn't cover
 
-These features are in the GA4GH SDK after the commit that this page
-describes (`af0e021`), or come with its first release. This page will be
-updated when it moves to a newer commit or a release.
+Version 0.1.0 has more commands than this page shows. The SDK's docs describe
+them; we haven't tested them with the services of ELIXIR On-Cloud yet:
 
-| Feature | Status |
-|---|---|
-| Ready-made binaries, without Rust | The release workflow on the default branch builds them for each version tag (`v*`) ([ga4gh-sdk#91](https://github.com/ga4gh/ga4gh-sdk/issues/91)); none published yet, as the SDK has no release yet. |
-| A container image of the CLI | The release workflow on the default branch builds it for each version tag (`v*`) ([ga4gh-sdk#189](https://github.com/ga4gh/ga4gh-sdk/issues/189)); none published yet, as the SDK has no release yet. |
-| Download the logs and output files of TES tasks | On the default branch since 2026-11-15 ([ga4gh-sdk#188](https://github.com/ga4gh/ga4gh-sdk/issues/188)). |
-| Log in with the OpenID Connect device flow, which LS Login offers | On the default branch since 2026-11-15 ([ga4gh-sdk#248](https://github.com/ga4gh/ga4gh-sdk/pull/248)); see the SDK's [authentication guide](https://github.com/ga4gh/ga4gh-sdk/blob/main/docs/authentication.md). |
+| Commands | What they do | Docs |
+|---|---|---|
+| `ga4gh-cli tes files`, `tes log` and `tes save` | List, show and download the logs and output files of a TES task. | [TES logs and output files][sdk-tes-files] |
+| `ga4gh-cli login` and `logout` | Get a token from an OpenID Connect provider with the device flow, refresh it, and delete it. | [CLI login with OpenID Connect][sdk-login] |
+| `ga4gh-cli service-info` | Show the service info of a configured service as JSON. | [Service Info command][sdk-service-info] |
+| `ga4gh-cli workflow` | Client-side checks of workflow runs, which submit through WES. | [Workflow contracts][sdk-workflow] |
 
 ## How this page was tested
 
-We built the CLI at commit `af0e021` of the SDK in the `rust:1.97` container
-image and checked every command and option on this page against its `--help`
-output and the SDK's docs. Then we ran it on one computer:
+We downloaded the binary of release 0.1.0 for Linux on x86-64, checked it
+against `SHA256SUMS`, checked every command and option on this page against
+its `--help` output and the SDK's docs, and ran it on one computer:
 
-- **Cloud Registry of ELIXIR On-Cloud, without a token:** `registry list`,
-  `registry list --type tes`, `registry get` and `registry types` gave the
-  output shown above.
 - **WorkflowHub, without a token:** all `trs` commands on this page for
   workflow `3`, version `1`, including the download with `--zip`.
-- **Local mock service, with its APIs at `/ga4gh/tes/v1` and
-  `/ga4gh/wes/v1`, as in proTES and WESkit, and a test token in
-  `LS_LOGIN_TOKEN`:** all `tes` and `wes` commands on this page reached the
-  right paths and sent the token, also to `service-info`, with profiles
-  chosen by `--profile` and `GA4GH_CLI_PROFILE`. Without the variable, the CLI
-  stopped before any request; with a wrong token, it ended with `401
-  Unauthorized`.
+- **Local mock service, with its APIs at `/ga4gh/tes/v1`, `/ga4gh/wes/v1`
+  and `/ga4gh/drs/v1`, as in proTES, WESkit and DRS-Filer, and a test token
+  in `LS_LOGIN_TOKEN`:** all `tes`, `wes` and `drs` commands on this page
+  reached the right paths, and the `tes` and `wes` commands sent the token,
+  also to `service-info`. Profiles chosen by `--profile`, before or after
+  the command, and by `GA4GH_CLI_PROFILE` worked. The CLI printed the error
+  messages that this page quotes. Without the variable, the CLI stopped before any request; with
+  a wrong token, it ended with `401 Unauthorized`.
+- **Cloud Registry of ELIXIR On-Cloud, without a token:** `registry list`,
+  `registry list --type tes`, `registry get` and `registry types` gave the
+  output shown above with release 0.1.0 on 26 November 2026.
 
-We did not run the CLI with an LS Login token against a deployed TES or WES
-service of ELIXIR On-Cloud yet. The `drs` commands are unchanged since the
-previous version of this page, which tested them against a mock service.
+We did not run the container image, and did not run the CLI with an LS
+Login token against a deployed TES or WES service of ELIXIR On-Cloud yet.
 
 ## Where to go next
 
-- The SDK's docs: its [README](https://github.com/ga4gh/ga4gh-sdk#readme)
-  (install and quick start with a local Funnel), the [CLI
-  README](https://github.com/ga4gh/ga4gh-sdk/blob/main/cli/README.md) (all
-  commands), the [usage
-  guide](https://github.com/ga4gh/ga4gh-sdk/blob/main/docs/usage.md)
-  (configuration and the Rust library) and the [authentication
-  guide](https://github.com/ga4gh/ga4gh-sdk/blob/main/docs/authentication.md).
-  They describe the latest version, which can be ahead of this page.
+- The SDK's [docs for 0.1.0](https://github.com/ga4gh/ga4gh-sdk/tree/v0.1.0/docs),
+  in its repository: installation and quick start with a local Funnel, the
+  CLI (all commands), configuration, authentication and the Rust library.
+  Its [latest docs](https://ga4gh-sdk.readthedocs.io/en/latest/) describe
+  the development version, which can be ahead of this page.
+- The [release notes of 0.1.0][sdk-release].
 - How to find services and get a token without the CLI: [Using the
   APIs](../partners-and-developers/apis.md).
 - Questions: the [Discussions][elixir-on-cloud-forum] or the
   [About](../about.md) page.
+
+[sdk-release]: <https://github.com/ga4gh/ga4gh-sdk/releases/tag/v0.1.0>
+[sdk-install]: <https://github.com/ga4gh/ga4gh-sdk/blob/v0.1.0/README.md#download-the-cli>
+[sdk-image]: <https://github.com/ga4gh/ga4gh-sdk/blob/v0.1.0/docs/container-image.md>
+[sdk-tes-files]: <https://github.com/ga4gh/ga4gh-sdk/blob/v0.1.0/cli/README.md#tes-logs-and-output-files>
+[sdk-login]: <https://github.com/ga4gh/ga4gh-sdk/blob/v0.1.0/docs/authentication.md#cli-login-with-openid-connect>
+[sdk-service-info]: <https://github.com/ga4gh/ga4gh-sdk/blob/v0.1.0/cli/README.md#service-info-command>
+[sdk-workflow]: <https://github.com/ga4gh/ga4gh-sdk/blob/v0.1.0/docs/workflow-contracts.md>

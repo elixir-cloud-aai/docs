@@ -95,7 +95,9 @@ of the ELIXIR On-Cloud, the admins check with you, its owner, that:
   public, with sync on (see above).
 - **The service isn't open to anyone:** it accepts requests only from the
   users that the policy of the federation allows, e.g., for a TES service,
-  members of the LS Login group `ECP_CLN` (see [Enable LS Login and ECP_CLN
+  members of the LS Login group `ECP_CLN:EOC-Compute` (see [Access control
+  for compute](policies.md#access-control-for-compute) and [Enable LS Login
+  and ECP_CLN
   access](node-onboarding-tutorial.md#3-enable-ls-login-and-ecp_cln-access)),
   and from the gateway. A service that can't check the group itself meets
   this only if it accepts nothing but the credentials of the gateway, which

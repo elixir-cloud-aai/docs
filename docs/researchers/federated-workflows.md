@@ -51,11 +51,7 @@ You need:
 - the address of a proTES gateway, and an access token for it: e.g., the
   deployment's proTES at `https://gateway-tes.elixir-on.cloud`, with an
   LS Login access token from Krini (see [Which TES services you can
-  use](index.md#which-tes-services-you-can-use)). Tasks sent to the
-  deployment's proTES fail for now, as its only TES service requires a
-  token that proTES doesn't send yet (see
-  [proTES](../operators/services/protes.md#in-the-elixir-on-cloud)); use
-  a gateway of your own until then;
+  use](index.md#which-tes-services-you-can-use));
 - the addresses of the TES services that the notebook runs the workflow on
   one by one, and their credentials: the TES services behind your gateway,
   or others that you may use;

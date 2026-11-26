@@ -35,8 +35,9 @@ deployment.
 These pages are for compute Nodes. A compute Node joins the federation with
 at least one TES or WES service that requires LS Login access tokens, and
 registers it in the Cloud Registry. Data nodes, which offer cloud storage or
-data through the [GA4GH DRS][ga4gh-drs] API, may join too: their
-requirements will follow. [Tutorial: Onboard a Data
+data through the [GA4GH DRS][ga4gh-drs] API, may join too: the
+requirements on [Policies and Requirements](policies.md) apply to them as
+far as they say so; those specific to data nodes will follow. [Tutorial: Onboard a Data
 Centre](data-centre-onboarding-tutorial.md) shows what they can offer
 today. Write to the admins at
 [cloud-service@elixir-europe.org][elixir-on-cloud-email] before you start.
@@ -54,6 +55,7 @@ today. Write to the admins at
 | Page | What it covers |
 |---|---|
 | [Central Addresses](addresses.md) | The addresses of the deployment's central services: portal, Cloud Registry, TES gateway and others. |
+| [Policies and Requirements](policies.md) | What the operator of a service must and should do: authentication, access control, registry entry, service info, security, upgrades, data and contact. |
 | [Onboarding](onboarding.md) | The steps for a Node to join the federation. |
 | [Tutorial: Onboard a Node](node-onboarding-tutorial.md) | Step by step, from a cluster to a registered, verified TES service behind the gateway. |
 | [Tutorial: Onboard a Data Centre](data-centre-onboarding-tutorial.md) | Step by step, from a cluster to storage for tasks and a registered, verified TRS service. |
