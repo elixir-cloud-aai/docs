@@ -20,12 +20,12 @@ product docs: they are the reference, and this page doesn't repeat them.
 
 | Product | Version | Role |
 |---|---|---|
-| [TESK][tesk] (Helm chart) | 0.3.0, with tesk-api 1.2.0 | TES service for Kubernetes |
+| [TESK][tesk] (Helm chart) | 0.4.0, with tesk-api 2.0.0 (TES 1.1) | TES service for Kubernetes |
 | [Poiesis](services/poiesis.md) | 0.2.0 | TES service for Kubernetes (alternative) |
 | [Funnel][funnel] | 0.12.3 | TES service for HPC and HTC clusters (alternative) |
 | [Cloud Registry][cr-docs] | 1.0.0rc2 | Registry of the services |
 | [proTES][protes-docs] | 0.6.0 | Gateway in front of the TES services |
-| [Pubgrade-Sidecar][sidecar-docs] | 0.2.0 | Automatic upgrades (optional) |
+| [Pubgrade-Sidecar][sidecar-docs] | 0.3.0 | Automatic upgrades (optional) |
 
 !!! note "Before you start"
     A compute Node runs at least one TES or WES service that requires LS
@@ -33,8 +33,10 @@ product docs: they are the reference, and this page doesn't repeat them.
     the admins check before they verify a service is in [What the admins
     check](using-cloud-registry.md#what-the-admins-check). Write to
     [cloud-service@elixir-europe.org][elixir-on-cloud-email] before you
-    start. The steps below have not yet been tested by an operator who
-    didn't write them: please report what doesn't work.
+    start. A reader who didn't write the steps below ran them on a local
+    test cluster: steps 2, 4 (with authentication off) and 8. The steps
+    that need LS Login, the registry or the admins haven't been tested
+    that way yet: please report what doesn't work.
 
 ## 1. Prerequisites
 
@@ -62,9 +64,9 @@ You need:
   token](../partners-and-developers/apis.md#2-get-an-access-token)). The
   client must be allowed the scope `eduperson_entitlement`, which releases
   the groups of a user. For the tests, your account must be a member of the
-  LS Login group `ECP_CLN` or one of its subgroups (see [step
-  3](#3-enable-ls-login-and-ecp_cln-access)): ask the
-  [admins][elixir-on-cloud-email].
+  LS Login group `ECP_CLN:EOC-Compute` (see [step
+  3](#3-enable-ls-login-and-ecp_cln-access) and [Apply for compute
+  access](../researchers/index.md#apply-for-compute-access)).
 
 ## 2. Deploy a TES service
 
@@ -75,11 +77,11 @@ today:
 |---|---|---|---|
 | Runs on | Kubernetes, OpenShift | Kubernetes 1.29+ | HPC, HTC (e.g., Slurm) |
 | Validates LS Login tokens | yes, with gaps (see [step 3](#3-enable-ls-login-and-ecp_cln-access)) | yes (OIDC issuer and audience) | yes (OIDC issuer and audience) |
-| Access by membership in `ECP_CLN` | by a claim of the user info | no, any valid token ([generic-issues#21][gi-21]) | no, any valid token ([generic-issues#20][gi-20]) |
+| Access by membership in `ECP_CLN:EOC-Compute` | by a claim of the user info | no, any valid token ([generic-issues#21][gi-21]) | no, any valid token ([generic-issues#20][gi-20]) |
 | Service info for the registry | set in the chart's values: import | fixed by the code: manual entry ([JaeAeich/poiesis#112][poiesis-112]) | fixed by the code: manual entry ([calypr/funnel#1493][funnel-1493]) |
 
-**Poiesis and Funnel can't enforce the `ECP_CLN` policy yet:** they accept
-every valid token of the provider, so anyone with an LS Login account who
+**Poiesis and Funnel can't enforce the `ECP_CLN:EOC-Compute` policy
+yet:** they accept every valid token of the provider, so anyone with an LS Login account who
 gets such a token could run tasks on your cluster. Ask the
 [admins][elixir-on-cloud-email] before you join with one of them.
 
@@ -94,7 +96,7 @@ docs and continue with [step 3](#3-enable-ls-login-and-ecp_cln-access):
 ### Install TESK
 
 The [deployment guide of TESK][tesk-deployment] covers the installation;
-this is the short path. Download chart 0.3.0 from its release, check that
+this is the short path. Download chart 0.4.0 from its release, check that
 TESK's release workflow built and signed it from the release tag (with the
 [GitHub CLI](https://cli.github.com/) and
 [cosign](https://docs.sigstore.dev/cosign/system_config/installation/), see
@@ -103,20 +105,19 @@ files in the chart directory:
 
 ```bash
 set -e  # stop if a check fails (Bash; in Fish, run the commands one by one)
-gh release download v0.3.0 --repo elixir-cloud-aai/TESK --pattern 'tesk-*'
-gh attestation verify tesk-0.3.0.tgz --repo elixir-cloud-aai/TESK \
+gh release download v0.4.0 --repo elixir-cloud-aai/TESK --pattern 'tesk-*'
+gh attestation verify tesk-0.4.0.tgz --repo elixir-cloud-aai/TESK \
     --signer-workflow elixir-cloud-aai/TESK/.github/workflows/release.yml \
-    --source-ref refs/tags/v0.3.0
-cosign verify-blob tesk-0.3.0.tgz --bundle tesk-0.3.0.tgz.sigstore.json \
-    --certificate-identity https://github.com/elixir-cloud-aai/TESK/.github/workflows/release.yml@refs/tags/v0.3.0 \
+    --source-ref refs/tags/v0.4.0
+cosign verify-blob tesk-0.4.0.tgz --bundle tesk-0.4.0.tgz.sigstore.json \
+    --certificate-identity https://github.com/elixir-cloud-aai/TESK/.github/workflows/release.yml@refs/tags/v0.4.0 \
     --certificate-oidc-issuer https://token.actions.githubusercontent.com
-tar -xzf tesk-0.3.0.tgz  # unpacks the chart into tesk/
+tar -xzf tesk-0.4.0.tgz  # unpacks the chart into tesk/
 ```
 
 Write your settings into `my-values.yaml`. For an
 Ingress with a certificate of cert-manager (see [Exposing the
-API][tesk-exposing]; on OpenShift, use a Route instead, as described
-there):
+API][tesk-exposing]):
 
 ```yaml
 hostName: tes.example.org
@@ -127,8 +128,15 @@ ingress:
   # The secret that cert-manager creates; empty switches TLS off
   tlsSecretName: tesk-tls
   annotations:
+    # The name of your ClusterIssuer
     cert-manager.io/cluster-issuer: letsencrypt-production
 ```
+
+On OpenShift, set `ingress.enabled: false` instead: the chart then creates
+a Route for `hostName`. OpenShift, and other clusters that reject pods
+asking for the `RuntimeDefault` seccomp profile (e.g., CSC Rahti), need a
+few more values, e.g., `tesk.podSecurityContext.seccompProfile: null`: see
+[OpenShift and other restricted clusters][tesk-restricted].
 
 Set up the storage backend of your Node as described in [Storage
 backends][tesk-storage] (e.g., `storage: s3` and the files in
@@ -142,6 +150,8 @@ info][tesk-service-info]). The registry imports these values in [step
 them right first: follow the checklist of [Prepare Your Service
 Info](service-info.md#checklist). This deployment accepts only the
 environments `prod` and `test`: the chart's default, `dev`, is refused.
+Also set `createdAt` and `storage`: otherwise, the chart's defaults
+describe your service (a date of 2021 and an FTP server of EMBL-EBI).
 
 ```yaml
 serviceInfo:
@@ -153,13 +163,18 @@ serviceInfo:
     url: https://example.org/
   contactUrl: mailto:tes@example.org
   documentationUrl: https://example.org/tes/
+  # When your service started, e.g., "2026-11-25"
+  createdAt: "2026-11-25"
   environment: prod
+  # The storage that tasks can use, e.g., [s3://bucket]; [] for none
+  storage: []
 ```
 
 **Add the `auth` values of [step 3](#tesk) to `my-values.yaml` before you
 install.** With the default, `auth.mode: noauth`, all endpoints are open, so
 anyone who reaches the Ingress could run tasks on your cluster. If you can't
-set them yet, keep `ingress.enabled: false` until you can.
+set them yet, don't install until you can: `ingress.enabled: false` doesn't
+keep TESK private on OpenShift, where it creates a Route.
 
 Install the chart into a namespace of its own. `secrets.yaml` holds
 credentials, e.g., of FTP: leave out `-f secrets.yaml` if you need none.
@@ -181,8 +196,12 @@ curl http://localhost:8080/ga4gh/tes/v1/service-info
 kill %1  # stop the port forward
 ```
 
-The service info should show your values. Then check that it is reachable
-from outside, without a token:
+The service info should show your values. If local port 8080 is taken, the
+port forward fails, and `curl` reaches whatever listens there: use another
+local port, e.g., `18080:8080` and `http://localhost:18080`.
+
+Then check that the service info is reachable from outside, without a
+token:
 
 ```bash
 curl https://tes.example.org/ga4gh/tes/v1/service-info
@@ -190,14 +209,18 @@ curl https://tes.example.org/ga4gh/tes/v1/service-info
 
 ## 3. Enable LS Login and ECP_CLN access
 
-**The policy of the ELIXIR On-Cloud:** users of a Node's TES service must be
-members of the LS Login group `ECP_CLN` or of one of its subgroups. LS Login
-releases group memberships as values of the claim `eduperson_entitlement`.
+**The policy of the ELIXIR On-Cloud:** only members of the LS Login group
+`ECP_CLN:EOC-Compute` may create tasks on a Node's TES service; the parent
+group `ECP_CLN`, its other subgroups and `ECP_CLN:ADMIN` don't let users
+create tasks (see [Access control for
+compute](policies.md#access-control-for-compute)).
+LS Login releases group memberships as values of the claim
+`eduperson_entitlement`; the value of the group is
+`urn:geant:lifescience-ri.eu:group:elixir:ECP_CLN:EOC-Compute#aai.lifescience-ri.eu`.
 The values are recorded in [generic-issues#46][gi-46]: LS Login releases
 them in the user info only, not in the access token, and only those of the
 groups assigned to the client that issued the token. Ask the
-[admins][elixir-on-cloud-email] which values your service must accept
-rather than guessing them.
+[admins][elixir-on-cloud-email] if your service needs other values.
 
 **Keep `GET /service-info` public.** The registry can only import and sync
 service info that answers without a token (see [Using the Cloud
@@ -210,8 +233,7 @@ except `GET /service-info`, which stays public by default
 (`auth.serviceInfoPublic`). Until the group model of TESK has been checked
 with the groups of `ECP_CLN` (see the gaps below), authorise users by a
 claim of the user info (see
-[Authorisation by a claim][tesk-claim]). Add to `my-values.yaml`, with the
-values that the admins give you:
+[Authorisation by a claim][tesk-claim]). Add to `my-values.yaml`:
 
 ```yaml
 auth:
@@ -222,11 +244,16 @@ auth:
     enabled: true
     name: eduperson_entitlement
     values:
-      - <the ECP_CLN value(s) from the admins>
+      - "urn:geant:lifescience-ri.eu:group:elixir:ECP_CLN:EOC-Compute#aai.lifescience-ri.eu"
 ```
 
-Users with one of the values may create tasks, which belong to them only,
-and list, get and cancel their own tasks. Everyone with one of the values
+Users with the value may create tasks, which belong to them only, and
+list, get and cancel their own tasks. Users without it have no rights at
+all: a user whose membership in `ECP_CLN:EOC-Compute` is revoked can no
+longer list, get or cancel their own tasks either, which the policy allows
+(see [Access control for
+compute](policies.md#access-control-for-compute)); TESK can't do this with
+this setting. Everyone with the value
 can run any image with any command on your cluster: read the [security
 implications][tesk-api-claim-security] in the docs of tesk-api. Set these
 values before the first installation (see [step 2](#install-tesk)); to
@@ -261,8 +288,8 @@ only their own tasks.
 
 !!! warning "Gap"
     Poiesis accepts every valid token of the issuer and audience: it can't
-    yet limit access to members of `ECP_CLN`. This is tracked in
-    [generic-issues#21][gi-21].
+    yet limit access to members of `ECP_CLN:EOC-Compute`. This is tracked
+    in [generic-issues#21][gi-21].
 
 ### Funnel
 
@@ -275,7 +302,7 @@ their own tasks (see [OAuth2][funnel-oauth2]). Ask the
 
 !!! warning "Gap"
     Funnel accepts every valid token of the provider: it can't yet limit
-    access to members of `ECP_CLN`. This is tracked in
+    access to members of `ECP_CLN:EOC-Compute`. This is tracked in
     [generic-issues#20][gi-20].
 
 ## 4. Check it with a test task
@@ -315,6 +342,10 @@ Also check that access is limited:
   and Poiesis).
 - With TESK, a token of an account without one of the values must fail with
   `403 Forbidden`.
+
+For TESK, the script `tests/smoke/deployment.sh` of the TESK repository
+runs these checks and a few more from outside the cluster, with your token
+in `TOKEN` (see [Checking a deployment][tesk-checking]).
 
 ## 5. Register the service
 
@@ -400,7 +431,9 @@ credentials (`basic`, a transitional mode for TES services that don't accept
 tokens yet), or none (see [Credentials of TES
 instances][protes-credentials]). Agree with the
 [admins][elixir-on-cloud-email] how the gateway authenticates at your
-service, and make your service accept it.
+service, and make your service accept it: TESK accepts the tokens of the
+gateway's client with `auth.tokenClients` (see [Tokens of
+services][tesk-token-clients]).
 
 Tell the [admins][elixir-on-cloud-email] that your service is ready, then
 check that tasks sent through the gateway arrive at your service.
@@ -416,13 +449,13 @@ page. The rest of its configuration is tracked in
 [Pubgrade-Sidecar][sidecar-docs] rolls out new releases of a service to its
 Kubernetes Deployments when [Pubgrade][pubgrade] notifies it. It runs in the
 namespace of the service, and changes only the image tags of the
-Deployments that it may update. Install version 0.2.0 into the namespace of
+Deployments that it may update. Install version 0.3.0 into the namespace of
 TESK, as described in [Deployment][sidecar-deployment]:
 
 1. Check out the release:
 
     ```bash
-    git clone --depth 1 --branch v0.2.0 https://github.com/elixir-cloud-aai/Pubgrade-Sidecar.git
+    git clone --depth 1 --branch v0.3.0 https://github.com/elixir-cloud-aai/Pubgrade-Sidecar.git
     cd Pubgrade-Sidecar
     ```
 
@@ -433,8 +466,9 @@ TESK, as described in [Deployment][sidecar-deployment]:
       --from-literal=access-token="$(openssl rand -hex 32)"
     ```
 
-3. Write the values, e.g., `my-values.yaml`. `tesk-api` is the Deployment
-   of TESK for the release `tesk`:
+3. Write the values into a file of their own, e.g., `sidecar-values.yaml`,
+   not into the `my-values.yaml` of TESK. `tesk-api` is the Deployment of
+   TESK for the release `tesk`:
 
     ```yaml
     targetDeployments:
@@ -442,7 +476,7 @@ TESK, as described in [Deployment][sidecar-deployment]:
     accessToken:
       existingSecret: pubgrade-sidecar
     hostName: sidecar.example.org
-    # On OpenShift:
+    # Only on OpenShift (elsewhere, it fails: no Route API):
     route:
       enabled: true
     # Elsewhere, instead:
@@ -452,10 +486,16 @@ TESK, as described in [Deployment][sidecar-deployment]:
     #   tlsSecretName: sidecar-tls
     ```
 
+    On clusters that reject pods asking for the `RuntimeDefault` seccomp
+    profile (e.g., CSC Rahti), add `podSecurityContext: {seccompProfile:
+    null}`. To roll out only higher versions, and only tags of a pattern,
+    set `refuseDowngrades` and `allowedTags` (see [Refusing
+    downgrades][sidecar-downgrades]).
+
 4. Install the chart:
 
     ```bash
-    helm install pubgrade-sidecar deployment/ -n tesk -f my-values.yaml
+    helm install pubgrade-sidecar deployment/ -n tesk -f sidecar-values.yaml
     ```
 
 !!! warning "Gap"
@@ -517,17 +557,21 @@ follow [Tutorial: Onboard a Data Centre](data-centre-onboarding-tutorial.md).
 [protes-docs]: <https://protes.readthedocs.io/en/v0.6.0/>
 [protes-tes-instances]: <https://protes.readthedocs.io/en/v0.6.0/configuration/#tes-instances>
 [pubgrade]: <https://github.com/elixir-cloud-aai/Pubgrade>
-[sidecar-deployment]: <https://pubgrade.readthedocs.io/en/latest/sidecar/deployment/>
-[sidecar-docs]: <https://pubgrade.readthedocs.io/en/latest/sidecar/>
-[tesk-api]: <https://tesk.readthedocs.io/en/latest/api/>
-[tesk-api-claim-security]: <https://tesk.readthedocs.io/en/latest/tesk-api/access-control/#security-implications>
-[tesk-api-token-validation]: <https://tesk.readthedocs.io/en/latest/tesk-api/access-control/#token-validation>
-[tesk-claim]: <https://tesk.readthedocs.io/en/latest/deployment/#authorisation-by-a-claim>
-[tesk-deployment]: <https://tesk.readthedocs.io/en/latest/deployment/>
-[tesk-exposing]: <https://tesk.readthedocs.io/en/latest/deployment/#exposing-the-api>
-[tesk-from-release]: <https://tesk.readthedocs.io/en/latest/deployment/#from-a-release>
-[tesk-ls-login]: <https://tesk.readthedocs.io/en/latest/deployment/#ls-login-and-other-providers>
-[tesk-requirements]: <https://tesk.readthedocs.io/en/latest/deployment/#requirements>
-[tesk-service-info]: <https://tesk.readthedocs.io/en/latest/configuration/#service-info-serviceinfo>
-[tesk-storage]: <https://tesk.readthedocs.io/en/latest/deployment/#storage-backends>
-[tesk-upgrading]: <https://tesk.readthedocs.io/en/latest/upgrading/>
+[sidecar-deployment]: <https://pubgrade.readthedocs.io/en/v0.3.0/sidecar/deployment/>
+[sidecar-docs]: <https://pubgrade.readthedocs.io/en/v0.3.0/sidecar/>
+[sidecar-downgrades]: <https://pubgrade.readthedocs.io/en/v0.3.0/sidecar/deployment/#refusing-downgrades>
+[tesk-api]: <https://github.com/elixir-cloud-aai/TESK/blob/v0.4.0/docs/api.md>
+[tesk-api-claim-security]: <https://github.com/elixir-cloud-aai/tesk-api/blob/v2.0.0/docs/access-control.md#security-implications>
+[tesk-api-token-validation]: <https://github.com/elixir-cloud-aai/tesk-api/blob/v2.0.0/docs/access-control.md#token-validation>
+[tesk-checking]: <https://github.com/elixir-cloud-aai/TESK/blob/v0.4.0/docs/deployment.md#checking-a-deployment>
+[tesk-claim]: <https://github.com/elixir-cloud-aai/TESK/blob/v0.4.0/docs/deployment.md#authorisation-by-a-claim>
+[tesk-deployment]: <https://github.com/elixir-cloud-aai/TESK/blob/v0.4.0/docs/deployment.md>
+[tesk-exposing]: <https://github.com/elixir-cloud-aai/TESK/blob/v0.4.0/docs/deployment.md#exposing-the-api>
+[tesk-from-release]: <https://github.com/elixir-cloud-aai/TESK/blob/v0.4.0/docs/deployment.md#from-a-release>
+[tesk-ls-login]: <https://github.com/elixir-cloud-aai/TESK/blob/v0.4.0/docs/deployment.md#ls-login-and-other-providers>
+[tesk-requirements]: <https://github.com/elixir-cloud-aai/TESK/blob/v0.4.0/docs/deployment.md#requirements>
+[tesk-restricted]: <https://github.com/elixir-cloud-aai/TESK/blob/v0.4.0/docs/deployment.md#openshift-and-other-restricted-clusters>
+[tesk-service-info]: <https://github.com/elixir-cloud-aai/TESK/blob/v0.4.0/docs/configuration.md#service-info-serviceinfo>
+[tesk-storage]: <https://github.com/elixir-cloud-aai/TESK/blob/v0.4.0/docs/deployment.md#storage-backends>
+[tesk-token-clients]: <https://github.com/elixir-cloud-aai/TESK/blob/v0.4.0/docs/deployment.md#tokens-of-services>
+[tesk-upgrading]: <https://github.com/elixir-cloud-aai/TESK/blob/v0.4.0/docs/upgrading.md>
