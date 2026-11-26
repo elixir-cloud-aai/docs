@@ -191,9 +191,9 @@ exactly this text.
 The TES services of ELIXIR On-Cloud accept only requests with an access
 token of [LS Login](https://www.lifescience-ri.eu/life-science-login/). To
 run tasks, your LS Login account must be a member of the ELIXIR On-Cloud
-compute group `ECP_CLN:EOC-Compute` (members of `ECP_CLN:ADMIN` may run tasks
-too). To join the group, apply as [Apply for compute
-access](../../researchers/index.md#apply-for-compute-access) describes.
+compute group `ECP_CLN:EOC-Compute`. To join the group, apply as [Apply
+for compute access](../../researchers/index.md#apply-for-compute-access)
+describes.
 
 1. Get an access token of your LS Login account from the web interface of
    the deployment that you use, or as [Using the
