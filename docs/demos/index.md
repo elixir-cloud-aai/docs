@@ -25,7 +25,7 @@ Each demo has one of these states:
 | Demo | Status | What it shows | Instructions |
 |---|---|---|---|
 | [Token exchange testbed][repo-txf] | Current | Per-hop OAuth 2.0 token exchange with LS Login along a chain of services, from a front end through a WES and the proTES gateway to TES nodes. Runs on your computer against a local mock of LS Login. | [Token Exchange Testbed](token-exchange-testbed.md) |
-| [NVFlare on WES and TES testbed][repo-nvflare] | Current | A federated learning job with NVIDIA FLARE, started through GA4GH WES, with one GA4GH TES task per site, also through proTES. Runs on your computer with two local Funnel instances and synthetic data. | [NVFlare Testbed](nvflare-wes-testbed.md) |
+| [NVFlare on WES and TES testbed][repo-nvflare] | Current | A federated learning job with NVIDIA FLARE, started through GA4GH WES, with one GA4GH TES task per site, also through proTES. Runs on your computer with two local Funnel instances and synthetic data; on 2026-11-24, it ran over the TESK of the FI and CZ Nodes, with LS Login tokens (see its [report][nvflare-report]). [Release 0.1.0][nvflare-release]. | [NVFlare Testbed](nvflare-wes-testbed.md) |
 | [Federated analytics][repo-fa] (`elixir-cloud-demos`) | Current | The same analysis at two Nodes as GA4GH TES tasks, directly or through proTES; only aggregates leave the Nodes. Runs on your computer with `--local`, or against your own TES services. | [Demo README][repo-fa] |
 | [GA4GH SDK upgrade][repo-sdk] | Current | Plan and guide of a BioHackathon Europe 2026 project. Its goal: the command line tool of the GA4GH SDK sends tasks to proTES with an LS Login token. The tool sends tokens and runs TES tasks and WES workflows now. Since 2026-11-15, the SDK's default branch also has a `login` command for the OpenID Connect device flow, which LS Login offers ([ga4gh-sdk#248][sdk-248]); [Use the Command Line](../researchers/cli.md) describes an earlier commit, without it. | [Use the Command Line](../researchers/cli.md) and the [project docs][docs-sdk] |
 | [Hybrid cloud via TES][repo-hybrid] (`demo-tes-hybrid-cloud`) | Current | A Snakemake workflow on the TES services of several Nodes, one after the other, and then on all of them through proTES. Runs on your computer with two local Funnel instances, proTES 0.6.0 and an S3 service, or on your own services. Its latest CI run (2026-11-13) failed, because a third-party file that the workflow downloads answered `404 Not Found`; the file is back, and the state will be confirmed by the next run. | [Run Workflows Across Nodes](../researchers/federated-workflows.md) |
@@ -34,20 +34,22 @@ Each demo has one of these states:
 | [Demo workflows][repo-workflows] (`demo-workflows`) | Retired | CWL and Snakemake workflows (GWAS, hash splitter, sequence comparison, rare diseases) for tests of the stack from 2019 to 2022. | [Retired demos](#retired-demos) |
 
 The states were checked on 2026-11-10 (`elixir-cloud-demos` on
-2026-11-15), against the default branch of each repository:
+2026-11-15, `nvflare-wes-testbed` on 2026-11-24), against the default branch of each repository:
 `token-exchange-flow-testbed` at `7585c99`,
-`nvflare-wes-testbed` at `ca418a6`, `biohackeu26-ga4gh-sdk-upgrade` at
-`290cb80`, `demo-tes-hybrid-cloud` at `3fd00c8`,
+`nvflare-wes-testbed` at `55309b5` (release 0.1.0),
+`biohackeu26-ga4gh-sdk-upgrade` at `290cb80`, `demo-tes-hybrid-cloud` at `3fd00c8`,
 `protes-middleware-crypt4gh` at `2c33121`, `elixir-cloud-demos` at
 `73d6e6b` and `demo-workflows` at `a069bea`.
 
 ## Test beds and demos
 
-The two test beds are not demos of the deployment: they run everything on
-your computer, with stand-ins for real sites and services, and say plainly
-what they have and haven't shown. They are the quickest way to see how the
-pieces fit, and they need no account. Never use them in production or with
-real data.
+The two test beds are not demos of the deployment: their quick starts run
+everything on your computer, with stand-ins for real sites and services, and
+they say plainly what they have and haven't shown. They are the quickest way
+to see how the pieces fit, and they need no account. The NVFlare testbed has
+also run over the TES services of two Nodes, run by its maintainers (see
+[NVFlare Testbed](nvflare-wes-testbed.md#status)). Never use the test beds
+in production or with real data.
 
 The demo `demo-tes-hybrid-cloud` runs on your computer, with local TES
 services and a proTES gateway, or against real ones. There is no public
@@ -99,6 +101,8 @@ Propose a new demo, or report one that no longer works, in the
 repository](https://github.com/elixir-cloud-aai/docs/issues).
 
 [docs-sdk]: <https://biohackeu26-ga4gh-sdk-upgrade.readthedocs.io/en/latest/>
+[nvflare-release]: <https://github.com/elixir-cloud-aai/nvflare-wes-testbed/releases/tag/v0.1.0>
+[nvflare-report]: <https://nvflare-wes-testbed.readthedocs.io/en/stable/outcomes/report/>
 [sdk-248]: <https://github.com/ga4gh/ga4gh-sdk/pull/248>
 <!-- historical -->
 [repo-crypt4gh]: <https://github.com/elixir-cloud-aai/protes-middleware-crypt4gh>

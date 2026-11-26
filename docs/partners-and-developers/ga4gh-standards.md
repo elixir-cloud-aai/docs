@@ -24,10 +24,10 @@ specification. Checked in November 2026.
 | [TESK][tesk] | [TES][ga4gh-tes], for tasks | [1.1.0](https://github.com/elixir-cloud-aai/tesk-api/releases/tag/v2.0.0) (tesk-api 2.0.0) | [1.1.0](https://github.com/ga4gh/task-execution-schemas/releases/tag/v1.1) | [TESK](https://tesk.readthedocs.io/en/latest/) |
 | [Funnel][funnel] | [TES][ga4gh-tes], for tasks | not stated: [a commit after 1.1.0](https://github.com/ga4gh/task-execution-schemas/blob/28a83a622e7d84fd4b8d438a6b2e99b0db2e5d5b/openapi/task_execution_service.openapi.yaml) | [1.1.0](https://github.com/ga4gh/task-execution-schemas/releases/tag/v1.1) | [Funnel][funnel] |
 | [Poiesis](https://github.com/JaeAeich/poiesis) | [TES][ga4gh-tes], for tasks | not stated: [a commit after 1.1.0](https://github.com/JaeAeich/poiesis/blob/dev/poiesis/api/tes/spec/c4c17c9.openapi.yaml) | [1.1.0](https://github.com/ga4gh/task-execution-schemas/releases/tag/v1.1) | [Poiesis](../operators/services/poiesis.md) |
-| [proWES](https://github.com/elixir-cloud-aai/proWES) | [WES][ga4gh-wes], for workflows | [1.0.1](https://github.com/elixir-cloud-aai/proWES/blob/dev/pro_wes/api/20201124.tag_1_0_1.workflow_execution_service.openapi.yaml) | [1.1.0](https://github.com/ga4gh/workflow-execution-service-schemas/releases/tag/1.1.0) | being revived: see the README |
+| [proWES](https://github.com/elixir-cloud-aai/proWES) | [WES][ga4gh-wes], for workflows | [1.1.0](https://github.com/elixir-cloud-aai/proWES/blob/dev/pro_wes/api/20230914.tag_1_1_0.workflow_execution_service.openapi.yaml) (default branch, no release yet) | [1.1.0](https://github.com/ga4gh/workflow-execution-service-schemas/releases/tag/1.1.0) | [proWES](https://prowes.readthedocs.io/en/latest/) |
 | [Conquest](https://github.com/anuragxxd/conquest) | [WES][ga4gh-wes], for workflows | [1.1](https://github.com/anuragxxd/conquest/blob/master/README.md) (README; no specification file) | [1.1.0](https://github.com/ga4gh/workflow-execution-service-schemas/releases/tag/1.1.0) | see the README |
 | [WESkit](https://gitlab.com/one-touch-pipeline/weskit/api) | [WES][ga4gh-wes], for workflows | [1.1.0](https://gitlab.com/one-touch-pipeline/weskit/api/-/blob/master/weskit/api/workflow_execution_service_1.1.0.yaml) | [1.1.0](https://github.com/ga4gh/workflow-execution-service-schemas/releases/tag/1.1.0) | [WESkit](https://gitlab.com/one-touch-pipeline/weskit/documentation) |
-| [DRS-Filer](https://github.com/elixir-cloud-aai/drs-filer) | [DRS][ga4gh-drs], for data | [1.1.0](https://github.com/elixir-cloud-aai/drs-filer/blob/dev/drs_filer/api/20200622.383121d.data_repository_service.swagger.yaml) | [1.5.0](https://github.com/ga4gh/data-repository-service-schemas/releases/tag/drs-1.5.0) | being revived: see the README |
+| [DRS-Filer](https://github.com/elixir-cloud-aai/drs-filer) | [DRS][ga4gh-drs], for data | [1.5.0](https://github.com/elixir-cloud-aai/drs-filer/blob/dev/drs_filer/api/20250324.fe25c39.openapi.yaml) (default branch, no release yet) | [1.5.0](https://github.com/ga4gh/data-repository-service-schemas/releases/tag/drs-1.5.0) | [DRS-Filer](https://drs-filer.readthedocs.io/en/latest/) |
 | [TRS-Filer](https://github.com/elixir-cloud-aai/trs-filer) | [TRS][ga4gh-trs], for tools and workflows | [2.0.2](https://github.com/elixir-cloud-aai/trs-filer/blob/dev/trs_filer/api/20250902.4854e2f.openapi.yaml) | [2.0.2](https://github.com/ga4gh/tool-registry-service-schemas/releases/tag/2.0.2) | [TRS-Filer](https://trs-filer.readthedocs.io/en/latest/) |
 | [Cloud Registry](https://github.com/elixir-cloud-aai/cloud-registry) | [Service Registry][ga4gh-service-registry], for finding services | [1.0.0](https://github.com/elixir-cloud-aai/cloud-registry/blob/dev/cloud_registry/api/20201108.e0358db.openapi.yaml) | [1.0.0](https://github.com/ga4gh-discovery/ga4gh-service-registry/releases/tag/1.0.0) | [Cloud Registry](https://cloud-registry.readthedocs.io/en/latest/) |
 
@@ -49,8 +49,9 @@ Notes on the table:
   2.0.0, it accepts the task fields of TES 1.1 and its service info reports
   TES `1.1.0`; earlier releases implement TES 1.0.0.
 - **proWES and DRS-Filer:** both are being revived since 2026-11-16, after
-  they had been archived. They catch up with the current versions of their
-  specifications, and get docs sites, with the revival.
+  they had been archived. Their default branches implement the current
+  versions of their specifications, and they have docs sites; neither has
+  a release yet.
 - **Conquest:** its README states WES 1.1 (and TES 1.1 for its internal
   task backend); the repository has no specification file.
 

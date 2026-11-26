@@ -547,11 +547,11 @@ follow [Tutorial: Onboard a Data Centre](data-centre-onboarding-tutorial.md).
 [gi-35]: <https://github.com/elixir-cloud-aai/generic-issues/issues/35>
 [gi-46]: <https://github.com/elixir-cloud-aai/generic-issues/issues/46>
 [gi-50]: <https://github.com/elixir-cloud-aai/generic-issues/issues/50>
-[poiesis-auth]: <https://poiesis.jaeaeich.com/docs/deploy/authentication.html>
+[poiesis-auth]: <https://github.com/JaeAeich/poiesis/blob/v0.2.0/docs/app/docs/deploy/authentication.md>
 [poiesis-chart]: <https://github.com/JaeAeich/poiesis/tree/v0.2.0/deployment/helm/poiesis>
 [poiesis-112]: <https://github.com/JaeAeich/poiesis/issues/112>
-[poiesis-deploy]: <https://poiesis.jaeaeich.com/docs/deploy/deploying-poiesis.html>
-[poiesis-prereq]: <https://poiesis.jaeaeich.com/docs/deploy/prerequisites.html>
+[poiesis-deploy]: <https://github.com/JaeAeich/poiesis/blob/v0.2.0/docs/app/docs/deploy/deploying-poiesis.md>
+[poiesis-prereq]: <https://github.com/JaeAeich/poiesis/blob/v0.2.0/docs/app/docs/deploy/prerequisites.md>
 [protes-credentials]: <https://protes.readthedocs.io/en/v0.6.0/access-control/#credentials-of-tes-instances>
 [protes-discovery]: <https://protes.readthedocs.io/en/v0.6.0/configuration/#discovery-in-a-service-registry>
 [protes-docs]: <https://protes.readthedocs.io/en/v0.6.0/>

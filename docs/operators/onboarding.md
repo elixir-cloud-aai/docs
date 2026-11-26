@@ -82,7 +82,7 @@ Other S3 and FTP servers may work, but nobody has tested them.
    endpoint** in the registration form, and keep sync on, so that the entry
    follows your service (see [Using the Cloud
    Registry](using-cloud-registry.md#registering-a-service)). For Funnel and
-   Poiesis, whose service info can't be set yet, enter the values by hand
+   Poiesis 0.2.0, whose service info can't be set yet, enter the values by hand
    (see [Manual entry, the
    fallback](service-info.md#manual-entry-the-fallback)). Check the values
    before registering them:
