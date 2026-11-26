@@ -91,8 +91,8 @@ sudo systemctl reload nginx
 
 ## Set the access token
 
-An LS Login access token, of an account in the compute group, lives for
-about 4 hours: see [Get an access
+An LS Login access token from Krini, of an account in the compute group,
+lives for 1 hour: see [Get an access
 token](interactive_services_tes.md#get-an-access-token).
 
 ```bash

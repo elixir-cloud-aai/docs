@@ -18,7 +18,7 @@ ELIXIR Nodes, and keep sensitive data under the control of its owner.
 | [Use the Command Line](cli.md) | Find services in the Cloud Registry, send tasks to a TES service such as proTES, run workflows on a WES service, find workflows in WorkflowHub and look up DRS objects from your terminal with `ga4gh-cli`. | The CLI on your computer (a download, or a container image), and an LS Login access token for services that need a login. |
 | [Tutorial: Your First Run in Krini](tutorial-krini.md) | Log in to Krini, run a task and a workflow on demo data, and read the results, step by step. For now, the task part only. | A web browser, an LS Login account, and compute access. |
 | [Tutorial: Your First Run from the Command Line](tutorial-cli.md) | Install `ga4gh-cli`, find services, log in with a token, run a task and a workflow on demo data, and read the results, step by step. | `curl` on Linux or macOS, an LS Login account, and access to a TES and a WES service. |
-| [Run Workflows Across Nodes](federated-workflows.md) | Run a Snakemake workflow on the TES services of several Nodes, through the proTES gateway. | A Python environment on your computer, and access to proTES or other TES services. |
+| [Run Workflows Across Nodes](federated-workflows.md) | Run a Snakemake workflow on the TES services of several Nodes, through the proTES gateway. | Docker with Compose to try it on your computer; for real services, Git and Conda or Mamba, access to proTES or other TES services, and an S3 bucket. |
 | [Crypt4GH with proTES](crypt4gh-with-protes.md) | Process Crypt4GH-encrypted files that proTES decrypts inside the task's container. Needs an unreleased proTES branch until the deployment runs the Crypt4GH plugin for current proTES (0.1.0, a pre-release, not deployed yet). | Docker and three virtual machines. |
 | [Run Interactive Services on TES](../tutorials/tes-services/interactive_services_tes.md) | Run RStudio, JupyterLab or Atlas with OMOP demo data as TES tasks, and open them in your browser. Synthetic data only. | A virtual machine with a public host name and an open HTTPS port, and a TES service. |
 
@@ -34,11 +34,11 @@ ELIXIR Nodes, and keep sensitive data under the control of its owner.
 ## Apply for compute access
 
 Members of the LS Login group `ECP_CLN:EOC-Compute` can run tasks and
-workflows on the compute services of the deployment, e.g., through Krini or
+workflows on the compute services of the deployment, for example, through Krini or
 proTES. To become a member:
 
 1. Open the [application form][eoc-compute-form] and log in with LS Login.
-2. Fill in your affiliation and the reason for access, i.e., what you want
+2. Fill in your affiliation and the reason for access, that is, what you want
    to run. If you aren't a member of the ELIXIR community in LS Login yet,
    the form asks you to apply for that too.
 3. Submit the form. You get an e-mail that your application was received.
@@ -64,10 +64,10 @@ Send your tasks to the TES gateway of the deployment,
 `https://gateway-tes.elixir-on.cloud/ga4gh/tes/v1`, with an LS Login access
 token (the old address `protes.rahtiapp.fi` keeps working).
 proTES forwards each task to one of the TES services that it knows: the
-TESK for tests at CSC and, as the first Node's service, the TESK of
-CERIT-SC (see [proTES](../operators/services/protes.md#in-the-elixir-on-cloud));
-its service info lists them under `backends`. proTES calls the TESK at
-CSC with a token of its own LS Login client, not with yours. Get your
+TESK of the FI Node, at CSC, and the TESK of the CZ Node, at CERIT-SC (see
+[proTES](../operators/services/protes.md#in-the-elixir-on-cloud)); its
+service info lists them under `backends`. proTES calls both with a token of
+its own LS Login client, not with yours. Get your
 token from [Krini](krini.md#copy-your-access-token): proTES accepts tokens
 that LS Login issued to Krini.
 

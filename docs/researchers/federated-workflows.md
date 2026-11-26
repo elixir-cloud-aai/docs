@@ -48,7 +48,8 @@ only.
 You need:
 
 - Git, and Conda or Mamba (the README lists all requirements);
-- the address of a proTES gateway, and an access token for it: e.g., the
+- the address of a proTES gateway (`TES_GATEWAY`, without the path of the
+  API), and an access token for it: for example, the
   deployment's proTES at `https://gateway-tes.elixir-on.cloud`, with an
   LS Login access token from Krini (see [Which TES services you can
   use](index.md#which-tes-services-you-can-use));
@@ -56,7 +57,9 @@ You need:
   one by one, and their credentials: the TES services behind your gateway,
   or others that you may use;
 - an S3 bucket that the TES services can write to, and its credentials. The
-  workflow writes its results there.
+  workflow writes its results there. Snakemake sends the S3 credentials
+  with each task, so the gateway and every TES service that runs a task
+  can read them: use credentials for this bucket only.
 
 Then follow the README of the [repository][elixir-cloud-demo-smk]: install
 the Conda environment, create the files `.tes_instances` and `.env` as its
