@@ -34,9 +34,9 @@ Each demo has one of these states:
 | [Demo workflows][repo-workflows] (`demo-workflows`) | Retired | CWL and Snakemake workflows (GWAS, hash splitter, sequence comparison, rare diseases) for tests of the stack from 2019 to 2022. | [Retired demos](#retired-demos) |
 
 The states were checked on 2026-11-10 (`elixir-cloud-demos` on
-2026-11-15), against the default branch of each repository:
+2026-11-15, `nvflare-wes-testbed` on 2026-11-24), against the default branch of each repository:
 `token-exchange-flow-testbed` at `7585c99`,
-`nvflare-wes-testbed` at `55309b5` (release 0.1.0, on 2026-11-24),
+`nvflare-wes-testbed` at `55309b5` (release 0.1.0),
 `biohackeu26-ga4gh-sdk-upgrade` at `290cb80`, `demo-tes-hybrid-cloud` at `3fd00c8`,
 `protes-middleware-crypt4gh` at `2c33121`, `elixir-cloud-demos` at
 `73d6e6b` and `demo-workflows` at `a069bea`.

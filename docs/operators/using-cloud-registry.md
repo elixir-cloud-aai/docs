@@ -65,7 +65,7 @@ info](service-info.md#the-rules-of-this-deployment) shows how to read them
 from the registry.
 
 **Enter the values by hand only as a fallback:** for services whose service
-info can't be set yet (Funnel, Poiesis and TESP API), isn't public, or for a
+info can't be set yet (Funnel, Poiesis 0.2.0 and TESP API), isn't public, or for a
 quick test with other values. Manual entries have no sync, and can drift. See
 [Manual entry, the fallback](service-info.md#manual-entry-the-fallback).
 
@@ -101,8 +101,10 @@ of the ELIXIR On-Cloud, the admins check with you, its owner, that:
   access](node-onboarding-tutorial.md#3-enable-ls-login-and-ecp_cln-access)),
   and from the gateway. A service that can't check the group itself meets
   this only if it accepts nothing but the credentials of the gateway, which
-  checks the group: e.g., Poiesis accepts any valid token of its issuer, as
-  its group check is still missing ([generic-issues#21][gi-21]).
+  checks the group: e.g., Poiesis 0.2.0 accepts any valid token of its
+  issuer; its default branch checks the group (see
+  [Poiesis](services/poiesis.md#notes-for-the-deployment) and
+  [generic-issues#21][gi-21]).
   Verification doesn't prove that a service enforces the policy itself.
 
 To ask for verification, write to
