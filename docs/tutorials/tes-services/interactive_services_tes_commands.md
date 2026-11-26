@@ -91,8 +91,8 @@ sudo systemctl reload nginx
 
 ## Set the access token
 
-An LS Login access token, of an account in the compute group, lives for
-about 4 hours: see [Get an access
+An LS Login access token from Krini, of an account in the compute group,
+lives for 1 hour: see [Get an access
 token](interactive_services_tes.md#get-an-access-token).
 
 ```bash
@@ -202,7 +202,7 @@ cd ~/eoc_services
 # RStudio: show the TES request
 ./tes-hub/tes-service.sh rstudio-tesk print
 
-# token expired (after about 4 hours, 401 in .state/watch.log): set a new token as in
+# token expired (a Krini token after 1 hour, 401 in .state/watch.log): set a new token as in
 # "Set the access token", then run up again, which gives the keep-alive loop the new token
 ./omop-tesk/omop-tesk-fi.sh up
 ./tes-hub/tes-service.sh rstudio-tesk up

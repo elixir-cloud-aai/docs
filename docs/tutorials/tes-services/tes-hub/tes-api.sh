@@ -28,7 +28,7 @@ tes_curl() {
     2??) printf '%s\n' "$out" ;;
     401)
       if [[ -n "${TES_TOKEN:-}" ]]; then
-        echo "ERROR: $TES_URL answered 401 Unauthorized: the token in TES_TOKEN is invalid or has expired (after about 4 hours). Get a new LS Login access token, set TES_TOKEN again and rerun the command" >&2
+        echo "ERROR: $TES_URL answered 401 Unauthorized: the token in TES_TOKEN is invalid or has expired (a Krini token after 1 hour). Get a new LS Login access token, set TES_TOKEN again and rerun the command" >&2
       else
         echo "ERROR: $TES_URL answered 401 Unauthorized: it needs a token. Get an LS Login access token and set TES_TOKEN (see the tutorial)" >&2
       fi
