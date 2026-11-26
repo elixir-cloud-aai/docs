@@ -322,7 +322,9 @@ members may create jobs, i.e., TES tasks and WES workflow runs (see
 [Access control for compute](policies.md#access-control-for-compute)).
 proTES maps it to its `user` role, and `ECP_CLN:ADMIN` to `admin`, which
 is for administration, not for running jobs: admins who run jobs join
-`ECP_CLN:EOC-Compute` too. Researchers apply with
+`ECP_CLN:EOC-Compute` too. The deployed proTES still lets `admin` create
+tasks until a rule of its configuration is removed (see
+[proTES](services/protes.md#in-the-elixir-on-cloud)). Researchers apply with
 the group's application form in Perun (see [Apply for compute
 access](../researchers/index.md#apply-for-compute-access)); the members of
 `ECP_CLN:ADMIN` approve or reject the applications.

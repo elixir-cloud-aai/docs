@@ -37,7 +37,7 @@ As of November 2026:
 |---|---|
 | Address | TES API at `https://gateway-tes.elixir-on.cloud/ga4gh/tes/v1` (the host itself has no page); the old address `protes.rahtiapp.fi` keeps working |
 | Version | proTES 0.6.0 |
-| Access | LS Login access tokens of members of the group `ECP_CLN:EOC-Compute`, issued to a client that it accepts, such as Krini's (see [Researchers](../../researchers/index.md#before-you-start)) |
+| Access | LS Login access tokens of members of the group `ECP_CLN:EOC-Compute`, issued to a client that it accepts, such as Krini's (see [Researchers](../../researchers/index.md#before-you-start)). Until the rule `admins-create-list-tasks` is removed from its configuration, members of `ECP_CLN:ADMIN` can create tasks too (see the role `admin` below) |
 | LS Login client | client ID `7c0c1fc0-e8ca-47d6-a9b2-bdc843961146`, issuer `https://login.aai.lifescience-ri.eu/oidc/`: a TES service behind proTES lists this client ID and accepts it as audience (see [Access control for compute](../policies.md#access-control-for-compute)) |
 | Environment | `test`: its service info calls it "proTES sandbox (BioHackathon 2026)" |
 | TES services | one, listed in its configuration: the TESK for tests at CSC (`csc-tesk-noauth.rahtiapp.fi`). Since 21 November 2026, that TESK requires LS Login tokens, and proTES doesn't send one of its own yet, so tasks sent to proTES fail until [generic-issues#111][gi-111] is done |
