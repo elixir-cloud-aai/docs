@@ -248,7 +248,12 @@ auth:
 ```
 
 Users with the value may create tasks, which belong to them only, and
-list, get and cancel their own tasks. Everyone with the value
+list, get and cancel their own tasks. Users without it have no rights at
+all: a user whose membership in `ECP_CLN:EOC-Compute` is revoked can no
+longer list, get or cancel their own tasks either, which the policy allows
+(see [Access control for
+compute](policies.md#access-control-for-compute)); TESK can't do this with
+this setting. Everyone with the value
 can run any image with any command on your cluster: read the [security
 implications][tesk-api-claim-security] in the docs of tesk-api. Set these
 values before the first installation (see [step 2](#install-tesk)); to
