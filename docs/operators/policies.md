@@ -33,6 +33,10 @@ written down yet.
 
 --8<-- "includes/scope.md"
 
+!!! info "If other pages differ"
+    If another page of these docs describes other rules than this page,
+    e.g., other groups that can run jobs, follow this page.
+
 ## Authentication
 
 These rules apply to the TES and WES services of a Node.
