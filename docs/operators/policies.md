@@ -34,12 +34,29 @@ written down yet.
 
 ## Authentication
 
-These rules apply to the TES and WES services of a Node. For the storage
-and TRS services of data centres, requirements are not written down yet:
-follow [Tutorial: Onboard a Data
-Centre](data-centre-onboarding-tutorial.md), e.g., [Restrict
-writes](data-centre-onboarding-tutorial.md#restrict-writes) of a
-TRS-Filer, which has no authentication yet.
+These rules apply to the TES and WES services of a Node. For the storage,
+TRS and DRS services of data centres, requirements are not written down
+yet: follow [Tutorial: Onboard a Data
+Centre](data-centre-onboarding-tutorial.md). What the data products
+protect themselves depends on their version:
+
+- **TRS-Filer 0.5.0**, the current release, has no authentication: all of
+  its endpoints, writes (`POST`, `PUT`, `DELETE`) included, are open to
+  anyone who reaches it (see its [access
+  control][trsfiler-access-control-050] page). Restrict its writes in front
+  of it (see [Security](#security)).
+- **TRS-Filer from 0.6.0**, the next release, requires access tokens of the
+  issuers that the deployment trusts for all writes, keeps reads public
+  unless the deployment requires login for them, and has owners and
+  maintainers of tools and admins (see the [access
+  control][trsfiler-access-control-latest] page of its default branch). The
+  [TRS-Filer of the deployment](services/trsfiler.md#in-the-elixir-on-cloud)
+  runs a development build with these rules.
+- **DRS-Filer** has no release yet. On its default branch, writes require
+  an access token and the admin role, and access URLs require login by
+  default; owners and maintainers of objects are still missing
+  ([drs-filer#92][drsfiler-92]). The data-centre tutorial doesn't cover it
+  yet.
 
 - Your service **must** require [LS Login](ls-login.md) access tokens for
   every endpoint except `GET /service-info`: no anonymous access. The
@@ -200,9 +217,12 @@ for products whose service info can't be set yet.
   any command on your cluster: read the security notes in the docs of your
   product, e.g., the [security implications][tesk-api-claim-security] of
   tesk-api.
-- A TRS-Filer without authentication **must** allow writes (`POST`, `PUT`,
-  `DELETE`) only from trusted clients (see [Restrict
-  writes](data-centre-onboarding-tutorial.md#restrict-writes)).
+- A TRS-Filer 0.5.0 or earlier, which has no authentication, **must** be
+  set up so that only trusted clients can write (`POST`, `PUT`, `DELETE`),
+  e.g., by your Ingress controller or a proxy (see [Restrict
+  writes](data-centre-onboarding-tutorial.md#restrict-writes)). From 0.6.0,
+  TRS-Filer requires access tokens for writes itself (see
+  [Authentication](#authentication)).
 - Report security problems of ELIXIR On-Cloud software privately, as its
   [security policy][security-policy] describes, not in public issues.
 
@@ -258,9 +278,12 @@ for products whose service info can't be set yet.
    gateway](node-onboarding-tutorial.md#7-get-added-behind-the-gateway)).
 6. Keep the service and its registry entry up to date.
 
+[drsfiler-92]: <https://github.com/elixir-cloud-aai/drs-filer/issues/92>
 [ga4gh-service-info]: <https://github.com/ga4gh-discovery/ga4gh-service-info>
 [ls-login-terms]: <https://www.lifescience-ri.eu/terms-of-use-for-service-providers/>
 [security-policy]: <https://github.com/elixir-cloud-aai/.github/blob/main/SECURITY.md>
 [sidecar-docs]: <https://pubgrade.readthedocs.io/en/latest/sidecar/>
 [tesk-api-claim-security]: <https://tesk.readthedocs.io/en/latest/tesk-api/access-control/#security-implications>
 [tesk-upgrading]: <https://tesk.readthedocs.io/en/latest/upgrading/>
+[trsfiler-access-control-050]: <https://trs-filer.readthedocs.io/en/v0.5.0/access-control/>
+[trsfiler-access-control-latest]: <https://trs-filer.readthedocs.io/en/latest/access-control/>
