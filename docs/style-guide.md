@@ -29,7 +29,8 @@ docs, see the
 Every page has one purpose and follows this order. Leave out a part that
 doesn't apply.
 
-1. **Title:** one `#` heading, the same as its label in the navigation.
+1. **Title:** one `#` heading, the same as its label in the navigation
+   (except Home, whose page is titled "Welcome").
 2. **Intro:** what the page is, who it is for and what the reader gets, in
    a few sentences.
 3. **Prerequisites:** what the reader needs before they start (accounts,
@@ -82,8 +83,9 @@ README).
 
 - Every page is in `nav:` of `mkdocs.yml`, once, under the audience that
   needs it, with the title of its `#` heading as the label.
-- Every section has an `index.md` that says what the section is for and
-  links to each of its pages.
+- Every audience section has an `index.md` that says what the section is
+  for and links to each of its pages. About groups the pages about the hub
+  itself, starting with `about.md`.
 - Add a new page in the same pull request as the links to it.
 
 ## Before you open a pull request

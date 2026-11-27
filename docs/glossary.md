@@ -21,10 +21,11 @@ Documentation Hub
 :   These docs, at <https://docs.elixir-on.cloud/>.
 
 Federation
-:   The Nodes and their services that work together in the deployment.
+:   The Nodes, data centres and their services that work together in the
+    deployment.
 
 Node
-:   A site that offers compute, and optionally storage, to the federation.
+:   A site that offers compute and storage for tasks to the federation.
     Write "Node" with a capital N, and "compute Node" for a Node that runs
     TES or WES services. See [Onboarding](operators/onboarding.md).
 
@@ -88,12 +89,10 @@ proTES, TES gateway
     [proTES](operators/services/protes.md).
 
 proWES
-:   A gateway in front of several WES services. Being revived, not
-    deployed yet. See [proWES](operators/services/prowes.md).
+:   A gateway in front of several WES services. See [proWES](operators/services/prowes.md).
 
 DRS-Filer
-:   A DRS service. Being revived, not deployed yet. See
-    [DRS-Filer](operators/services/drsfiler.md).
+:   A DRS service. See [DRS-Filer](operators/services/drsfiler.md).
 
 TRS-Filer
 :   A TRS service. See [TRS-Filer](operators/services/trsfiler.md).
@@ -144,7 +143,8 @@ Entitlement
 
 EOC-Compute entitlement, compute access
 :   Membership of the LS Login group `ECP_CLN:EOC-Compute`. It gives access
-    to the compute services of the deployment, such as Krini and proTES. See
+    to the compute services of the deployment: Krini, the portal, and
+    proTES, the gateway, send your tasks to them only for members. See
     [Apply for compute
     access](researchers/index.md#apply-for-compute-access).
 
