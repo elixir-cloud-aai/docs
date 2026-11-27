@@ -99,16 +99,16 @@ nav:
   - Home: "index.md"
   - Architects & Operators:
     - "operators/index.md"
-    - "Central Addresses": "operators/addresses.md"
-    - "Policies and Requirements": "operators/policies.md"
     - "Onboarding": "operators/onboarding.md"
     - "Tutorial: Onboard a Node": "operators/node-onboarding-tutorial.md"
     - "Tutorial: Onboard a Data Centre": "operators/data-centre-onboarding-tutorial.md"
-    - "Cloud Registry": "operators/cloud-registry.md"
+    - "Policies and Requirements": "operators/policies.md"
+    - "Central Addresses": "operators/addresses.md"
+    - "LS Login": "operators/ls-login.md"
     - "Using the Cloud Registry": "operators/using-cloud-registry.md"
     - "Using the Cloud Registry UI": "operators/using-cloud-registry-ui.md"
     - "Prepare Your Service Info": "operators/service-info.md"
-    - "LS Login": "operators/ls-login.md"
+    - "Cloud Registry": "operators/cloud-registry.md"
     - Services:
       - "operators/services/index.md"
       - "DRS-Filer": "operators/services/drsfiler.md"
@@ -128,21 +128,24 @@ nav:
     - "User Stories": "partners-and-developers/user-stories.md"
   - Researchers:
     - "researchers/index.md"
-    - "Use Krini": "researchers/krini.md"
-    - "Use the Command Line": "researchers/cli.md"
     - "Tutorial: Your First Run in Krini": "researchers/tutorial-krini.md"
     - "Tutorial: Your First Run from the Command Line": "researchers/tutorial-cli.md"
+    - "Use Krini": "researchers/krini.md"
+    - "Use the Command Line": "researchers/cli.md"
     - "Run Workflows Across Nodes": "researchers/federated-workflows.md"
-    - "SPE with WESkit": "researchers/spe-with-weskit.md"
+    - "Sensitive Data in a Secure Processing Environment": "researchers/spe-with-weskit.md"
     - "Crypt4GH with proTES": "researchers/crypt4gh-with-protes.md"
-    - Run Interactive Services on TES:
+    - "Run Interactive Services on TES":
       - "tutorials/tes-services/interactive_services_tes.md"
-      - "Commands": "tutorials/tes-services/interactive_services_tes_commands.md"
+      - "Interactive Services on TES: Commands": "tutorials/tes-services/interactive_services_tes_commands.md"
   - Demos:
     - "demos/index.md"
     - "Token Exchange Testbed": "demos/token-exchange-testbed.md"
     - "NVFlare Testbed": "demos/nvflare-wes-testbed.md"
-  - About: "about.md"
+  - About:
+    - "about.md"
+    - "Glossary": "glossary.md"
+    - "Style Guide": "style-guide.md"
 extra_css:
   - stylesheets/extra.css
 # `registry.py` replaces `<!-- registry:services ... -->` markers with tables
