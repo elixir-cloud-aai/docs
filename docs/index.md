@@ -48,5 +48,9 @@ Choose the section that fits you:
 
 To see the stack at work, try one of the [Demos](demos/index.md).
 
-Questions, contributing, funding, license and contact: see [About and
-contributing](about.md).
+## Also on this site
+
+- [Glossary](glossary.md): one name for each service, standard and term.
+- [Style Guide](style-guide.md): how to write and change pages of these docs.
+- [About and contributing](about.md): questions, contributing, funding,
+  license and contact.
