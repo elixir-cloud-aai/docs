@@ -191,14 +191,15 @@ exactly this text.
 The TES services of ELIXIR On-Cloud accept only requests with an access
 token of [LS Login](https://www.lifescience-ri.eu/life-science-login/). To
 run tasks, your LS Login account must be a member of the ELIXIR On-Cloud
-compute group `ECP_CLN:EOC-Compute` (members of `ECP_CLN:ADMIN` may run tasks
-too). To join the group, apply as [Apply for compute
-access](../../researchers/index.md#apply-for-compute-access) describes.
+compute group `ECP_CLN:EOC-Compute`. To join the group, apply as [Apply
+for compute access](../../researchers/index.md#apply-for-compute-access)
+describes.
 
 1. Get an access token of your LS Login account from the web interface of
    the deployment that you use, or as [Using the
    APIs](../../partners-and-developers/apis.md#2-get-an-access-token)
-   describes. A token lives for about 4 hours.
+   describes. A token from Krini lives for 1 hour; tokens of other clients
+   may live longer.
 2. Set it in the shell (bash) in which you run the scripts. With
    `read -s`, the token is neither shown nor saved in the shell history:
 
@@ -365,7 +366,7 @@ To change a default, set the environment variable before you run a script:
 
 - **`401 Unauthorized` or `403 Forbidden`:** the TES service refused the
   token, see [Get an access token](#get-an-access-token). If the keep-alive
-  loop stops replacing a service after a few hours, its token has expired:
+  loop stops replacing a service after an hour or more, its token has expired:
   its log `.state/watch.log` shows the error. Set a new token and run `up`
   again.
 - **`proxy route not working`:** the hub doesn't run (start it with

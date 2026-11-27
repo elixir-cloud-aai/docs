@@ -65,7 +65,7 @@ info](service-info.md#the-rules-of-this-deployment) shows how to read them
 from the registry.
 
 **Enter the values by hand only as a fallback:** for services whose service
-info can't be set yet (Funnel, Poiesis and TESP API), isn't public, or for a
+info can't be set yet (Funnel, Poiesis 0.2.0 and TESP API), isn't public, or for a
 quick test with other values. Manual entries have no sync, and can drift. See
 [Manual entry, the fallback](service-info.md#manual-entry-the-fallback).
 
@@ -94,13 +94,17 @@ of the ELIXIR On-Cloud, the admins check with you, its owner, that:
 - **The service is live:** it answers at its URL, and its service info is
   public, with sync on (see above).
 - **The service isn't open to anyone:** it accepts requests only from the
-  users that the policy of the federation allows, e.g., for a TES service,
-  members of the LS Login group `ECP_CLN` (see [Enable LS Login and ECP_CLN
+  users that the policy of the federation allows, for example, for a TES service,
+  members of the LS Login group `ECP_CLN:EOC-Compute` (see [Access control
+  for compute](policies.md#access-control-for-compute) and [Enable LS Login
+  and ECP_CLN
   access](node-onboarding-tutorial.md#3-enable-ls-login-and-ecp_cln-access)),
   and from the gateway. A service that can't check the group itself meets
   this only if it accepts nothing but the credentials of the gateway, which
-  checks the group: e.g., Poiesis accepts any valid token of its issuer, as
-  its group check is still missing ([generic-issues#21][gi-21]).
+  checks the group: for example, Poiesis 0.2.0 accepts any valid token of its
+  issuer; its default branch checks the group (see
+  [Poiesis](services/poiesis.md#notes-for-the-deployment) and
+  [generic-issues#21][gi-21]).
   Verification doesn't prove that a service enforces the policy itself.
 
 To ask for verification, write to
@@ -147,7 +151,7 @@ While sync is on:
 |---|---|---|
 | `unreachable` | The registry couldn't fetch the service info, also after retries: the service is down, requires a token, redirects, or the response is too large or too slow. | Bring the service back, or make its service info public, without redirects. |
 | `address not allowed` | The host resolves to an address that isn't public. The registry reads only public service info. | Publish the service at a public address. |
-| `invalid service info` | The service info doesn't pass the checks of a registration, e.g., it has an environment other than `prod` and `test`. | Correct the service info. |
+| `invalid service info` | The service info doesn't pass the checks of a registration, for example, it has an environment other than `prod` and `test`. | Correct the service info. |
 | `identity mismatch` | The service info has another `id` than when sync was turned on, or another API type (`type.group` or `type.artifact`) than the entry. | Take this seriously, and check what your address serves. If a new `id` is right, turn sync off and on again. For another API type, register a new entry. |
 | `version awaiting approval` | The API type in the service info is new, and waits for the approval of an admin. The entry stays listed with its old values. | Wait: the next sync after the approval applies it. |
 | `version not allowed` | The API type in the service info isn't registered, and only admins may add it. | Ask the [admins][elixir-on-cloud-email] to add it. |
@@ -197,10 +201,10 @@ service with this step: update its entry, or check that sync did.**
 
 - **With sync on:** once the new version answers, sync the entry at once
   (`PUT /services/<id>/sync`) or wait for the next sync. Then check that
-  the entry shows the new values, e.g., the version, with the label
+  the entry shows the new values, for example, the version, with the label
   `synced`. If it shows `out-of-sync`, see [Out-of-sync
   reasons](#out-of-sync-reasons).
-- **Without sync** (a manual entry, e.g., of Funnel or Poiesis): edit the
+- **Without sync** (a manual entry, for example, of Funnel or Poiesis): edit the
   entry by hand, so that it matches the service again.
 - **A new version of the API** (`type.version`): sync applies it to the
   same entry, after an admin has approved it if it is new (see [Out-of-sync

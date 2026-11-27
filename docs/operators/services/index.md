@@ -20,6 +20,15 @@ Every Node runs one of these in front of its cluster (see
 | [Poiesis](poiesis.md) | [GA4GH TES][ga4gh-tes] | Kubernetes |
 | [Funnel](funnel.md) | [GA4GH TES][ga4gh-tes] | HPC or HTC (Slurm, OpenPBS) |
 
+## WES services
+
+Nodes that offer runs of whole workflows run a WES service, instead of
+or next to a TES service.
+
+| Service | Standard | Runs on |
+|---|---|---|
+| [WESkit](weskit.md) | [GA4GH WES][ga4gh-wes] | its host, or HPC or HTC (Slurm, LSF) |
+
 ## Other services
 
 | Service | Standard | Role |

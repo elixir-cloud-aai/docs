@@ -27,7 +27,7 @@ there takes you to the portal address.
 | Log in and out | [LS Login](#log-in) | No other login provider. |
 | Run a task | [A form for TES tasks](#run-a-task), with your token | Only with [compute access](#before-you-start). |
 | Follow your tasks | [A list of tasks, and the details of each](#follow-your-tasks) | What a service lists depends on the service. |
-| Run a workflow | [A form for WES runs](#run-a-workflow) | No WES service can be selected yet: [none is reachable](#no-wes-service-yet). |
+| Run a workflow | [A form for WES runs](#run-a-workflow) | Two WES services are listed; none runs CWL yet (see [Which WES services you can use](#which-wes-services-you-can-use)). |
 | Follow your workflow runs | [A list of runs, and the details of each](#follow-your-workflow-runs) | As above. |
 | Use your token elsewhere | [Copy your access token](#copy-your-access-token) | Only while you are logged in. |
 
@@ -35,17 +35,15 @@ there takes you to the portal address.
 
 1. **Get an LS Login account.** See the [LS Login and registration
    guide][ls-login-guide]. Krini has no sign-up page of its own.
-2. **Get compute access.** Krini lets you run tasks and workflows only if
-   you are a member of the LS Login group `ECP_CLN:EOC-Compute` (or
-   `ECP_CLN:ADMIN`, the admins of the deployment). Apply for
-   `ECP_CLN:EOC-Compute` with the application form (see [Apply for compute
+2. **Get compute access.** You can run tasks and workflows only as a
+   member of the LS Login group `ECP_CLN:EOC-Compute`. Apply for it with the application form (see [Apply for compute
    access](index.md#apply-for-compute-access)). Once your application is
    approved, log out of Krini and log in again: tokens that you got before
    the approval don't carry the group.
 3. **Check that the service lets you in.** Each TES and WES service decides
    whom it accepts: Krini only offers the forms, and sends your token. The
-   TES gateway of the deployment, proTES, accepts the members of both
-   groups (see [proTES](../operators/services/protes.md#in-the-elixir-on-cloud)).
+   TES gateway of the deployment, proTES, accepts the members of
+   `ECP_CLN:EOC-Compute` (see [proTES](../operators/services/protes.md#in-the-elixir-on-cloud)).
    For other services, ask their operators, or write to
    [cloud-service@elixir-europe.org][elixir-on-cloud-email].
 
@@ -60,7 +58,7 @@ shows it in the menu at the bottom of the sidebar (**User Tier**):
 
 | Tier | Who | What Krini offers |
 |---|---|---|
-| Admin | Members of `ECP_CLN:ADMIN` | The same as Compute; Krini has no admin pages. |
+| Admin | Members of `ECP_CLN:ADMIN` | The same forms as Compute; Krini has no admin pages. Only members of `ECP_CLN:EOC-Compute` may run tasks, so admins who run tasks join that group too. |
 | Compute | Members of `ECP_CLN:EOC-Compute` | The forms to run tasks and workflows (**Create Task**, **Create Workflow**). |
 | User | Everybody else who is logged in | The lists, without the forms. Instead of **Create Task** and **Create Workflow**, Krini shows **Request compute access** (a link, if the deployment set one) or **Compute access required**. |
 
@@ -92,7 +90,7 @@ shows the sidebar.
    of the sidebar.
 2. On the login page, select **LS Login**. The page also links to the
    privacy notice.
-3. Log in at LS Login with an identity provider of your choice, e.g., your
+3. Log in at LS Login with an identity provider of your choice, for example, your
    home organisation, and agree to share your profile with Krini if LS Login
    asks.
 4. LS Login sends you back to Krini. The sidebar shows your name; its menu
@@ -114,7 +112,7 @@ right (**Select TES Instance** or **Select WES Instance**). Krini fills the
 lists from the Cloud Registry, with the services that are served over
 `https`:
 
-- **TES:** services of the types `tes` and `tes-gateway`, e.g., the proTES
+- **TES:** services of the types `tes` and `tes-gateway`, for example, the proTES
   gateway (**ELIXIR On-Cloud TES Gateway**), TESK and Funnel.
 - **WES:** services of the types `wes` and `wes-gateway`. Krini checks
   each one: it shows its health and the number of workflow types that it
@@ -156,7 +154,7 @@ A TES task runs one or more container images, one after the other. See
 [compute access](#before-you-start).
 
 1. Open **Tasks** and select **Create Task**.
-2. Choose a TES service in **Select TES Instance**, e.g., **ELIXIR
+2. Choose a TES service in **Select TES Instance**, for example, **ELIXIR
    On-Cloud TES Gateway**.
 3. Fill in the form. Only the image and the command of one executor are
    required:
@@ -164,11 +162,11 @@ A TES task runs one or more container images, one after the other. See
     | Field | What to enter |
     |---|---|
     | **Name**, **Description** | Free text that helps you find the task later. |
-    | **Executors** | One or more containers, run in order; **Add executor** adds one. For each: the **Image** (e.g., `alpine:3.20`) and the **Command**, one argument per line (e.g., `echo` and `Hello`). **Advanced executor options** has the working directory (**Workdir**), the files for standard input and output (**Stdin**, **Stdout**, **Stderr**), environment variables (**Environment**) and **Ignore error**, to go on with the next executor if this one fails. |
+    | **Executors** | One or more containers, run in order; **Add executor** adds one. For each: the **Image** (for example, `alpine:3.20`) and the **Command**, one argument per line (for example, `echo` and `Hello`). **Advanced executor options** has the working directory (**Workdir**), the files for standard input and output (**Stdin**, **Stdout**, **Stderr**), environment variables (**Environment**) and **Ignore error**, to go on with the next executor if this one fails. |
     | **Inputs** | Under **Inputs, outputs, resources and metadata**: files that the service copies into the container before the task starts. For each: the **URL** of the file, or its content inline, the **Path in container**, and the type, `FILE` or `DIRECTORY`. |
     | **Outputs** | Files that the service copies out of the container when the task ends. For each: the **URL** to copy it to, the **Path in container** (or a **Path prefix** with wildcards), and the type. The URL must be a place that the service can write to; ask its operator which ones it supports. |
     | Resources | **CPU cores**, **RAM (GB)** and **Disk (GB)**, **Zones** (comma separated), **Preemptible**, and **Backend parameters** for the service, optionally strict (the task fails if the service doesn't support one). |
-    | **Tags** | Names and values, e.g., for a project. |
+    | **Tags** | Names and values, for example, for a project. |
     | **Volumes** | Paths in the container that the executors share. |
 
 4. Select **Submit Task**. Krini shows "Task submitted successfully!" with
@@ -208,18 +206,23 @@ The states of a task:
 
 ## Run a workflow
 
-A WES service runs a whole workflow, e.g., in CWL, Nextflow, Snakemake or
+A WES service runs a whole workflow, for example, in CWL, Nextflow, Snakemake or
 WDL, depending on the service. See [GA4GH WES][ga4gh-wes].
 
-### No WES service yet
+### Which WES services you can use
 
-As of November 2026, there is no WES service that you can select in
-Krini: the only WES service in the Cloud Registry is registered with the
-address of its service info instead of its API, so Krini leaves it out.
-Until a WES service is registered and reachable, the steps below can't be
-followed at the portal. To run workflows now, let a workflow engine send
-their tasks to a TES service (see [Run Workflows Across
-Nodes](federated-workflows.md)).
+As of 26 November 2026, Krini lists two WES services from the Cloud
+Registry. Both require a token; ask their operators whether they accept
+yours (see [Before you start](#before-you-start)):
+
+| Service | Workflow types | From Krini |
+|---|---|---|
+| **Conquest**, at CERIT-SC (CZ) | Nextflow (`NFL`, `DSL2`), Snakemake (`SMK`), WDL | Allows requests from the portal. |
+| **WESkit**, at the Berlin Institute of Health (BIH) | Nextflow (`NFL`), Snakemake (`SMK`) | Doesn't allow requests from the portal (CORS) yet, so its lists and forms fail in Krini. |
+
+Neither runs CWL yet. To run workflows on TES services now, you can also
+let a workflow engine send their tasks to a TES service (see [Run Workflows
+Across Nodes](federated-workflows.md)).
 
 ### Submit a run
 
@@ -232,12 +235,12 @@ With a WES service in the list and [compute access](#before-you-start):
 
     | Field | What to enter |
     |---|---|
-    | **Workflow URL** (required) | The address of the workflow file, e.g., on GitHub (use the raw file), or a path within the files that you attach. |
+    | **Workflow URL** (required) | The address of the workflow file, for example, on GitHub (use the raw file), or a path within the files that you attach. |
     | **Workflow Type**, **Workflow Type Version** (required) | One of the types and versions that the service supports. |
-    | **Workflow Parameters (JSON)** | The inputs of the workflow as a JSON object, e.g., `{"input_file": "https://example.com/input.txt"}`. |
+    | **Workflow Parameters (JSON)** | The inputs of the workflow as a JSON object, for example, `{"input_file": "https://example.com/input.txt"}`. |
     | **Engine Parameters (JSON)**, under **Advanced Configuration** | Settings of the workflow engine, if the service accepts them. |
-    | **Tags (Optional)** | Keys and values, e.g., for a project. |
-    | **Workflow Attachments (Optional)** | Files that the service needs next to the workflow, e.g., its other files or a configuration (**Add Files**). |
+    | **Tags (Optional)** | Keys and values, for example, for a project. |
+    | **Workflow Attachments (Optional)** | Files that the service needs next to the workflow, for example, its other files or a configuration (**Add Files**). |
 
 4. Select **Submit Run**. Krini shows the run ID, or the error of the
    service. **Reset** clears the form.
@@ -258,12 +261,12 @@ what they mean).
 (workflow URL, type, parameters, engine parameters and tags), the log of
 the run and of its tasks, and its outputs. Like the task details, the page
 always shows the run on the service that you listed it from. Where the
-outputs are depends on the service, e.g., in a bucket of its object
+outputs are depends on the service, for example, in a bucket of its object
 storage.
 
 ## Copy your access token
 
-To use the services outside Krini, e.g., with `curl` or the [command
+To use the services outside Krini, for example, with `curl` or the [command
 line](cli.md) (see [Using the APIs](../partners-and-developers/apis.md)),
 select **Copy access token** in the menu at the bottom of the sidebar.
 Krini copies your LS Login access token to the clipboard. proTES accepts
@@ -307,7 +310,7 @@ These are planned in the [Krini repository][krini-repo], not available yet:
 
 - **Access to services and questions about the deployment:** write to
   [cloud-service@elixir-europe.org][elixir-on-cloud-email].
-- **Problems with LS Login itself,** e.g., your account: see the [LS
+- **Problems with LS Login itself,** for example, your account: see the [LS
   Login][ls-login] pages.
 - **Bugs in Krini:** open an issue in the [Krini repository][krini-repo].
   Report security problems privately instead, as the [security

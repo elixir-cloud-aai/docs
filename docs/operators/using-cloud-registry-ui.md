@@ -1,5 +1,5 @@
 ---
-last_verified: null
+last_verified: 2026-11-25
 ---
 
 # Using the Cloud Registry UI
@@ -51,7 +51,7 @@ the menu at the bottom of the sidebar (see [Your user ID][cr-ui-user-id]).
 | Logged-in users | register up to 20 services (admins aren't limited); only admins add service types here |
 | Maintainers of a service | edit it |
 | Owners of a service | edit and delete it, and manage access to it (see [Access and permissions][cr-ui-access]) |
-| Admins, in admin mode | everything, e.g. verify services and approve service types (see [Admin mode][cr-ui-admin-mode]) |
+| Admins, in admin mode | everything, for example verify services and approve service types (see [Admin mode][cr-ui-admin-mode]) |
 
 Roles on a service come from its owners: as the one who registers a
 service, you become its owner, and can give other users or groups a role on
@@ -66,10 +66,10 @@ admin rights, write to
 
 ## Getting help
 
-- **Questions about this deployment,** e.g. rights, service types to add, or
-  services that stay out of sync: write to
+- **Questions about this deployment,** for example rights, service types to
+  add, or services that stay out of sync: write to
   [cloud-service@elixir-europe.org][elixir-on-cloud-email].
-- **Problems with LS Login itself,** e.g. your account: see the [LS
+- **Problems with LS Login itself,** for example your account: see the [LS
   Login][ls-login] pages.
 - **Bugs in the UI:** open an issue in the [Cloud Registry UI
   repository][cr-ui-repo]. Report security problems privately instead, as

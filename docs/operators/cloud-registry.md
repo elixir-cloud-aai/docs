@@ -63,351 +63,13 @@ The API's base path is `/ga4gh/registry/v1` (not
 different host names: the front end calls the API from the user's browser,
 at the API URL configured in the front end's deployment.
 
-## Replacing the deployment before 0.4.0 (one-time)
+The commands on this page are for Bash or Zsh, with `kubectl` and `helm`
+set to the registry's cluster. Set the namespace of the registry's release
+first, in the shell that runs them:
 
-!!! danger "Redeploy with a fresh install and an empty database"
-    Do not migrate the data of the deployment before 0.4.0. That version
-    (Helm chart 2, FOCA 0.12) accepted tokens of **any** issuer and had no
-    ownership checks: anyone with any OpenID Connect token could create,
-    change or delete entries, so its data can't be trusted. Services stored
-    before 0.4.0 would also have no owner, so only admins could manage them.
-
-Follow [From versions before 0.4.0][cr-upgrading-0.4.0]; for this
-deployment:
-
-1. Export the registered services, as a reference for their operators (the
-   list is public). Continue only if the number of services looks right:
-
-    ```bash
-    curl -fsS https://elixir-on.cloud/ga4gh/registry/v1/services \
-      > services-before-0.4.0.json
-    jq length services-before-0.4.0.json
-    ```
-
-2. Note how the old release serves TLS (a `tls` section and cert-manager
-   annotations in its Ingress, or none if TLS is terminated in front of the
-   cluster), to configure the new one the same way (see [Values
-   file](#values-file)):
-
-    ```bash
-    kubectl get ingress -n <namespace> -o yaml
-    ```
-
-3. Find and uninstall the old release. Uninstalling deletes its MongoDB
-   volume (the claim `mongodb`) and the data; check that the claim is gone,
-   and delete it by hand if it isn't:
-
-    ```bash
-    helm ls -n <namespace>
-    helm uninstall <release> -n <namespace>
-    kubectl get pvc -n <namespace>
-    ```
-
-    If the volume's reclaim policy is `Retain`, deleting the claim keeps the
-    PersistentVolume and its data: delete it too (`kubectl get pv` lists it
-    as `Released`; `kubectl delete pv <name>`), and its storage, if the
-    storage isn't deleted with it.
-
-4. Install v1.0.0rc2 (see [Installation](#installation)). Then ask the
-   operators of the exported services to register them again (e.g., in the
-   front end, by importing their service info), so that they become their
-   owners; admins verify them (see [Verified
-   services][cr-verified-services]).
-
-## Upgrading from 1.0.0rc1
-
-!!! warning "1.0.0rc2 starts with an empty database"
-    Data is not kept, and there is no migration: 1.0.0rc2 stores the fields
-    that the registry adds in camelCase, and refuses to start on data or
-    indexes of any earlier version, naming the collections. Services,
-    service types, roles, invitations and verifications are registered
-    again after the upgrade.
-
-Follow [From 1.0.0rc1][cr-upgrading-1.0.0rc1], the chart's notes [To app
-version 1.0.0rc2][cr-chart-1.0.0rc2] and the UI's [upgrade
-notes][cr-ui-upgrading-1.0.0-rc2]. **Upgrade the registry first, then the
-front end, in the same maintenance window, with the front end stopped
-while the registry is upgraded:** the front end of 1.0.0-rc2 doesn't work
-with the registry of 1.0.0rc1 (it would give roles to the wrong users), and
-the front end of 1.0.0-rc1 can't read the registry of 1.0.0rc2 (see the
-UI's [Compatibility][cr-ui-compatibility]). For this deployment:
-
-1. **Login settings, before the upgrade:** register the front end's login
-   page, `https://registry.elixir-on.cloud/auth/login`, as a post-logout
-   redirect URI of its LS Login client (see [Registering the front end with
-   LS Login](#registering-the-front-end-with-ls-login)). From 1.0.0-rc2,
-   logging out also ends the session at LS Login, which lists an
-   `end_session_endpoint` in its [discovery document][ls-login-discovery];
-   without the URI, LS Login may show an error after logging out. The
-   issuer in `LOGIN_PROVIDERS` and `LOGIN_REDIRECT_URI` must be `https`
-   URLs, as they are in [Settings](#settings); the front end refuses to
-   start otherwise.
-2. **Stop the front end** for the whole upgrade:
-
-    ```bash
-    kubectl scale deploy/cloud-registry-ui --replicas=0 -n <namespace>
-    ```
-
-3. **Export what is registered**, as a reference for registering it again
-   (the lists are public). Roles and invitations aren't public, so owners
-   share their services again after the upgrade. The public lists leave out
-   pending services and service types: an admin exports these from
-   `GET /approvals`, in admin mode. The backup of step 5, taken after the
-   app is stopped, holds everything, including what is written after the
-   export:
-
-    ```bash
-    curl -fsS https://elixir-on.cloud/ga4gh/registry/v1/services \
-      > services-1.0.0rc1.json
-    curl -fsS https://elixir-on.cloud/ga4gh/registry/v1/services/types \
-      > service-types-1.0.0rc1.json
-    curl -fsS https://elixir-on.cloud/ga4gh/registry/v1/verifications \
-      > verifications-1.0.0rc1.json
-    jq length services-1.0.0rc1.json
-    read -rs TOKEN
-    printf 'Authorization: Bearer %s\nX-Request-Roles: admin\n' "$TOKEN" \
-      | curl -fsS -H @- https://elixir-on.cloud/ga4gh/registry/v1/approvals \
-      > approvals-1.0.0rc1.json
-    ```
-
-4. **Stop the app:** scale it to 0 replicas, and wait until its pods are
-   gone, so that nothing is written during the backup:
-
-    ```bash
-    kubectl scale deploy/cloud-registry --replicas=0 -n <namespace>
-    kubectl wait --for=delete pod -n <namespace> --timeout=120s \
-      -l app.kubernetes.io/instance=cloud-registry,app.kubernetes.io/component=app
-    ```
-
-5. **Back up the database of 1.0.0rc1** (see [Backups](#backups)), e.g.,
-   with a dump by the CronJob. Going back to 1.0.0rc1 needs its database as
-   it was, so wait until the job has completed, and check that the dump
-   arrived in the bucket, before going on:
-
-    ```bash
-    kubectl create job --from=cronjob/cloud-registry-backup backup-before-1.0.0rc2 -n <namespace>
-    kubectl wait --for=condition=complete job/backup-before-1.0.0rc2 -n <namespace> --timeout=600s
-    kubectl logs job/backup-before-1.0.0rc2 -n <namespace> --all-containers
-    ```
-
-6. **Empty the database:** drop the database `serviceStore`, as the
-   [chart's notes][cr-chart-1.0.0rc2] show, only if no pod of the app runs
-   (the command stops otherwise). Dropping a database keeps its users, so
-   the Secret with the MongoDB credentials stays valid:
-
-    ```bash
-    # Stops with an error if pods of the app are listed (or kubectl fails)
-    pods=$(kubectl get pods -n <namespace> -o name \
-      -l app.kubernetes.io/instance=cloud-registry,app.kubernetes.io/component=app) \
-      && test -z "$pods" \
-      && kubectl exec deploy/cloud-registry-mongodb -n <namespace> -- sh -c 'mongosh serviceStore --quiet \
-      -u "$MONGO_INITDB_ROOT_USERNAME" -p "$MONGO_INITDB_ROOT_PASSWORD" \
-      --authenticationDatabase admin --eval "db.dropDatabase()"'
-    ```
-
-7. **Values file:** nothing must change. It gives no
-   `config.security.access_control.policies`, so the new rules of imports,
-   syncs and notifications, and the moved rule `owners-change-permissions`,
-   apply as they are. The environment of its service info, `prod`, is one
-   of the allowed environments, `[prod, test]`, as 1.0.0rc2 checks on
-   startup. The new settings keep their defaults (see [Service info import
-   and sync](#service-info-import-and-sync), [Notifications](#notifications)
-   and [Invitations](#invitations)).
-8. **Outgoing connections:** the registry now fetches service info from
-   public addresses, when users import it and for syncs. If the cluster
-   restricts the connections of the namespace's pods, allow the app's pods
-   to connect to public addresses on port 443, as for LS Login (see
-   [Network policies](#network-policies)); otherwise, imports fail and
-   synced services become `out-of-sync`.
-9. Download and verify the chart and the image of v1.0.0rc2 (see
-   [Verifying the chart and the
-   image](#verifying-the-chart-and-the-image)), upgrade with the verified
-   chart file (see [Upgrades](#upgrades); `helm upgrade` restores the
-   replicas of the values file), and wait for the app:
-
-    ```bash
-    helm upgrade cloud-registry ./cloud-registry-1.0.0-rc2.tgz \
-      -n <namespace> -f values-prod.yaml
-    kubectl rollout status deploy/cloud-registry -n <namespace>
-    ```
-
-10. **Front end:** deploy the release image of v1.0.0-rc2, verified and
-   pinned by its digest (see [Verifying the UI
-   image](#verifying-the-ui-image)), with the same settings (see
-   [Settings](#settings); the two new ones keep their defaults), and wait
-   for it. The manifest restores the 2 replicas (see [Running the front
-   end](#running-the-front-end)):
-
-    ```bash
-    kubectl apply -f deployment-cloud-registry-ui.yaml
-    kubectl rollout status deploy/cloud-registry-ui -n <namespace>
-    ```
-
-    The session cookies have new names (`__Host-…`), so users who were
-    logged in log in once more.
-11. **Register again:** admins add the service types, in admin mode (see
-    [Service types](#service-types)), and verify services as they are
-    registered again; ask the operators of the exported services to
-    register them again, by importing their service info, with sync on
-    (see [Using the Cloud Registry](using-cloud-registry.md)), and to share
-    them again.
-12. **List the registry itself:** an admin adds the registry to its own
-    services (see [Listing the registry
-    itself](#listing-the-registry-itself)).
-
-Then go through the [checks](#checks-after-installing).
-
-API clients and scripts must follow the API of 1.0.0rc2 in the same
-upgrade: the fields and query parameters that the registry adds are in
-camelCase (e.g., `registrationRules`, `adminAvailable`, `verifiedAt`,
-`userId`), and roles of users move to
-`/services/<id>/permissions/users/<user-id>`, without aliases (see [From
-1.0.0rc1][cr-upgrading-1.0.0rc1] for all names). Log checks and alerts that
-rely on request paths must follow too: from FOCA 0.22, the logs name routes
-(e.g., `/ga4gh/registry/v1/services/{serviceId}`) instead of paths.
-
-**Going back** to 1.0.0rc1 needs its database, as it was: roll the registry
-and the front end back together, and restore the backup of step 5 (see
-[Testing a restore](#testing-a-restore)).
-
-## Upgrading from 0.6.0
-
-These steps lead to 1.0.0rc1, which keeps the data. 1.0.0rc2 needs a fresh
-database from any earlier version, so to go from 0.6.0 to 1.0.0rc2, follow
-[Upgrading from 1.0.0rc1](#upgrading-from-100rc1) instead, with the front
-end of 1.0.0-rc2 replacing one built from a branch (see step 7 below for
-the settings that changed).
-
-Data is kept. Follow [From 0.6.0][cr-upgrading-0.6.0] and the chart's notes
-[To app version 1.0.0rc1][cr-chart-1.0.0rc1]. **Upgrade the registry first,
-then the front end**, in the same maintenance window: the front end of
-1.0.0-rc1 goes with the registry of 1.0.0rc1, and uses its invitations and
-limit of services once the registry has them (see the UI's [upgrade
-notes][cr-ui-upgrading-1.0.0-rc1]). For this deployment:
-
-1. **Services per user:** the values file below limits users other than
-   admins to 20 services each (see [Services per
-   user](#services-per-user)), not to the default of 50. The app counts
-   each user's services on its first start, so check the counts right
-   after the upgrade, with the command of the [chart's
-   notes][cr-chart-1.0.0rc1], with `20` instead of `50`. Users at or above
-   the limit keep their services, but can't register more until they are
-   below it. Services that admins registered before the upgrade count for
-   the admin; if an admin registered many (e.g., imported them), make them
-   count for nobody, as described in [From 0.6.0][cr-upgrading-0.6.0].
-2. **Policies:** the values file below neither gives
-   `config.security.access_control.policies` nor changes the owners'
-   rules, so the new rules of invitations apply as they are (see
-   [Invitations](#invitations)). If yours gives the policies as a list or
-   restricts `owners-change-permissions`, change them as the [chart's
-   notes][cr-chart-1.0.0rc1] say.
-3. **Organization fields:** registrations and updates with organization
-   fields other than `name` and `url` are now rejected. Before upgrading,
-   list the services that have others, and tell their owners, or clean
-   them up as described in [Stored
-   services][cr-upgrading-stored-services]. The public list leaves out
-   pending services; the app warns of all such services, pending ones
-   included, on startup (see [Checks](#checks-after-installing)):
-
-    ```bash
-    curl -fsS https://elixir-on.cloud/ga4gh/registry/v1/services \
-      | jq '[.[] | select(.organization // {} | keys - ["name", "url"] | length > 0) | .id]'
-    ```
-
-4. **Image name:** the chart's default image is now fully qualified
-   (`docker.io/elixircloud/cloud-registry`). The values file below sets no
-   `cloudRegistry.image`; if the cluster has image allow-lists, admission
-   policies or registry mirror rules that match the short name
-   `elixircloud/cloud-registry`, adapt them before upgrading.
-5. **Replicas:** the chart can now run several pods of the app; the values
-   file below sets `cloudRegistry.replicas: 2` (see
-   [Replicas](#replicas)).
-6. Download and verify the chart and the image of v1.0.0rc1 (see
-   [Verifying the chart and the
-   image](#verifying-the-chart-and-the-image)), upgrade with the verified
-   chart file (see [Upgrades](#upgrades)), and wait for the app. Then
-   restart it once, so that services that pods of 0.6.0 registered,
-   updated or deleted during the rollout are counted correctly. Pods of
-   0.6.0 apply neither the limit of services nor the check of organization
-   fields, so writes during the rollout can bypass both; to rule that out,
-   scale the app to 0 replicas before upgrading instead (`helm upgrade`
-   restores the replicas of the values file), at the cost of a short
-   downtime:
-
-    ```bash
-    kubectl rollout status deploy/cloud-registry -n <namespace>
-    kubectl rollout restart deployment/cloud-registry -n <namespace>
-    kubectl rollout status deploy/cloud-registry -n <namespace>
-    ```
-
-7. **Front end:** replace the front end built from a branch (`ai` or
-   `ai-post-deploy`) with the release image of v1.0.0-rc1 (see [UI
-   version](#ui-version)), following the UI's [upgrade
-   notes][cr-ui-upgrading]:
-
-    - **Image:** `docker.io/elixircloud/cloud-registry-ui:1.0.0-rc1`,
-      verified and pinned by its digest (see [Verifying the UI
-      image](#verifying-the-ui-image)).
-    - **Login settings:** the front end reads only `LOGIN_PROVIDERS` and
-      `LOGIN_REDIRECT_URI` (see [Settings](#settings)). If its Secret
-      still has `LS_LOGIN_URL` and `OIDC_*`, move their values into these
-      as the [UI's upgrade notes][cr-ui-upgrading-login] show: the client
-      ID and secret into `LOGIN_PROVIDERS`, with the issuer
-      `https://login.aai.lifescience-ri.eu/oidc/`, and
-      `OIDC_REDIRECT_URI` into `LOGIN_REDIRECT_URI` (same value). The
-      front end stops at start if it finds only the old variables; next to
-      `LOGIN_PROVIDERS`, it ignores them with a warning. Remove them, so
-      that no stale client secret stays in the deployment.
-    - **Audience:** the client ID in `LOGIN_PROVIDERS` must be in the
-      registry's `config.security.auth.audience` (see
-      [Audience](#audience)). Keeping the front end's LS Login client
-      changes nothing; if you register a new client for it, add its ID to
-      the audience and upgrade the registry before switching the front
-      end, or every create, update and delete fails with `401`.
-    - **Settings that are gone:** remove `NEXT_PUBLIC_SERVICE_ENVIRONMENTS`
-      and `NEXT_PUBLIC_SERVICE_URL_SCHEMES`; the front end now reads the
-      allowed environments and URL schemes from the registry (see
-      [Service environments](#service-environments)). It ignores them,
-      with a warning on start.
-    - **Build arguments:** the release image holds no settings; pass them
-      all when the container starts (see [Settings](#settings)).
-
-    Then go through the [checks](#checks-after-installing).
-
-## Upgrading from 0.4.0 or 0.5.0
-
-As for 0.6.0, these steps lead to 1.0.0rc1; to go to 1.0.0rc2, which needs a
-fresh database from any earlier version, follow [Upgrading from
-1.0.0rc1](#upgrading-from-100rc1) instead.
-
-Data is kept. Upgrade one release at a time, never directly to 1.0.0rc1:
-from 0.4.0 to 0.5.0, then to 0.6.0, then to 1.0.0rc1 (see [Upgrading from
-0.6.0](#upgrading-from-060)), each time with the chart of that release
-(see [Upgrades](#upgrades)). Follow the registry's guides [From
-0.4.0][cr-upgrading-0.4.0-to-0.5.0] and [From 0.5.0][cr-upgrading-0.5.0]
-and the chart's notes [To app version 0.5.0][cr-chart-0.5.0] and [To app
-version 0.6.0][cr-chart-0.6.0]. The values file below is for 1.0.0rc2,
-and sets nothing that 1.0.0rc1 doesn't know: leave out what the earlier
-releases don't know (`config.custom.access_control.max_services_per_user` and
-`config.security.access_control.opt_in_roles` for 0.5.0,
-`max_services_per_user` and `cloudRegistry.replicas` for 0.6.0; 0.6.0
-refuses to start with keys of `config.custom` that it doesn't know). For
-this deployment:
-
-- **To 0.5.0:** before upgrading, check the environments of the stored
-  services (see [Service environments](#service-environments)), and set up
-  the rate limits (see [Rate limits](#rate-limits)). After the rollout,
-  restart the app once, so that it stores the types of the services that
-  pods of 0.4.0 registered during it (`kubectl rollout restart
-  deployment/cloud-registry -n <namespace>`). Keep the mode `controlled` of
-  service types; set `moderated` only after the restart.
-- **To 0.6.0:** admins act as admins only in admin mode from 0.6.0 (see
-  [Admin mode](#admin-mode)). Revoke rules that grant the role `admin` via
-  the permissions API, and add the users to the admin group instead (see
-  [Admins](#admins)). A front end from the branch `ai` has no admin mode
-  switch: to keep its admins able to act as admins until the front end of
-  v1.0.0-rc1 is deployed, set `config.security.access_control.opt_in_roles:
-  []` for this step, and remove it in the upgrade to 1.0.0rc1.
+```bash
+NAMESPACE="..."  # the namespace of the registry's release
+```
 
 ## Version
 
@@ -458,9 +120,10 @@ check the kernels of all nodes that MongoDB may run on:
 kubectl get nodes -o custom-columns=NODE:.metadata.name,KERNEL:.status.nodeInfo.kernelVersion
 ```
 
-This covers only the current nodes: nodes added later (e.g., by an
-autoscaler) need compatible kernels too. MongoDB upgrades go one major version at a time, and
-binaries can't be downgraded (see [Version][cr-mongodb-version]).
+This covers only the current nodes: nodes added later (for example, by an
+autoscaler) need compatible kernels too. MongoDB upgrades go one major
+version at a time, and binaries can't be downgraded (see
+[Version][cr-mongodb-version]).
 
 ## Configuration
 
@@ -486,19 +149,19 @@ JWTs as per RFC 9068 (`typ: at+jwt`), as the registry requires.
 
 The public reads (`GET /services`, `GET /services/types` and the
 verifications) accept an optional token: with one, they apply that user's
-visibility rules, e.g., show the user's pending types and services. Invalid
-or expired tokens are rejected with `401`, so that the front end logs the
-user in again; if LS Login can't be reached, such reads are served as
-anonymous (see [Authentication][cr-ac-authentication]).
+visibility rules, for example, show the user's pending types and services.
+Invalid or expired tokens are rejected with `401`, so that the front end
+logs the user in again; if LS Login can't be reached, such reads are served
+as anonymous (see [Authentication][cr-ac-authentication]).
 
 ### Audience
 
 The registry accepts tokens only for the client IDs in
 `config.security.auth.audience`. Set it to the LS Login client IDs of
-**all** apps that send tokens to the registry: the production front end, plus
-any other front end (e.g., a preview deployment) or client for scripts that
-should be able to register services. Without the front end's client ID,
-logging in works, but every create, update and delete fails with
+**all** apps that send tokens to the registry: the production front end,
+plus any other front end (for example, a preview deployment) or client for
+scripts that should be able to register services. Without the front end's
+client ID, logging in works, but every create, update and delete fails with
 `401 Unauthorized`.
 
 **Register one LS Login client per front end**: the registry UI, Krini and
@@ -541,9 +204,10 @@ urn:geant:lifescience-ri.eu:group:elixir:ECP_CLN:ADMIN#aai.lifescience-ri.eu
 
 It is a value of the user's `eduperson_entitlement` claim. To see the groups
 that LS Login releases for a user, call its user info endpoint with an
-access token of that user, e.g., one issued to the front end. Read the token
-into a variable, so that it stays out of the shell history, and pass the
-header via standard input, so that it stays out of process listings:
+access token of that user, for example, one issued to the front end. Read
+the token into a variable, so that it stays out of the shell history, and
+pass the header via standard input, so that it stays out of process
+listings:
 
 ```bash
 read -rs TOKEN
@@ -711,7 +375,7 @@ sync][cr-service-info-sync]): the values file sets nothing for them.
   through the database, without any setup.
 
 The registry connects to the services directly: proxy settings of the
-environment (e.g., `HTTPS_PROXY`) don't apply, so the app's pods need
+environment (for example, `HTTPS_PROXY`) don't apply, so the app's pods need
 connections to public addresses on port 443 (see [Network
 policies](#network-policies)). Fetches take up to 10 seconds, so keep the
 timeouts of the ingress (and of any proxy in front of it) above that. The
@@ -737,9 +401,9 @@ Secret. The service info keeps the identifier
 `ELIXIR_CLOUD_SERVICE_REGISTRY_1`, so that clients still recognize the
 registry, and sets all fields that describe the deployment (see [Service
 info][cr-service-info]). It collects the recommended settings of the
-sections above and below, for 1.0.0rc2. The ingress controller's settings (rate limits, blocking
-`/admin/`) depend on the controller and come on top (see [Exposing the
-API](#exposing-the-api) and [Rate limits](#rate-limits)).
+sections above and below, for 1.0.0rc2. The ingress controller's settings
+(rate limits, blocking `/admin/`) depend on the controller and come on top
+(see [Exposing the API](#exposing-the-api) and [Rate limits](#rate-limits)).
 
 ```yaml title="values-prod.yaml"
 # Public host name of the API (not of the front end)
@@ -855,7 +519,7 @@ cluster allows:
         # `tls` out if TLS is terminated in front of the cluster
         cert-manager.io/cluster-issuer: letsencrypt-prod
         kubernetes.io/tls-acme: "true"
-        # The controller's settings, e.g., the rate limits (see "Rate limits")
+        # The controller's settings, such as the rate limits (see "Rate limits")
     spec:
       ingressClassName: <Ingress class>
       rules:
@@ -905,23 +569,23 @@ the front end's deployment together, keeping the base path
 
 Pass encoded slashes (`%2F`) in the API's paths on as they are, in the
 ingress and in any proxy in front of it: the front end sends user IDs and
-groups with slashes, e.g., IDs namespaced by issuer, that way, and a proxy
-that decodes or refuses them makes the registry store another ID (see
-[Behind a reverse proxy][cr-ui-reverse-proxy] in the UI's documentation,
-and [Checks](#checks-after-installing)).
+groups with slashes, for example, IDs namespaced by issuer, that way, and a
+proxy that decodes or refuses them makes the registry store another ID (see
+[Behind a reverse proxy][cr-ui-reverse-proxy] in the UI's documentation, and
+[Checks](#checks-after-installing)).
 
 ### Rate limits
 
 **Limit the request rate per client IP address at the ingress: write
 requests (`POST`, `PUT`, `DELETE`) to 10 per minute with a small burst, all
-requests to 300 per minute.** The registry limits how many service types
-and services each account adds, but not how often anyone
-writes, and anyone can create LS Login accounts (see [Rate
-limits][cr-rate-limits]). Registering a few services takes far fewer
-writes; 300 requests per minute leave room for the front end, which sends
-several reads per page. The controller must see the clients' addresses, not
-those of a proxy in front of the cluster (e.g., with `use-forwarded-headers`
-or the PROXY protocol); otherwise, all requests count for the proxy.
+requests to 300 per minute.** The registry limits how many service types and
+services each account adds, but not how often anyone writes, and anyone can
+create LS Login accounts (see [Rate limits][cr-rate-limits]). Registering a
+few services takes far fewer writes; 300 requests per minute leave room for
+the front end, which sends several reads per page. The controller must see
+the clients' addresses, not those of a proxy in front of the cluster (for
+example, with `use-forwarded-headers` or the PROXY protocol); otherwise, all
+requests count for the proxy.
 
 *Example for ingress-nginx.* The annotations limit all requests;
 annotations can't tell methods apart, so the limit of writes needs a
@@ -952,16 +616,16 @@ cloudRegistry:
       nginx.ingress.kubernetes.io/limit-rpm: "300"
       nginx.ingress.kubernetes.io/limit-burst-multiplier: "1"
       # Writes: 10 per minute, a burst of 5 (requests with an empty key,
-      # i.e., reads, aren't counted in this zone)
+      # that is, reads, aren't counted in this zone)
       nginx.ingress.kubernetes.io/configuration-snippet: |
         limit_req zone=cloud_registry_writes burst=5 nodelay;
 ```
 
 Without the chart's Ingress, set the same annotations on your own Ingress
 (`metadata.annotations` of `ingress-cloud-registry.yaml` in [Exposing the
-API](#exposing-the-api)). With other controllers, use their own means, e.g.,
-Traefik's `rateLimit` middleware on routes that match the methods, or the
-rate limit policies of a Gateway implementation (see [Rate
+API](#exposing-the-api)). With other controllers, use their own means, for
+example, Traefik's `rateLimit` middleware on routes that match the methods,
+or the rate limit policies of a Gateway implementation (see [Rate
 limits][cr-rate-limits]).
 
 ### Network policies
@@ -983,7 +647,7 @@ kubectl get ingressclass
 kubectl get pods -A --show-labels | grep -Ei 'ingress|gateway|traefik'
 ```
 
-Then set them as the peer, e.g.:
+Then set them as the peer, for example:
 
 ```yaml title="values-prod.yaml"
 cloudRegistry:
@@ -1024,9 +688,9 @@ app's pods connect only to:
   default, the private, loopback, link-local and other ranges that aren't
   public).
 
-Anything private that the app must reach (e.g., an identity provider or a
-MongoDB inside the cluster, or services in `private_networks`) needs a rule
-of its own in `egressNetworkPolicy.to`, as in `spec.egress` of a
+Anything private that the app must reach (for example, an identity provider
+or a MongoDB inside the cluster, or services in `private_networks`) needs a
+rule of its own in `egressNetworkPolicy.to`, as in `spec.egress` of a
 NetworkPolicy; NetworkPolicies add up, so another policy that selects the
 app's pods can allow more.
 
@@ -1034,7 +698,7 @@ app's pods can allow more.
 isn't in the values file, so the chart's default, `enabled: false`,
 applies). It is the first deployment of the registry on de.NBI's cluster:
 the policy only takes effect if the cluster's network plugin enforces
-NetworkPolicies, and it must allow exactly what the app needs, i.e., DNS,
+NetworkPolicies, and it must allow exactly what the app needs, that is, DNS,
 MongoDB, LS Login, and public addresses on port 443 for importing and
 syncing service info. A rule that is missing breaks logins (if LS Login
 can't be reached) or imports and syncs, so this is better added once the
@@ -1053,7 +717,7 @@ egressNetworkPolicy:
 ```
 
 Then check that the policy exists (`kubectl get networkpolicy -n
-<namespace>`), that an admin can log in (checks 5 and 6 of
+"$NAMESPACE"`), that an admin can log in (checks 5 and 6 of
 [Checks](#checks-after-installing)), and that importing service info still
 works.
 
@@ -1080,7 +744,7 @@ and a later upgrade or rollback sets it back without notice.
 1. Create the namespace, unless it exists:
 
     ```bash
-    kubectl create namespace <namespace>
+    kubectl create namespace "$NAMESPACE"
     ```
 
 2. Create the Secret with the MongoDB credentials, with random passwords
@@ -1090,7 +754,7 @@ and a later upgrade or rollback sets it back without notice.
    as arguments, so that they don't show up in process listings:
 
     ```bash
-    kubectl create secret generic cloud-registry-mongodb-credentials -n <namespace> \
+    kubectl create secret generic cloud-registry-mongodb-credentials -n "$NAMESPACE" \
       --from-env-file=<(printf 'root-username=root\nroot-password=%s\nusername=cloud-registry\npassword=%s\n' \
         "$(openssl rand -hex 24)" "$(openssl rand -hex 24)")
     ```
@@ -1098,8 +762,8 @@ and a later upgrade or rollback sets it back without notice.
     To check an existing Secret, list its keys without printing the values:
 
     ```bash
-    kubectl get secrets -n <namespace>
-    kubectl describe secret cloud-registry-mongodb-credentials -n <namespace>
+    kubectl get secrets -n "$NAMESPACE"
+    kubectl describe secret cloud-registry-mongodb-credentials -n "$NAMESPACE"
     ```
 
 3. Download and verify the chart and the image (see [Verifying the chart
@@ -1108,8 +772,8 @@ and a later upgrade or rollback sets it back without notice.
 
     ```bash
     helm install cloud-registry ./cloud-registry-1.0.0-rc2.tgz \
-      -n <namespace> -f values-prod.yaml
-    kubectl rollout status deploy/cloud-registry -n <namespace>
+      -n "$NAMESPACE" -f values-prod.yaml
+    kubectl rollout status deploy/cloud-registry -n "$NAMESPACE"
     ```
 
     Rendering fails if the issuer, the audience or the admin group is
@@ -1182,7 +846,8 @@ Cloud Registry 1.0.0rc2**, and upgrade the front end together with the
 registry when its minor version changes. Deploy the registry first, then
 the front end. Pre-releases may need a newer pre-release of the registry:
 the UI 1.0.0-rc2 doesn't work with Cloud Registry 1.0.0rc1, although their
-numbers match (see [Upgrading from 1.0.0rc1](#upgrading-from-100rc1)).
+numbers match (see the registry's [upgrade notes from
+1.0.0rc1][cr-upgrading-1.0.0rc1]).
 
 **Deploy the signed release image, pinned by its digest**
 (`docker.io/elixircloud/cloud-registry-ui:1.0.0-rc2@sha256:<digest>`),
@@ -1203,7 +868,8 @@ then verify that digest, so that what you deploy is what you verified:
 
 ```bash
 docker buildx imagetools inspect docker.io/elixircloud/cloud-registry-ui:1.0.0-rc2
-gh attestation verify oci://docker.io/elixircloud/cloud-registry-ui@sha256:<digest> \
+DIGEST="sha256:..."  # the digest that the first command prints
+gh attestation verify "oci://docker.io/elixircloud/cloud-registry-ui@$DIGEST" \
   --repo elixir-cloud-aai/cloud-registry-ui \
   --signer-workflow elixir-cloud-aai/cloud-registry-ui/.github/workflows/release.yml \
   --source-ref refs/tags/v1.0.0-rc2
@@ -1247,9 +913,9 @@ this deployment:
 | `LOGIN_PROVIDERS` (required) | a JSON list with LS Login, including the client ID and secret (see below) |
 | `LOGIN_REDIRECT_URI` (required) | `https://registry.elixir-on.cloud/auth/api/callback` |
 
-The [LS Login example][cr-ui-login] in the UI's documentation shows the format of
-`LOGIN_PROVIDERS`, with the scopes above; keep its `scopes`, or the
-registry doesn't recognize admins:
+The [LS Login example][cr-ui-login] in the UI's documentation shows the
+format of `LOGIN_PROVIDERS`, with the scopes above; keep its `scopes`, or
+the registry doesn't recognize admins:
 
 ```text
 LOGIN_PROVIDERS=[{"id": "ls-login", "name": "LS Login", "logo": "/ls-login-grey-wide.jpg", "issuer": "https://login.aai.lifescience-ri.eu/oidc/", "clientId": "<client ID>", "clientSecret": "<client secret>", "scopes": ["openid", "profile", "email", "eduperson_entitlement"]}]
@@ -1284,23 +950,23 @@ The front end takes the allowed environments and URL schemes of services
 from the registry's service info (see [Registry][cr-ui-registry-settings]):
 don't set `NEXT_PUBLIC_SERVICE_ENVIRONMENTS` or
 `NEXT_PUBLIC_SERVICE_URL_SCHEMES`, which it ignores, with a warning on
-start. Nor does it read `LS_LOGIN_URL` or `OIDC_*` (see [Upgrading from
-0.6.0](#upgrading-from-060)).
+start. Nor does it read `LS_LOGIN_URL` or `OIDC_*` (see the UI's [upgrade notes on login
+providers][cr-ui-upgrading-login]).
 
 The branding settings are optional, and their defaults are the ELIXIR
-On-Cloud logos and the title "Cloud Registry". Logos given as paths must be the default logos in the
-image's `public/` folder; give other logos as URLs (see
-[Branding][cr-ui-branding]).
+On-Cloud logos and the title "Cloud Registry". Logos given as paths must be
+the default logos in the image's `public/` folder; give other logos as URLs
+(see [Branding][cr-ui-branding]).
 
 Missing or invalid settings stop the container, with a message that names
-the setting (see the container's log, e.g., `kubectl logs`). Change
+the setting (see the container's log, for example, `kubectl logs`). Change
 settings by restarting the container, without building the image again.
 
 #### Running the front end
 
 The UI has no Helm chart. Run the image as a Deployment with a Service on
 port 3000 (`PORT`; the app listens on all IPv4 interfaces, set
-`LISTEN_HOSTNAME`, e.g. to `::`, for IPv6), and route
+`LISTEN_HOSTNAME`, for example to `::`, for IPv6), and route
 `registry.elixir-on.cloud` to it with HTTPS: the login cookies are marked
 `Secure`, so logging in fails over plain HTTP. Serve it at the address of
 `LOGIN_REDIRECT_URI`: logging out is a `POST` that the app accepts only from
@@ -1409,9 +1075,10 @@ Login](#registering-the-front-end-with-ls-login)). Logins that are in
 progress while the front end is updated may fail once; users then log in
 again.
 
-After deploying, open the front end, log in with LS Login and check that
-the list of services loads (it is empty after a fresh install); then go on with the [checks](#checks-after-installing)
-below, which include logging in as an admin.
+After deploying, open the front end, log in with LS Login and check that the
+list of services loads (it is empty after a fresh install); then go on with
+the [checks](#checks-after-installing) below, which include logging in as an
+admin.
 
 ## Checks after installing
 
@@ -1442,8 +1109,8 @@ below, which include logging in as an admin.
    environment is not allowed; there should be no such warning:
 
     ```bash
-    kubectl logs deploy/cloud-registry -n <namespace> | grep "mapped to the role 'admin'"
-    kubectl logs deploy/cloud-registry -n <namespace> | grep "environments not allowed"
+    kubectl logs deploy/cloud-registry -n "$NAMESPACE" | grep "mapped to the role 'admin'"
+    kubectl logs deploy/cloud-registry -n "$NAMESPACE" | grep "environments not allowed"
     ```
 
 4. The stored service types are those that admins added (see
@@ -1472,17 +1139,17 @@ below, which include logging in as an admin.
    in the top bar (see [Admin mode](#admin-mode)).
 
 6. Register a test service in the front end, then delete it. Import the
-   service info of a public service in the registration form (e.g., of a
+   service info of a public service in the registration form (for example, of a
    TES service to be registered), without registering it: the form fills
    in its values. If the import fails for a service whose service info is
    public, the app's pods can't connect out (see [Network
    policies](#network-policies)). Logged-in users see the notification
    bell in the top bar.
 
-    On the test service, grant a role to a user ID with a slash (e.g.,
-    `test/user`), check that **Current Access** lists exactly that ID, and
-    remove it: otherwise, a proxy changes encoded slashes (see [Exposing
-    the API](#exposing-the-api)).
+    On the test service, grant a role to a user ID with a slash (for
+    example, `test/user`), check that **Current Access** lists exactly that
+    ID, and remove it: otherwise, a proxy changes encoded slashes (see
+    [Exposing the API](#exposing-the-api)).
 
 7. From outside the cluster, `/admin/` doesn't reach the app (`403` or
    `404` from the proxy or the controller, not the app's `401`; see
@@ -1508,8 +1175,8 @@ below, which include logging in as an admin.
    PodDisruptionBudget exists (see [Replicas](#replicas)):
 
     ```bash
-    kubectl get pods -n <namespace> -o wide
-    kubectl get pdb -n <namespace>
+    kubectl get pods -n "$NAMESPACE" -o wide
+    kubectl get pdb -n "$NAMESPACE"
     ```
 
 10. The app's NetworkPolicy exists, and a pod in the release's namespace
@@ -1517,8 +1184,8 @@ below, which include logging in as an admin.
     times out, if the network plugin enforces NetworkPolicies):
 
     ```bash
-    kubectl get networkpolicy -n <namespace>
-    kubectl run np-check --rm -it --restart=Never -n <namespace> \
+    kubectl get networkpolicy -n "$NAMESPACE"
+    kubectl run np-check --rm -it --restart=Never -n "$NAMESPACE" \
       --image=curlimages/curl -- curl -sS -m 5 http://cloud-registry/ga4gh/registry/v1/service-info
     ```
 
@@ -1543,7 +1210,7 @@ fail with the cluster, and test a restore once**:
 
 - **If the storage provider offers volume snapshots, use them** for the
   claim: they need no extra job and no credentials. Schedule them with the
-  provider's or the cluster's tools (e.g., a snapshot schedule of the
+  provider's or the cluster's tools (for example, a snapshot schedule of the
   storage, or Velero), and check that the snapshots are kept outside the
   cluster's own disks. Whether a snapshot class exists:
 
@@ -1552,8 +1219,8 @@ fail with the cluster, and test a restore once**:
     ```
 
 - **Otherwise, dump the database daily with `mongodump` to storage outside
-  the cluster, and keep the dumps for 14 days**, e.g., with a CronJob (see
-  below).
+  the cluster, and keep the dumps for 14 days**, for example, with a CronJob
+  (see below).
 
 ### Dumps with a CronJob
 
@@ -1567,7 +1234,7 @@ days. The bucket's credentials go in a Secret of their own
 `RCLONE_CONFIG_OFFSITE_SECRET_ACCESS_KEY`), created like the MongoDB Secret,
 never in a file in a repository. A lifecycle rule of the bucket that
 deletes objects after 14 days can replace the `rclone delete`, so that the
-job needs no right to delete. Pin both images (e.g., by digest).
+job needs no right to delete. Pin both images (for example, by digest).
 
 The chart's MongoDB is a single server without an oplog, so a dump is not a
 point-in-time copy: writes during the dump (a few seconds for this small
@@ -1683,8 +1350,8 @@ the bucket:
 
 ```bash
 kubectl apply -f backup-cloud-registry.yaml
-kubectl create job --from=cronjob/cloud-registry-backup backup-test -n <namespace>
-kubectl logs job/backup-test -n <namespace> --all-containers
+kubectl create job --from=cronjob/cloud-registry-backup backup-test -n "$NAMESPACE"
+kubectl logs job/backup-test -n "$NAMESPACE" --all-containers
 ```
 
 ### Testing a restore
@@ -1694,13 +1361,14 @@ from the production database, and compare it with the live registry; the
 numbers differ only by the services registered since, and by pending
 services, which the public list leaves out:
 
-- **A dump**, e.g., with Docker on a workstation, from a dump downloaded
+- **A dump**, for example, with Docker on a workstation, from a dump downloaded
   from the bucket:
 
     ```bash
+    ARCHIVE="cloud-registry-....archive.gz"  # the dump from the bucket
     docker run -d --name cr-restore-test docker.io/library/mongo:7.0
     docker exec -i cr-restore-test mongorestore --gzip --archive \
-      < cloud-registry-<timestamp>.archive.gz
+      < "$ARCHIVE"
     docker exec cr-restore-test mongosh --quiet \
       --eval 'db.getSiblingDB("serviceStore").services.countDocuments()'
     curl -fsS https://elixir-on.cloud/ga4gh/registry/v1/services | jq length
@@ -1721,16 +1389,17 @@ replace the claim with one created from it). The app corrects the counters
 of services per user when it starts:
 
 ```bash
-kubectl scale deploy/cloud-registry --replicas=0 -n <namespace>
+ARCHIVE="cloud-registry-....archive.gz"  # the dump to restore
+kubectl scale deploy/cloud-registry --replicas=0 -n "$NAMESPACE"
 # Waits until the app's pods are gone, so that none writes during the restore
-kubectl wait --for=delete pod -n <namespace> --timeout=120s \
+kubectl wait --for=delete pod -n "$NAMESPACE" --timeout=120s \
   -l app.kubernetes.io/instance=cloud-registry,app.kubernetes.io/component=app
 # Starts the app again only if the restore succeeded
-kubectl exec -i deploy/cloud-registry-mongodb -n <namespace> -- sh -c 'mongorestore \
+kubectl exec -i deploy/cloud-registry-mongodb -n "$NAMESPACE" -- sh -c 'mongorestore \
   -u "$MONGO_INITDB_ROOT_USERNAME" -p "$MONGO_INITDB_ROOT_PASSWORD" \
   --authenticationDatabase admin --gzip --archive --drop' \
-  < cloud-registry-<timestamp>.archive.gz \
-  && kubectl scale deploy/cloud-registry --replicas=2 -n <namespace>
+  < "$ARCHIVE" \
+  && kubectl scale deploy/cloud-registry --replicas=2 -n "$NAMESPACE"
 ```
 
 If the restore fails, keep the app stopped, and restore again (`--drop`
@@ -1738,18 +1407,24 @@ replaces the collections that the archive holds).
 
 ## Upgrades
 
+The deployment runs 1.0.0rc2. This page covers that version only: the
+one-time steps of the earlier upgrades (the replacement of the deployment
+before 0.4.0, and the upgrades from 0.4.0, 0.5.0, 0.6.0 and 1.0.0rc1) are
+done, and are in the registry's [upgrade notes][cr-upgrading].
+
 Read the release notes and upgrade steps of the new release, change the
 values file if needed, check that the last backup is recent (see
 [Backups](#backups)), download and verify the chart and the image of that
 release (see [Verifying the chart and the
 image](#verifying-the-chart-and-the-image), with the new version), and
 upgrade with the verified chart file (see [Upgrades][cr-upgrades]; the
-chart file has the chart's version, e.g., `1.0.0-rc2` for the release
+chart file has the chart's version, for example, `1.0.0-rc2` for the release
 `v1.0.0rc2`):
 
 ```bash
-helm upgrade cloud-registry ./cloud-registry-<chart version>.tgz \
-  -n <namespace> -f values-prod.yaml
+CHART_VERSION="..."  # the chart's version, for example 1.0.0-rc2
+helm upgrade cloud-registry "./cloud-registry-$CHART_VERSION.tgz" \
+  -n "$NAMESPACE" -f values-prod.yaml
 ```
 
 When the registry's minor version changes, upgrade the front end with it,
@@ -1768,8 +1443,9 @@ when it starts, so it must show the new version. An entry of the registry
 that was registered like other services instead has to be edited by hand.
 
 Rolling back from 1.0.0rc2 to an earlier version needs the database of that
-version, as it was (see [Upgrading from 1.0.0rc1](#upgrading-from-100rc1)).
-Don't roll back to an image older than 0.4.0 (e.g., that of the previous
+version, as it was (see the registry's [upgrade notes from
+1.0.0rc1][cr-upgrading-1.0.0rc1]).
+Don't roll back to an image older than 0.4.0 (for example, that of the previous
 deployment) once admins have verified services: older versions serve the
 internal field `_verifiedAt` in GA4GH responses and drop verifications when
 services are updated. If a rollback can't be avoided, ask the maintainers
@@ -1778,7 +1454,7 @@ first ([cloud-service@elixir-europe.org][elixir-on-cloud-email]).
 ## Uninstalling
 
 ```bash
-helm uninstall cloud-registry -n <namespace>
+helm uninstall cloud-registry -n "$NAMESPACE"
 ```
 
 The chart keeps MongoDB's volume (the claim `cloud-registry-mongodb`) and
@@ -1809,7 +1485,6 @@ policy is `Retain`.
 [cr-mongodb-version]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/deployment/#version>
 [cr-authentication]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/deployment/#authentication>
 [cr-persistence]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/deployment/#persistence>
-[cr-upgrading-0.4.0]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/upgrading/#from-versions-before-040>
 [cr-configuration]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/configuration/>
 [cr-service-info]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/configuration/#service-info>
 [cr-access-control]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/access-control/>
@@ -1819,11 +1494,6 @@ policy is `Retain`.
 [cr-current-user]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/access-control/#current-user>
 [cr-operations]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/operations/>
 [cr-verifying]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/operations/#verifying-images-and-charts>
-[cr-verified-services]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/api/#verified-services>
-[cr-upgrading-0.4.0-to-0.5.0]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/upgrading/#from-040>
-[cr-chart-0.5.0]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/deployment/#to-app-version-050>
-[cr-chart-0.6.0]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/deployment/#to-app-version-060>
-[cr-upgrading-0.5.0]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/upgrading/#from-050>
 [cr-admin-mode]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/access-control/#admin-mode>
 [cr-making-admins]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/operations/#making-users-admins>
 [cr-service-environments]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/configuration/#service-environments>
@@ -1835,10 +1505,8 @@ policy is `Retain`.
 [cr-server]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/deployment/#server>
 [cr-service-url-schemes]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/configuration/#service-url-schemes>
 [cr-ui-verifying-images]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/operator-guide/deployment/#verifying-images>
+[cr-ui-upgrading-login]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/operator-guide/upgrading/#login-providers-instead-of-ls_login_url-and-oidc_>
 [cr-upgrading]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/upgrading/>
-[cr-upgrading-0.6.0]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/upgrading/#from-060>
-[cr-upgrading-stored-services]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/upgrading/#stored-services>
-[cr-chart-1.0.0rc1]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/deployment/#to-app-version-100rc1>
 [cr-replicas]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/deployment/#replicas>
 [cr-services-per-user]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/configuration/#services-per-user>
 [cr-invitations]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/access-control/#invitations>
@@ -1847,13 +1515,9 @@ policy is `Retain`.
 [cr-ui-operator-guide]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/operator-guide/>
 [cr-ui-user-guide]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/user-guide/>
 [cr-ui-compatibility]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/operator-guide/#compatibility>
-[cr-ui-upgrading]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/operator-guide/upgrading/>
 [cr-ui-updating]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/operator-guide/upgrading/#updating-a-deployment>
-[cr-ui-upgrading-1.0.0-rc1]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/operator-guide/upgrading/#100-rc1>
-[cr-ui-upgrading-login]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/operator-guide/upgrading/#login-providers-instead-of-ls_login_url-and-oidc_>
 [cr-ui-services-limit]: <https://cloud-registry-ui.readthedocs.io/en/v1.0.0-rc2/user-guide/registering/#limit-on-registered-services>
 [cr-upgrading-1.0.0rc1]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/upgrading/#from-100rc1>
-[cr-chart-1.0.0rc2]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/deployment/#to-app-version-100rc2>
 [cr-apps-connections]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/deployment/#the-apps-connections>
 [cr-service-info-import]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/configuration/#service-info-import>
 [cr-service-info-sync]: <https://cloud-registry.readthedocs.io/en/v1.0.0rc2/configuration/#service-info-sync>

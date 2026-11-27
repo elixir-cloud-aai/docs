@@ -1,5 +1,5 @@
 ---
-last_verified: 2026-11-17
+last_verified: 2026-11-25
 ---
 
 # Funnel
@@ -30,10 +30,11 @@ upgrade](../using-cloud-registry.md#after-a-deployment-or-an-upgrade)).
 - Put the config file on the same server. For Slurm, [this
   file][funnel-config-slurm] is a starting point.
 - If everything works, Funnel listens on port `8080`.
-- Funnel's service info can't be set yet
-  ([calypr/funnel#1493](https://github.com/calypr/funnel/issues/1493)), and
-  this deployment refuses its environment, `development`: register it by
-  hand (see [Manual entry, the
+- Funnel's service info can't be set in its release 0.12.3: the setting
+  ([calypr/funnel#1495](https://github.com/calypr/funnel/pull/1495)) is
+  merged, but not released yet. This deployment refuses Funnel's
+  environment, `development` (it allows `prod` and `test`), so register it
+  by hand (see [Manual entry, the
   fallback](../service-info.md#manual-entry-the-fallback)).
 
 ## Funnel with OpenPBS
@@ -45,10 +46,11 @@ the job script from a template, with the variables `TaskId`, `WorkDir`,
 the worker to a copy of Funnel's config in the work directory. The worker
 in the job reports the state of its task to the Funnel server.
 
-1. Write the job script template, e.g., to `/etc/funnel/pbs-template.txt`.
-   The [template of the Funnel docs][funnel-pbs-template] uses the resource
-   syntax of PBS/Torque (`-l nodes=1:ppn=…`). OpenPBS requests resources by
-   chunks (`-l select=…`), so adapt it, e.g.:
+1. Write the job script template, for example to
+   `/etc/funnel/pbs-template.txt`. The [template of the Funnel
+   docs][funnel-pbs-template] uses the resource syntax of PBS/Torque
+   (`-l nodes=1:ppn=…`). OpenPBS requests resources by chunks
+   (`-l select=…`), so adapt it, for example:
 
     ```text
     #!/bin/bash
@@ -66,9 +68,9 @@ in the job reports the state of its task to the Funnel server.
     - **Disk:** OpenPBS has no standard resource for the free disk space of
       a job, so the template ignores `DiskGb`.
     - **Zone:** it ignores `Zone`, the zone that a task asks for, too. The
-      Funnel docs suggest it as a queue name (e.g., `{{if .Zone}}#PBS -q
-      {{.Zone}}{{end}}`); add that only if your queues should be chosen by
-      the users of your service.
+      Funnel docs suggest it as a queue name (for example,
+      `{{if .Zone}}#PBS -q {{.Zone}}{{end}}`); add that only if your
+      queues should be chosen by the users of your service.
     - **Memory:** OpenPBS takes whole units, and templates can't round up:
       `%.0f` rounds `RamGb` to the nearest GB, so a task that asks for
       1.4 GB gets 1 GB, and one that asks for less than 0.5 GB gets
@@ -76,7 +78,7 @@ in the job reports the state of its task to the Funnel server.
       memory per job in the queue, or add a margin in the template.
 
     The `funnel` binary must be on the `PATH` of the jobs on the execution
-    hosts too, e.g., on a shared file system.
+    hosts too, for example on a shared file system.
 
 2. Point Funnel's config file at it, and keep the reconciler off, as it is
    by default (see the warning below):
@@ -101,9 +103,9 @@ in the job reports the state of its task to the Funnel server.
     which marks a task as failed when its job fails without the worker
     reporting it, reads the XML output of `qstat -x` of Torque; in OpenPBS,
     `qstat -x` lists finished jobs instead, in plain text. With the
-    reconciler off, a task whose job fails that way (e.g., killed for
-    exceeding its limits) may keep its last state: check such jobs with the
-    tools of OpenPBS. Please report what works on your cluster to the
+    reconciler off, a task whose job fails that way (for example, one
+    killed for exceeding its limits) may keep its last state: check such
+    jobs with the tools of OpenPBS. Please report what works on your cluster to the
     [admins][elixir-on-cloud-email].
 
 [funnel-pbs]: <https://github.com/calypr/funnel/blob/v0.12.3/docs/compute/pbs-torque.md>

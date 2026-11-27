@@ -11,20 +11,18 @@ the [GA4GH SDK](https://github.com/ga4gh/ga4gh-sdk), to the results of your
 first analysis on ELIXIR On-Cloud. You find services in the Cloud Registry,
 log in with an LS Login token, and count the lines, words and characters of
 a small text file twice: once as a [GA4GH TES][ga4gh-tes] task, and once as
-a [GA4GH WES][ga4gh-wes] workflow. It takes about an hour, most of it for
-building the tool.
+a [GA4GH WES][ga4gh-wes] workflow. How long it takes depends mostly on how
+long the services need to run the task and the workflow.
 
 The tutorial uses the demo files in this documentation. Each step does one
 thing and links to [Use the Command Line](cli.md), the reference of the
 tool, which explains all commands and options; this page doesn't repeat it.
 The commands are for Bash or Zsh on Linux or macOS.
 
-!!! warning "What the CLI can't do yet"
-    - **No ready-made binaries:** you build the CLI from its source code
-      ([ga4gh-sdk#91](https://github.com/ga4gh/ga4gh-sdk/issues/91)).
-
-The CLI doesn't log in itself: it sends an LS Login access token that you
-put into a variable. Step 5 shows how to get one.
+The tutorial uses [release
+0.1.0](https://github.com/ga4gh/ga4gh-sdk/releases/tag/v0.1.0) of the CLI.
+The CLI sends an LS Login access token that you put into a variable; step 5
+shows how to get one.
 
 !!! warning "Synthetic or public data only"
     The deployment is a sandbox for demos and tests. The demo file is public;
@@ -34,16 +32,22 @@ put into a variable. Step 5 shows how to get one.
 
 You need:
 
-- **Git and [Rust](https://www.rust-lang.org/tools/install)**, installed
-  with `rustup`, to build the CLI, and `curl` and
-  [`jq`](https://jqlang.org/) for the demo files and results.
+- **`curl`, `tar` and [`jq`](https://jqlang.org/),** to install the CLI
+  and for the demo files and results, and `sha256sum` (on macOS: `shasum`)
+  to check the download.
 - **An LS Login account.** See the [LS Login and registration
   guide](https://www.lifescience-ri.eu/ls-login-and-registration-guide/).
 - **Access to a TES service,** for part 1, and **to a WES service that runs
   CWL `v1.0`,** for part 2, and the information which LS Login tokens they accept.
 
-The deployment doesn't publish the addresses of all its services for
-researchers yet. To ask for services that you can use, write to
+The Cloud Registry lists the TES and WES services of the deployment (step
+4), but a listed service doesn't always accept your token. For part 1, the
+TES gateway of the deployment, proTES, accepts the tokens of members of the
+LS Login group `ECP_CLN:EOC-Compute` (see [Apply for compute
+access](index.md#apply-for-compute-access)). As of 26 November 2026, no
+WES service in the registry runs CWL: for part 2, you need one that you
+got access to elsewhere. To
+ask for services that you can use, write to
 [cloud-service@elixir-europe.org][elixir-on-cloud-email] and say that you
 want to follow this tutorial.
 
@@ -57,26 +61,48 @@ The demo files:
 
 ## 2. Install the CLI
 
-Build and install the CLI at the commit that [Use the Command
-Line](cli.md#install) describes:
+Download the CLI 0.1.0, check it and put it into `~/.local/bin` (see
+[Install](cli.md#install), which also has the container image and the build
+from source). Set `target` to the one of your computer:
+`x86_64-unknown-linux-gnu` or `aarch64-unknown-linux-gnu` on Linux,
+`x86_64-apple-darwin` on a Mac with an Intel processor, or
+`aarch64-apple-darwin` on a Mac with Apple silicon.
 
 ```bash
-git clone https://github.com/ga4gh/ga4gh-sdk.git
-cd ga4gh-sdk
-git checkout af0e021
-cargo install --path cli --locked
-cd ..
+version=0.1.0
+target=x86_64-unknown-linux-gnu
+archive="ga4gh-cli-$version-$target.tar.gz"
+base="https://github.com/ga4gh/ga4gh-sdk/releases/download/v$version"
+(
+  cd "$(mktemp -d)" &&
+  curl --fail --location --remote-name "$base/$archive" &&
+  curl --fail --location --remote-name "$base/SHA256SUMS" &&
+  grep " $archive\$" SHA256SUMS > archive.sha256 &&
+  sha256sum --check archive.sha256 &&
+  tar -xzf "$archive" &&
+  mkdir -p ~/.local/bin &&
+  mv "ga4gh-cli-$version-$target/ga4gh-cli" ~/.local/bin/ &&
+  rm -r "$PWD"
+)
 ```
 
-**Check:**
+The commands work in a new, empty folder, which they delete at the end, and
+each runs only if the one before it succeeded. On macOS, write `shasum -a 256
+--check` instead of `sha256sum --check`. The binaries aren't signed, so macOS
+may block the CLI until you remove its quarantine attribute; check the build
+provenance of the archive first, as [Download the
+binary](cli.md#download-the-binary) describes.
+
+**Check:** the checksum line ends with `OK`, and
 
 ```bash
 ga4gh-cli --version
 ```
 
-The command prints the version of the CLI. If the shell doesn't find
-`ga4gh-cli`, open a new terminal, so that it reads the `PATH` that `rustup`
-set.
+prints `ga4gh-cli 0.1.0`. If a download or the checksum fails, nothing is
+installed: run the commands again. If the shell doesn't find
+`ga4gh-cli`, add `~/.local/bin` to your `PATH`, for example with
+`export PATH="$HOME/.local/bin:$PATH"`.
 
 ## 3. Point the CLI at the Cloud Registry
 
@@ -106,8 +132,14 @@ ga4gh-cli registry list --type tes
 ga4gh-cli registry list --type wes
 ```
 
-**Check:** the TES and WES services that you got access to are in the lists,
-with their `URL`s. If a service isn't listed, use the address that its
+**Check:** the TES list has the TES gateway of the deployment, proTES:
+
+```text
+ZNJ5SN  org.ga4gh:tes:1.1.0    https://gateway-tes.elixir-on.cloud/ga4gh/tes/v1
+```
+
+The lists also have the other TES and WES services, with their `URL`s. If a
+service that you got access to isn't listed, use the address that its
 operators gave you.
 
 !!! warning "Send your token only to services that you trust"
@@ -124,9 +156,10 @@ operators gave you.
 Then add a `TES` and a `WES` section to `~/.ga4gh-cli/config.json` in a text
 editor. `base_path` is the root of the API of the service (see
 [Configure](cli.md#configure)): copy the `URL` from the list as it is, and
-add the path of the API only if the `URL` ends before it, e.g.,
-`/ga4gh/tes/v1` for proTES. Your file then looks like this, with these API
-roots instead of `<TES API ROOT>` and `<WES API ROOT>`:
+add the path of the API only if the `URL` ends before it, for example,
+`/ga4gh/tes/v1` for a TES service. The `URL` of proTES is its API root
+already. Your file then looks like this, with proTES as the TES service,
+and the API root of your WES service instead of `<WES API ROOT>`:
 
 ```json
 {
@@ -134,7 +167,7 @@ roots instead of `<TES API ROOT>` and `<WES API ROOT>`:
     "base_path": "https://elixir-on.cloud/ga4gh/registry/v1"
   },
   "TES": {
-    "base_path": "<TES API ROOT>",
+    "base_path": "https://gateway-tes.elixir-on.cloud/ga4gh/tes/v1",
     "oauth_access_token_env": "LS_LOGIN_TOKEN"
   },
   "WES": {
@@ -144,17 +177,15 @@ roots instead of `<TES API ROOT>` and `<WES API ROOT>`:
 }
 ```
 
-For example, a proTES at `tes.example.org` has the API root
-`https://tes.example.org/ga4gh/tes/v1`.
-
 `oauth_access_token_env` tells the CLI to send the token in the variable
 `LS_LOGIN_TOKEN`. Leave it out for a service that doesn't need a token.
+Without a WES service for part 2, leave out the `WES` section.
 
 ## 5. Log in
 
-The CLI sends a token that you put into a variable; it doesn't get one
-itself. Get an LS Login access token in one of these ways, and ask the
-operators of your services which of them they accept:
+The CLI sends a token that you put into a variable. Get an LS Login access
+token in one of these ways, and ask the operators of your services which of
+them they accept:
 
 - **With your own LS Login client,** as [Get an access
   token](../partners-and-developers/apis.md#2-get-an-access-token)
@@ -180,7 +211,8 @@ ga4gh-cli wes list
 
 The commands list your tasks and runs, or none. `401 Unauthorized` means
 that the token expired or that the service doesn't accept it: get a new one,
-or ask the operators.
+or ask the operators. Without a `WES` section, `ga4gh-cli wes list` ends
+with `Configuration file must contain a 'WES' object`: skip it.
 
 ## Part 1: Run a task
 
@@ -221,10 +253,11 @@ printf '%s\n' '{
   ]
 }' > count-words-task.json
 TASK_ID=$(ga4gh-cli tes create count-words-task.json)
-echo "$TASK_ID"
+echo "${TASK_ID:?no task ID, see Check for errors}"
 ```
 
-**Check:** the CLI prints the ID of the new task. If it ends with an error,
+**Check:** the CLI prints the ID of the new task. If it ends with an error
+(and `echo` says `no task ID`),
 see [Check for errors](cli.md#check-for-errors) before you send the task
 again.
 
@@ -265,9 +298,10 @@ output in the logs; then the result is `null`.
 
 A WES service runs a whole workflow. Here, the workflow is
 [`count-words.cwl`](tutorial-files/count-words.cwl), which does the same as
-the task, and writes the result to the file `counts.txt`. Check with the
-operators of your WES service that it runs CWL `v1.0`. If no WES service
-that you can use runs it, stop after part 1 and ask the operators for
+the task, and writes the result to the file `counts.txt`. As of
+26 November 2026, none of the WES services in the Cloud Registry runs CWL.
+Check with the operators of your WES service that it runs CWL `v1.0`. If
+no WES service that you can use runs it, stop after part 1 and ask the operators for
 access to one that does: the steps below work only with CWL `v1.0`.
 
 ### 9. Start the workflow
@@ -303,7 +337,7 @@ ga4gh-cli wes get "$RUN_ID" | jq '.outputs'
 ```
 
 **Result:** `outputs` lists the file `counts.txt` with its address. Where
-the file is, and how you download it, depends on the service, e.g., in a
+the file is, and how you download it, depends on the service, for example, in a
 bucket of its object storage. Its content is the same as in step 8, without
 the file name:
 
@@ -332,7 +366,7 @@ The configuration file holds no token, so you can keep it for next time.
 
 ## Where to go next
 
-- All commands and options, e.g., to find workflows in WorkflowHub or to
+- All commands and options, for example, to find workflows in WorkflowHub or to
   attach files to a run: [Use the Command Line](cli.md).
 - Do the same in your browser: [Tutorial: Your First Run in
   Krini](tutorial-krini.md).
@@ -345,8 +379,9 @@ The workflow [`count-words.cwl`](tutorial-files/count-words.cwl) ran with
 `cwltool` and Docker on one computer, with
 [`count-words.json`](tutorial-files/count-words.json), and gave the result
 shown in step 11; the command of the task gave the result shown in step 8 in
-the image `alpine:3.20`. The commands and options of the CLI follow [Use
-the Command Line](cli.md), which was tested at commit `af0e021` of the SDK.
+the image `alpine:3.20`. Step 2 was run as written on Linux on x86-64.
+The commands and options of the CLI follow [Use the Command
+Line](cli.md), which was tested with release 0.1.0 of the SDK.
 The steps have not yet been run against deployed TES and WES services of
 ELIXIR On-Cloud, and not yet by someone who didn't write them. If you follow
 this tutorial, please tell us what didn't work: in the

@@ -18,9 +18,10 @@ field, button and message; this page doesn't repeat it.
 
 !!! note "Krini 0.1.0, part 2 not possible yet"
     This tutorial describes Krini 0.1.0 at <https://portal.elixir-on.cloud>,
-    like the [Krini user guide](krini.md). No WES service can be selected in
-    Krini yet (see [No WES service yet](krini.md#no-wes-service-yet)), so
-    for now you can follow part 1 only.
+    like the [Krini user guide](krini.md). None of the WES services in
+    Krini runs CWL yet (see [Which WES services you can
+    use](krini.md#which-wes-services-you-can-use)), so for now you can
+    follow part 1 only.
 
 !!! warning "Synthetic or public data only"
     The deployment is a sandbox for demos and tests. The demo file is public;
@@ -32,11 +33,10 @@ You need:
 
 - **An LS Login account.** See [Before you start](krini.md#before-you-start)
   in the user guide.
-- **Compute access,** i.e., membership in the LS Login group
-  `ECP_CLN:EOC-Compute` (or `ECP_CLN:ADMIN`, for the admins of the
-  deployment), for part 1: Krini offers the task form only to members of
-  these groups, and the TES gateway of the deployment, proTES, accepts
-  their tokens (see [Before you start](krini.md#before-you-start)).
+- **Compute access,** that is, membership in the LS Login group
+  `ECP_CLN:EOC-Compute`, for part 1: Krini offers the task form to its
+  members, and the TES gateway of the deployment, proTES, accepts their
+  tokens (see [Before you start](krini.md#before-you-start)).
 - **Access to a WES service that runs CWL `v1.0`,** for part 2.
 
 Krini shows the services of the Cloud Registry, but doesn't give you access
@@ -134,9 +134,9 @@ The numbers change if the file changes. If the state is `EXECUTOR_ERROR` or
 ## Part 2: Run a workflow
 
 !!! warning "Not possible at the portal yet"
-    No WES service can be selected in Krini yet (see [No WES service
-    yet](krini.md#no-wes-service-yet)). The steps below are for when one
-    is registered.
+    None of the WES services in Krini runs CWL yet (see [Which WES
+    services you can use](krini.md#which-wes-services-you-can-use)). The
+    steps below are for when one does.
 
 A WES service runs a whole workflow. Here, the workflow is
 [`count-words.cwl`](tutorial-files/count-words.cwl), which does the same as
@@ -195,7 +195,7 @@ run](krini.md#read-the-details-and-outputs-of-a-run)).
 
 **Result:** the outputs of the run list the file `counts.txt` with its
 address. Where the file is, and how you download it, depends on the service,
-e.g., in a bucket of its object storage. Its content is the same as in step
+for example, in a bucket of its object storage. Its content is the same as in step
 5, without the file name:
 
 ```text
