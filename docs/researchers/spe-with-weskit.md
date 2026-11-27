@@ -9,11 +9,10 @@ This page describes the SPE that was built in the de.NBI Cloud (ELIXIR-DE)
 with open-source services. It has two parts: the steps for a researcher who
 uses an SPE, and the steps for an operator who sets one up.
 
-!!! warning "Under construction"
-    No SPE is listed as a public service of the deployment. The address of
-    the environment, its web interface and the way to ask for permission are
-    not documented. Until then, write to
-    [cloud-service@elixir-europe.org][elixir-on-cloud-email].
+    The WESkit team is setting up an SPE for demonstration purposes at
+    <https://home.spe4hd.bihealth.org/>. If you are interested, contact the
+    [WESkit team](https://gitlab.com/one-touch-pipeline/weskit/documentation)
+    for more information and for ways to get access.
 
 ## How it works
 
@@ -60,7 +59,7 @@ one for the S3 storage.
 2. **Provide a Slurm cluster.** You can create one with
    [BiBiGrid](https://cloud.denbi.de/wiki/Tutorials/BiBiGrid/) in the
    [de.NBI Cloud](https://www.denbi.de/cloud), or use any other Slurm cluster.
-3. **Deploy an S3 server.** Create a bucket `results`, and give all
+3. **Deploy an S3 server.** Create a bucket `results`, and give only 
    authorized users read access to it.
 4. **Copy the results.** A script that runs as a cron job (see below) copies
    the files that may leave the cluster into the bucket.
