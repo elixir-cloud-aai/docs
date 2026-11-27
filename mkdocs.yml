@@ -133,6 +133,7 @@ nav:
     - "Tutorial: Your First Run in Krini": "researchers/tutorial-krini.md"
     - "Tutorial: Your First Run from the Command Line": "researchers/tutorial-cli.md"
     - "Run Workflows Across Nodes": "researchers/federated-workflows.md"
+    - "SPE with WESkit": "researchers/spe-with-weskit.md"
     - "Crypt4GH with proTES": "researchers/crypt4gh-with-protes.md"
     - Run Interactive Services on TES:
       - "tutorials/tes-services/interactive_services_tes.md"
